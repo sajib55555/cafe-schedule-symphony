@@ -2,7 +2,7 @@ import React, { useState } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { format, addDays, startOfWeek } from "date-fns";
+import { format, addDays, startOfWeek, addWeeks, subWeeks } from "date-fns";
 import {
   Dialog,
   DialogContent,
@@ -11,6 +11,7 @@ import {
   DialogTrigger,
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 
 interface Shift {
   startTime: string;
@@ -26,9 +27,8 @@ interface StaffShifts {
 
 export function WeeklySchedule() {
   const { toast } = useToast();
-  const today = new Date();
-  const weekStart = startOfWeek(today, { weekStartsOn: 1 });
-  const [shifts, setShifts] = useState<StaffShifts>({});
+  const [selectedWeekStart, setSelectedWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
+  const [shifts, setShifts] = useState<{ [weekStart: string]: StaffShifts }>({});
   const [selectedStaff, setSelectedStaff] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [newShift, setNewShift] = useState<Shift>({
@@ -47,7 +47,7 @@ export function WeeklySchedule() {
   ];
 
   const days = Array.from({ length: 7 }, (_, index) => {
-    const date = addDays(weekStart, index);
+    const date = addDays(selectedWeekStart, index);
     return {
       name: format(date, 'EEE, MMM d'),
       fullDate: format(date, 'yyyy-MM-dd')
@@ -57,11 +57,16 @@ export function WeeklySchedule() {
   const handleAddShift = () => {
     if (!selectedStaff || !selectedDate) return;
 
+    const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+    
     setShifts(prev => ({
       ...prev,
-      [selectedStaff]: {
-        ...(prev[selectedStaff] || {}),
-        [selectedDate]: newShift
+      [weekStartStr]: {
+        ...(prev[weekStartStr] || {}),
+        [selectedStaff]: {
+          ...(prev[weekStartStr]?.[selectedStaff] || {}),
+          [selectedDate]: newShift
+        }
       }
     }));
 
@@ -71,10 +76,30 @@ export function WeeklySchedule() {
     });
   };
 
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    setSelectedWeekStart(current => 
+      direction === 'prev' ? subWeeks(current, 1) : addWeeks(current, 1)
+    );
+  };
+
+  const currentWeekShifts = shifts[format(selectedWeekStart, 'yyyy-MM-dd')] || {};
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-secondary">Schedule for {format(weekStart, 'yyyy-MM-dd')} through {format(addDays(weekStart, 6), 'yyyy-MM-dd')}</h2>
+        <h2 className="text-2xl font-bold text-secondary">
+          Schedule for {format(selectedWeekStart, 'MMM d, yyyy')} through {format(addDays(selectedWeekStart, 6), 'MMM d, yyyy')}
+        </h2>
+        <div className="flex gap-2">
+          <Button variant="outline" onClick={() => navigateWeek('prev')}>
+            <ChevronLeft className="h-4 w-4" />
+            Previous Week
+          </Button>
+          <Button variant="outline" onClick={() => navigateWeek('next')}>
+            Next Week
+            <ChevronRight className="h-4 w-4" />
+          </Button>
+        </div>
       </div>
 
       <div className="border rounded-lg overflow-hidden">
@@ -93,7 +118,7 @@ export function WeeklySchedule() {
                 <div className="text-sm text-gray-500">{person.hours} hrs</div>
               </div>
               {days.map((day) => {
-                const shift = shifts[person.name]?.[day.fullDate];
+                const shift = currentWeekShifts[person.name]?.[day.fullDate];
                 return (
                   <div key={`${person.name}-${day.fullDate}`} className="border-t border-l p-2 min-h-[100px]">
                     {shift ? (
