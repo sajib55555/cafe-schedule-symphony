@@ -20,20 +20,18 @@ const App = () => (
         <BrowserRouter>
           <Routes>
             <Route path="/auth" element={<AuthPage />} />
+            <Route
+              path="/"
+              element={
+                <Navigate to="/subscription" replace />
+              }
+            />
             <Route path="/subscription" element={
               <Layout>
                 <SubscriptionPage />
               </Layout>
             } />
-            <Route
-              path="/"
-              element={
-                <Layout>
-                  <Index />
-                </Layout>
-              }
-            />
-            <Route path="*" element={<Navigate to="/" replace />} />
+            <Route path="*" element={<Navigate to="/subscription" replace />} />
           </Routes>
         </BrowserRouter>
       </StaffProvider>
