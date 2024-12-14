@@ -6,64 +6,30 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
-
-interface Employee {
-  id: number;
-  name: string;
-  role: string;
-  email: string;
-  phone: string;
-  availability: string[];
-}
-
-const daysOfWeek = [
-  "Monday",
-  "Tuesday",
-  "Wednesday",
-  "Thursday",
-  "Friday",
-  "Saturday",
-  "Sunday",
-];
-
-const initialEmployees: Employee[] = [
-  {
-    id: 1,
-    name: "John Smith",
-    role: "Barista",
-    email: "john@example.com",
-    phone: "123-456-7890",
-    availability: ["Monday", "Tuesday", "Wednesday"],
-  },
-  {
-    id: 2,
-    name: "Sarah Johnson",
-    role: "Server",
-    email: "sarah@example.com",
-    phone: "234-567-8901",
-    availability: ["Thursday", "Friday", "Saturday"],
-  },
-  {
-    id: 3,
-    name: "Mike Wilson",
-    role: "Chef",
-    email: "mike@example.com",
-    phone: "345-678-9012",
-    availability: ["Monday", "Wednesday", "Friday"],
-  },
-];
+import { useStaff } from '@/contexts/StaffContext';
 
 export function EmployeeList() {
-  const [employees, setEmployees] = useState<Employee[]>(initialEmployees);
-  const [editingEmployee, setEditingEmployee] = useState<Employee | null>(null);
+  const { staff, setStaff } = useStaff();
+  const [editingEmployee, setEditingEmployee] = useState<number | null>(null);
   const [newEmployee, setNewEmployee] = useState({
     name: "",
     role: "",
     email: "",
     phone: "",
     availability: [] as string[],
+    hours: 0
   });
   const { toast } = useToast();
+
+  const daysOfWeek = [
+    "Monday",
+    "Tuesday",
+    "Wednesday",
+    "Thursday",
+    "Friday",
+    "Saturday",
+    "Sunday",
+  ];
 
   const handleAddEmployee = () => {
     if (!newEmployee.name || !newEmployee.role || !newEmployee.email || !newEmployee.phone) {
@@ -75,24 +41,25 @@ export function EmployeeList() {
       return;
     }
 
-    const employee: Employee = {
-      id: employees.length + 1,
+    const employee = {
+      id: Math.max(0, ...staff.map(s => s.id)) + 1,
       ...newEmployee,
     };
 
-    setEmployees([...employees, employee]);
-    setNewEmployee({ name: "", role: "", email: "", phone: "", availability: [] });
+    setStaff([...staff, employee]);
+    setNewEmployee({ name: "", role: "", email: "", phone: "", availability: [], hours: 0 });
     toast({
       title: "Success",
       description: "New staff member added successfully",
     });
   };
 
-  const handleEditEmployee = () => {
-    if (!editingEmployee) return;
-
-    setEmployees(employees.map((emp) => 
-      emp.id === editingEmployee.id ? editingEmployee : emp
+  const handleEditEmployee = (id: number) => {
+    setStaff(staff.map((emp) => 
+      emp.id === id ? {
+        ...emp,
+        ...staff.find(e => e.id === editingEmployee)
+      } : emp
     ));
 
     setEditingEmployee(null);
@@ -102,17 +69,8 @@ export function EmployeeList() {
     });
   };
 
-  const handleAvailabilityChange = (day: string, isEditing: boolean) => {
-    if (isEditing && editingEmployee) {
-      const newAvailability = editingEmployee.availability.includes(day)
-        ? editingEmployee.availability.filter((d) => d !== day)
-        : [...editingEmployee.availability, day];
-      
-      setEditingEmployee({
-        ...editingEmployee,
-        availability: newAvailability,
-      });
-    } else {
+  const handleAvailabilityChange = (day: string, employeeId: number | null) => {
+    if (employeeId === null) {
       const newAvailability = newEmployee.availability.includes(day)
         ? newEmployee.availability.filter((d) => d !== day)
         : [...newEmployee.availability, day];
@@ -121,6 +79,16 @@ export function EmployeeList() {
         ...newEmployee,
         availability: newAvailability,
       });
+    } else {
+      setStaff(staff.map(emp => {
+        if (emp.id === employeeId) {
+          const newAvailability = emp.availability.includes(day)
+            ? emp.availability.filter((d) => d !== day)
+            : [...emp.availability, day];
+          return { ...emp, availability: newAvailability };
+        }
+        return emp;
+      }));
     }
   };
 
@@ -182,7 +150,7 @@ export function EmployeeList() {
                       <Checkbox
                         id={`new-${day}`}
                         checked={newEmployee.availability.includes(day)}
-                        onCheckedChange={() => handleAvailabilityChange(day, false)}
+                        onCheckedChange={() => handleAvailabilityChange(day, null)}
                       />
                       <label htmlFor={`new-${day}`} className="text-sm">{day}</label>
                     </div>
@@ -197,24 +165,28 @@ export function EmployeeList() {
         </Sheet>
       </div>
       <div className="grid gap-4">
-        {employees.map((employee) => (
+        {staff.map((employee) => (
           <Card key={employee.id} className="p-4 hover:shadow-lg transition-shadow">
-            {editingEmployee?.id === employee.id ? (
+            {editingEmployee === employee.id ? (
               <div className="space-y-4">
                 <div className="space-y-2">
                   <Label htmlFor="edit-name">Name</Label>
                   <Input
                     id="edit-name"
-                    value={editingEmployee.name}
-                    onChange={(e) => setEditingEmployee({ ...editingEmployee, name: e.target.value })}
+                    value={employee.name}
+                    onChange={(e) => setStaff(staff.map(emp => 
+                      emp.id === employee.id ? { ...emp, name: e.target.value } : emp
+                    ))}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-role">Role</Label>
                   <Input
                     id="edit-role"
-                    value={editingEmployee.role}
-                    onChange={(e) => setEditingEmployee({ ...editingEmployee, role: e.target.value })}
+                    value={employee.role}
+                    onChange={(e) => setStaff(staff.map(emp => 
+                      emp.id === employee.id ? { ...emp, role: e.target.value } : emp
+                    ))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -222,16 +194,20 @@ export function EmployeeList() {
                   <Input
                     id="edit-email"
                     type="email"
-                    value={editingEmployee.email}
-                    onChange={(e) => setEditingEmployee({ ...editingEmployee, email: e.target.value })}
+                    value={employee.email}
+                    onChange={(e) => setStaff(staff.map(emp => 
+                      emp.id === employee.id ? { ...emp, email: e.target.value } : emp
+                    ))}
                   />
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-phone">Phone</Label>
                   <Input
                     id="edit-phone"
-                    value={editingEmployee.phone}
-                    onChange={(e) => setEditingEmployee({ ...editingEmployee, phone: e.target.value })}
+                    value={employee.phone}
+                    onChange={(e) => setStaff(staff.map(emp => 
+                      emp.id === employee.id ? { ...emp, phone: e.target.value } : emp
+                    ))}
                   />
                 </div>
                 <div className="space-y-2">
@@ -240,17 +216,17 @@ export function EmployeeList() {
                     {daysOfWeek.map((day) => (
                       <div key={day} className="flex items-center space-x-2">
                         <Checkbox
-                          id={`edit-${day}`}
-                          checked={editingEmployee.availability.includes(day)}
-                          onCheckedChange={() => handleAvailabilityChange(day, true)}
+                          id={`edit-${day}-${employee.id}`}
+                          checked={employee.availability.includes(day)}
+                          onCheckedChange={() => handleAvailabilityChange(day, employee.id)}
                         />
-                        <label htmlFor={`edit-${day}`} className="text-sm">{day}</label>
+                        <label htmlFor={`edit-${day}-${employee.id}`} className="text-sm">{day}</label>
                       </div>
                     ))}
                   </div>
                 </div>
                 <div className="flex space-x-2">
-                  <Button onClick={handleEditEmployee}>Save</Button>
+                  <Button onClick={() => handleEditEmployee(employee.id)}>Save</Button>
                   <Button variant="outline" onClick={() => setEditingEmployee(null)}>Cancel</Button>
                 </div>
               </div>
@@ -263,7 +239,7 @@ export function EmployeeList() {
                     <p className="text-sm text-gray-600">{employee.email}</p>
                     <p className="text-sm text-gray-600">{employee.phone}</p>
                   </div>
-                  <Button variant="outline" onClick={() => setEditingEmployee(employee)}>
+                  <Button variant="outline" onClick={() => setEditingEmployee(employee.id)}>
                     Edit
                   </Button>
                 </div>

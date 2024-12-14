@@ -12,6 +12,7 @@ import {
 } from "@/components/ui/dialog";
 import { useToast } from "@/components/ui/use-toast";
 import { ChevronLeft, ChevronRight } from "lucide-react";
+import { useStaff } from '@/contexts/StaffContext';
 
 interface Shift {
   startTime: string;
@@ -26,6 +27,7 @@ interface StaffShifts {
 }
 
 export function WeeklySchedule() {
+  const { staff } = useStaff();
   const { toast } = useToast();
   const [selectedWeekStart, setSelectedWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [shifts, setShifts] = useState<{ [weekStart: string]: StaffShifts }>({});
@@ -36,15 +38,6 @@ export function WeeklySchedule() {
     endTime: '17:00',
     role: 'Barista'
   });
-
-  const staff = [
-    { name: 'Courtney', hours: 17 },
-    { name: 'Saj', hours: 55 },
-    { name: 'Tia', hours: 23 },
-    { name: 'Lucy', hours: 15.5 },
-    { name: 'Nick', hours: 9 },
-    { name: 'Niloufar', hours: 23.5 }
-  ];
 
   const days = Array.from({ length: 7 }, (_, index) => {
     const date = addDays(selectedWeekStart, index);
@@ -112,7 +105,7 @@ export function WeeklySchedule() {
           ))}
 
           {staff.map((person) => (
-            <React.Fragment key={person.name}>
+            <React.Fragment key={person.id}>
               <div className="border-t p-4 bg-gray-50">
                 <div className="font-medium">{person.name}</div>
                 <div className="text-sm text-gray-500">{person.hours} hrs</div>
