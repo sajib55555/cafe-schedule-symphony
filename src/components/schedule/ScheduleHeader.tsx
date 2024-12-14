@@ -8,9 +8,10 @@ interface ScheduleHeaderProps {
   selectedWeekStart: Date;
   navigateWeek: (direction: 'prev' | 'next') => void;
   scheduleRef: React.RefObject<HTMLDivElement>;
+  onPdfGenerating: (generating: boolean) => void;
 }
 
-export function ScheduleHeader({ selectedWeekStart, navigateWeek, scheduleRef }: ScheduleHeaderProps) {
+export function ScheduleHeader({ selectedWeekStart, navigateWeek, scheduleRef, onPdfGenerating }: ScheduleHeaderProps) {
   return (
     <div className="flex justify-between items-center">
       <h2 className="text-2xl font-bold text-secondary">
@@ -25,7 +26,7 @@ export function ScheduleHeader({ selectedWeekStart, navigateWeek, scheduleRef }:
           Next Week
           <ChevronRight className="h-4 w-4" />
         </Button>
-        <SchedulePdfExport scheduleRef={scheduleRef} />
+        <SchedulePdfExport scheduleRef={scheduleRef} onPdfGenerating={onPdfGenerating} />
       </div>
     </div>
   );
