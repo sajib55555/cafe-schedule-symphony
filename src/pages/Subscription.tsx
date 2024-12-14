@@ -102,7 +102,7 @@ export default function SubscriptionPage() {
             </ul>
             <Button 
               className="w-full"
-              onClick={() => handleSubscribe('price_1QVwHDFk4w8hjVcVAXnqBo0a')}
+              onClick={() => handleSubscribe('price_1QVwDpFk4w8hjVcVL872Hll8')}
             >
               Start Free Trial
             </Button>
