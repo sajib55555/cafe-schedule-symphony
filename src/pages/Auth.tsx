@@ -11,20 +11,33 @@ export default function AuthPage() {
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    // Check current auth status
-    supabase.auth.getSession().then(({ data: { session } }) => {
-      if (session) {
-        navigate("/");
+    const checkSession = async () => {
+      try {
+        const { data: { session }, error } = await supabase.auth.getSession();
+        if (error) throw error;
+        if (session) {
+          navigate("/subscription");
+        }
+      } catch (error) {
+        console.error("Session check error:", error);
+        toast({
+          title: "Error",
+          description: "Failed to check authentication status",
+          variant: "destructive",
+        });
+      } finally {
+        setIsLoading(false);
       }
-      setIsLoading(false);
-    });
+    };
 
-    // Listen for auth changes
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+    checkSession();
+
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN" && session) {
-        navigate("/");
+        navigate("/subscription");
       } else if (event === "USER_UPDATED") {
-        // Handle email confirmation
         toast({
           title: "Email confirmed",
           description: "You can now sign in to your account.",

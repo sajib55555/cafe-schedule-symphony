@@ -2,21 +2,37 @@ import { useEffect } from "react";
 import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "./ui/button";
+import { useToast } from "@/components/ui/use-toast";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
   useEffect(() => {
-    supabase.auth.onAuthStateChange((event, session) => {
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange((event, session) => {
       if (!session) {
         navigate("/auth");
       }
     });
+
+    return () => subscription.unsubscribe();
   }, [navigate]);
 
   const handleSignOut = async () => {
-    await supabase.auth.signOut();
-    navigate("/auth");
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+      navigate("/auth");
+    } catch (error) {
+      console.error("Sign out error:", error);
+      toast({
+        title: "Error",
+        description: "Failed to sign out",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
