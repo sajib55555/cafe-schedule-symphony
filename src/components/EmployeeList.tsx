@@ -8,7 +8,7 @@ import { AddStaffForm } from "./AddStaffForm";
 import { EditStaffForm } from "./EditStaffForm";
 
 export function EmployeeList() {
-  const { staff } = useStaff();
+  const { staff, resetAllHours } = useStaff();
   const [editingEmployee, setEditingEmployee] = useState<number | null>(null);
   const { toast } = useToast();
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
@@ -21,23 +21,36 @@ export function EmployeeList() {
     });
   };
 
+  const handleResetHours = async () => {
+    await resetAllHours();
+    toast({
+      title: "Success",
+      description: "All staff hours have been reset to zero",
+    });
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-secondary">Staff</h2>
-        <Sheet open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
-          <SheetTrigger asChild>
-            <Button>Add Staff</Button>
-          </SheetTrigger>
-          <SheetContent className="overflow-y-auto">
-            <SheetHeader>
-              <SheetTitle>Add New Staff Member</SheetTitle>
-            </SheetHeader>
-            <div className="mt-4">
-              <AddStaffForm onClose={() => setIsAddStaffOpen(false)} />
-            </div>
-          </SheetContent>
-        </Sheet>
+        <div className="space-x-2">
+          <Button variant="outline" onClick={handleResetHours}>
+            Reset Hours
+          </Button>
+          <Sheet open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
+            <SheetTrigger asChild>
+              <Button>Add Staff</Button>
+            </SheetTrigger>
+            <SheetContent className="overflow-y-auto">
+              <SheetHeader>
+                <SheetTitle>Add New Staff Member</SheetTitle>
+              </SheetHeader>
+              <div className="mt-4">
+                <AddStaffForm onClose={() => setIsAddStaffOpen(false)} />
+              </div>
+            </SheetContent>
+          </Sheet>
+        </div>
       </div>
 
       <div className="grid gap-4">
