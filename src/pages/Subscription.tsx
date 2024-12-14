@@ -70,7 +70,7 @@ export default function SubscriptionPage() {
             </ul>
             <Button 
               className="w-full"
-              onClick={() => handleSubscribe('price_1OeXXXXXXXXXXXXX')} // Replace with your actual price ID
+              onClick={() => handleSubscribe('price_1QVwHDFk4w8hjVcVAXnqBo0a')}
             >
               Start Free Trial
             </Button>
@@ -106,7 +106,7 @@ export default function SubscriptionPage() {
             </ul>
             <Button 
               className="w-full"
-              onClick={() => handleSubscribe('price_1OeXXXXXXXXXXXXX')} // Replace with your actual price ID
+              onClick={() => handleSubscribe('price_1QVwHDFk4w8hjVcVAXnqBo0a')}
             >
               Upgrade to Premium
             </Button>
