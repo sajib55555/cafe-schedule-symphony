@@ -24,13 +24,12 @@ export default function SubscriptionPage() {
         return;
       }
 
-      console.log('Session found:', session.access_token);
+      console.log('Session found, access token:', session.access_token);
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
         },
       });
 

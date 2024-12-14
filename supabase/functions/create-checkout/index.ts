@@ -35,11 +35,13 @@ serve(async (req) => {
 
     // Get the user from the JWT token
     const token = authHeader.replace('Bearer ', '');
+    console.log('Received token:', token);
+
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     
     if (userError) {
       console.error('User error:', userError);
-      throw new Error('Invalid user token');
+      throw userError;
     }
 
     if (!user) {
@@ -91,7 +93,7 @@ serve(async (req) => {
       cancel_url: `${req.headers.get('origin')}/subscription`,
     });
 
-    console.log('Checkout session created successfully');
+    console.log('Checkout session created successfully:', session.id);
     return new Response(
       JSON.stringify({ url: session.url }),
       { 
