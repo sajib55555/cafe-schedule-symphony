@@ -1,4 +1,4 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
+import { serve } from "https://deno.land/std@0.168.0/http/server.ts";
 import Stripe from 'https://esm.sh/stripe@14.21.0';
 import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.45.0';
 
@@ -29,13 +29,12 @@ serve(async (req) => {
     // Get the JWT token from the request headers
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
-      console.error('No authorization header found');
       throw new Error('No authorization header');
     }
 
     // Get the user from the JWT token
     const token = authHeader.replace('Bearer ', '');
-    console.log('Received token:', token);
+    console.log('Processing request with token');
 
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     
@@ -70,18 +69,21 @@ serve(async (req) => {
       limit: 1,
     });
 
-    let customer_id = undefined;
+    let customerId;
     if (customers.data.length > 0) {
-      customer_id = customers.data[0].id;
-      console.log('Found existing customer:', customer_id);
+      customerId = customers.data[0].id;
+      console.log('Found existing customer:', customerId);
     } else {
-      console.log('Creating new customer for email:', email);
+      const newCustomer = await stripe.customers.create({
+        email: email,
+      });
+      customerId = newCustomer.id;
+      console.log('Created new customer:', customerId);
     }
 
     console.log('Creating payment session...');
     const session = await stripe.checkout.sessions.create({
-      customer: customer_id,
-      customer_email: customer_id ? undefined : email,
+      customer: customerId,
       line_items: [
         {
           price: priceId,

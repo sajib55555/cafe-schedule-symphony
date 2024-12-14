@@ -24,12 +24,25 @@ export default function SubscriptionPage() {
         return;
       }
 
-      console.log('Session found, access token:', session.access_token);
+      // Get a fresh access token
+      const { data: { session: refreshedSession }, error: refreshError } = 
+        await supabase.auth.refreshSession();
+
+      if (refreshError) {
+        console.error('Refresh error:', refreshError);
+        throw new Error('Failed to refresh session');
+      }
+
+      if (!refreshedSession) {
+        throw new Error('No session after refresh');
+      }
+
+      console.log('Using refreshed access token');
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId },
         headers: {
-          Authorization: `Bearer ${session.access_token}`,
+          Authorization: `Bearer ${refreshedSession.access_token}`,
         },
       });
 
