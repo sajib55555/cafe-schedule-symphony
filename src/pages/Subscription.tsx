@@ -18,13 +18,20 @@ export default function SubscriptionPage() {
     };
 
     checkSession();
-  }, [navigate]);
+
+    // Check if this is a return from successful payment
+    const urlParams = new URLSearchParams(window.location.search);
+    if (urlParams.get('success') === 'true') {
+      toast({
+        title: "Success!",
+        description: "Your trial has been activated successfully.",
+      });
+      navigate("/");
+    }
+  }, [navigate, toast]);
 
   const handleSubscribe = () => {
-    // Add success_url parameter to redirect back to the schedule page
-    const successUrl = `${window.location.origin}/`;
-    const stripeUrl = `https://buy.stripe.com/9AQ4jFgOG3G100waEG?success_url=${encodeURIComponent(successUrl)}`;
-    window.location.href = stripeUrl;
+    window.location.href = 'https://buy.stripe.com/9AQ4jFgOG3G100waEG';
   };
 
   return (
