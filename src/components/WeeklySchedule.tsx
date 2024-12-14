@@ -1,19 +1,9 @@
 import React, { useState, useRef } from 'react';
-import { Card } from "@/components/ui/card";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { format, addDays, startOfWeek, addWeeks, subWeeks } from "date-fns";
-import {
-  Dialog,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogTrigger,
-} from "@/components/ui/dialog";
+import { format, startOfWeek, addDays, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useStaff } from '@/contexts/StaffContext';
-import { SchedulePdfExport } from './SchedulePdfExport';
+import { ScheduleHeader } from './schedule/ScheduleHeader';
+import { ScheduleGrid } from './schedule/ScheduleGrid';
 
 interface Shift {
   startTime: string;
@@ -72,7 +62,6 @@ export function WeeklySchedule() {
       }
     }));
 
-    // Update staff hours
     setStaff(prev => prev.map(person => {
       if (person.name === selectedStaff) {
         return {
@@ -99,111 +88,24 @@ export function WeeklySchedule() {
 
   return (
     <div className="space-y-4">
-      <div className="flex justify-between items-center">
-        <h2 className="text-2xl font-bold text-secondary">
-          Schedule for {format(selectedWeekStart, 'MMM d, yyyy')} through {format(addDays(selectedWeekStart, 6), 'MMM d, yyyy')}
-        </h2>
-        <div className="flex gap-2">
-          <Button variant="outline" onClick={() => navigateWeek('prev')}>
-            <ChevronLeft className="h-4 w-4" />
-            Previous Week
-          </Button>
-          <Button variant="outline" onClick={() => navigateWeek('next')}>
-            Next Week
-            <ChevronRight className="h-4 w-4" />
-          </Button>
-          <SchedulePdfExport scheduleRef={scheduleRef} />
-        </div>
-      </div>
-
+      <ScheduleHeader
+        selectedWeekStart={selectedWeekStart}
+        navigateWeek={navigateWeek}
+        scheduleRef={scheduleRef}
+      />
       <div ref={scheduleRef} className="border rounded-lg overflow-hidden">
-        <div className="grid grid-cols-[200px,repeat(7,1fr)]">
-          <div className="bg-secondary text-white p-4 font-semibold">Staff</div>
-          {days.map((day) => (
-            <div key={day.fullDate} className="bg-secondary text-white p-4 font-semibold text-center border-l border-white/20">
-              {day.name}
-            </div>
-          ))}
-
-          {staff.map((person) => (
-            <React.Fragment key={person.id}>
-              <div className="border-t p-4 bg-gray-50">
-                <div className="font-medium">{person.name}</div>
-                <div className="text-sm text-gray-500">{person.hours} hrs</div>
-              </div>
-              {days.map((day) => {
-                const shift = currentWeekShifts[person.name]?.[day.fullDate];
-                return (
-                  <div key={`${person.name}-${day.fullDate}`} className="border-t border-l p-2 min-h-[100px]">
-                    {shift ? (
-                      <div className="bg-primary text-white p-2 rounded-md text-sm">
-                        <div>{shift.startTime} - {shift.endTime}</div>
-                        <div>{shift.role}</div>
-                      </div>
-                    ) : (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="ghost" 
-                            className="w-full h-full"
-                            onClick={() => {
-                              setSelectedStaff(person.name);
-                              setSelectedDate(day.fullDate);
-                            }}
-                          >
-                            + Add Shift
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent>
-                          <DialogHeader>
-                            <DialogTitle>Add Shift for {person.name}</DialogTitle>
-                          </DialogHeader>
-                          <div className="space-y-4 pt-4">
-                            <div className="grid grid-cols-2 gap-4">
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">Start Time</label>
-                                <Input
-                                  type="time"
-                                  value={newShift.startTime}
-                                  onChange={(e) => setNewShift(prev => ({ ...prev, startTime: e.target.value }))}
-                                />
-                              </div>
-                              <div className="space-y-2">
-                                <label className="text-sm font-medium">End Time</label>
-                                <Input
-                                  type="time"
-                                  value={newShift.endTime}
-                                  onChange={(e) => setNewShift(prev => ({ ...prev, endTime: e.target.value }))}
-                                />
-                              </div>
-                            </div>
-                            <div className="space-y-2">
-                              <label className="text-sm font-medium">Role</label>
-                              <select
-                                className="w-full border rounded-md p-2"
-                                value={newShift.role}
-                                onChange={(e) => setNewShift(prev => ({ 
-                                  ...prev, 
-                                  role: e.target.value as 'Barista' | 'Floor'
-                                }))}
-                              >
-                                <option value="Barista">Barista</option>
-                                <option value="Floor">Floor</option>
-                              </select>
-                            </div>
-                            <Button className="w-full" onClick={handleAddShift}>
-                              Add Shift
-                            </Button>
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    )}
-                  </div>
-                );
-              })}
-            </React.Fragment>
-          ))}
-        </div>
+        <ScheduleGrid
+          days={days}
+          staff={staff}
+          currentWeekShifts={currentWeekShifts}
+          selectedStaff={selectedStaff}
+          setSelectedStaff={setSelectedStaff}
+          selectedDate={selectedDate}
+          setSelectedDate={setSelectedDate}
+          newShift={newShift}
+          setNewShift={setNewShift}
+          handleAddShift={handleAddShift}
+        />
       </div>
     </div>
   );

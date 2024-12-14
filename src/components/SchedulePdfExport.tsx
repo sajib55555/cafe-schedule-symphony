@@ -13,8 +13,9 @@ export function SchedulePdfExport({ scheduleRef }: SchedulePdfExportProps) {
   const handleDownload = async () => {
     if (scheduleRef.current) {
       try {
-        const { toPdf } = await import('react-to-pdf');
-        await toPdf(scheduleRef.current, {
+        const pdfModule = await import('react-to-pdf');
+        await pdfModule.generatePdf({
+          element: scheduleRef.current,
           filename: 'cafe-schedule.pdf',
           page: {
             margin: 20,
