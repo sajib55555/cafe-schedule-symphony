@@ -70,7 +70,7 @@ export default function SubscriptionPage() {
             </ul>
             <Button 
               className="w-full"
-              onClick={() => handleSubscribe('TRIAL_PRICE_ID')} // Replace with actual Stripe price ID
+              onClick={() => handleSubscribe('prod_ROjhGptCNtKNxq')}
             >
               Start Free Trial
             </Button>
@@ -106,7 +106,7 @@ export default function SubscriptionPage() {
             </ul>
             <Button 
               className="w-full"
-              onClick={() => handleSubscribe('PREMIUM_PRICE_ID')} // Replace with actual Stripe price ID
+              onClick={() => handleSubscribe('prod_ROjkzv4JFEosIz')}
             >
               Upgrade to Premium
             </Button>
