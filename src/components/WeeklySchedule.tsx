@@ -31,6 +31,7 @@ export function WeeklySchedule() {
   const [shifts, setShifts] = useState<{ [weekStart: string]: StaffShifts }>({});
   const [selectedStaff, setSelectedStaff] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
+  const [isPdfGenerating, setIsPdfGenerating] = useState(false);
   const [newShift, setNewShift] = useState<Shift>({
     startTime: '09:00',
     endTime: '17:00',
@@ -127,6 +128,7 @@ export function WeeklySchedule() {
         selectedWeekStart={selectedWeekStart}
         navigateWeek={navigateWeek}
         scheduleRef={scheduleRef}
+        onPdfGenerating={setIsPdfGenerating}
       />
       <div ref={scheduleRef} className="border rounded-lg overflow-hidden">
         <ScheduleGrid
@@ -141,6 +143,7 @@ export function WeeklySchedule() {
           setNewShift={setNewShift}
           handleAddShift={handleAddShift}
           handleEditShift={handleEditShift}
+          isPdfGenerating={isPdfGenerating}
         />
       </div>
     </div>

@@ -1,4 +1,4 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
@@ -6,14 +6,16 @@ import toPdf from 'react-to-pdf';
 
 interface SchedulePdfExportProps {
   scheduleRef: React.RefObject<HTMLDivElement>;
+  onPdfGenerating: (generating: boolean) => void;
 }
 
-export function SchedulePdfExport({ scheduleRef }: SchedulePdfExportProps) {
+export function SchedulePdfExport({ scheduleRef, onPdfGenerating }: SchedulePdfExportProps) {
   const { toast } = useToast();
 
   const handleDownload = async () => {
     if (scheduleRef.current) {
       try {
+        onPdfGenerating(true);
         await toPdf(() => scheduleRef.current, {
           filename: 'cafe-schedule.pdf',
           page: {
@@ -29,6 +31,8 @@ export function SchedulePdfExport({ scheduleRef }: SchedulePdfExportProps) {
           title: "Error",
           description: "Failed to generate PDF. Please try again.",
         });
+      } finally {
+        onPdfGenerating(false);
       }
     }
   };

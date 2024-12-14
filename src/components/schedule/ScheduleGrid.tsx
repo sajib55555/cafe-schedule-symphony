@@ -25,6 +25,7 @@ interface ScheduleGridProps {
   }>>;
   handleAddShift: () => void;
   handleEditShift: () => void;
+  isPdfGenerating?: boolean;
 }
 
 export function ScheduleGrid({
@@ -38,7 +39,8 @@ export function ScheduleGrid({
   newShift,
   setNewShift,
   handleAddShift,
-  handleEditShift
+  handleEditShift,
+  isPdfGenerating = false
 }: ScheduleGridProps) {
   return (
     <div className="grid grid-cols-[200px,repeat(7,1fr)]">
@@ -63,20 +65,47 @@ export function ScheduleGrid({
                   <div className="bg-primary text-white p-2 rounded-md text-sm space-y-2">
                     <div>{shift.startTime} - {shift.endTime}</div>
                     <div>{shift.role}</div>
+                    {!isPdfGenerating && (
+                      <Dialog>
+                        <DialogTrigger asChild>
+                          <Button 
+                            variant="secondary" 
+                            size="sm"
+                            className="w-full"
+                            onClick={() => {
+                              setSelectedStaff(person.name);
+                              setSelectedDate(day.fullDate);
+                              setNewShift(shift);
+                            }}
+                          >
+                            <Edit2 className="h-4 w-4 mr-1" />
+                            Edit
+                          </Button>
+                        </DialogTrigger>
+                        <ShiftDialog
+                          selectedStaff={selectedStaff}
+                          selectedDate={selectedDate}
+                          newShift={newShift}
+                          setNewShift={setNewShift}
+                          handleAddShift={handleEditShift}
+                          mode="edit"
+                        />
+                      </Dialog>
+                    )}
+                  </div>
+                ) : (
+                  !isPdfGenerating && (
                     <Dialog>
                       <DialogTrigger asChild>
                         <Button 
-                          variant="secondary" 
-                          size="sm"
-                          className="w-full"
+                          variant="ghost" 
+                          className="w-full h-full"
                           onClick={() => {
                             setSelectedStaff(person.name);
                             setSelectedDate(day.fullDate);
-                            setNewShift(shift);
                           }}
                         >
-                          <Edit2 className="h-4 w-4 mr-1" />
-                          Edit
+                          + Add Shift
                         </Button>
                       </DialogTrigger>
                       <ShiftDialog
@@ -84,34 +113,11 @@ export function ScheduleGrid({
                         selectedDate={selectedDate}
                         newShift={newShift}
                         setNewShift={setNewShift}
-                        handleAddShift={handleEditShift}
-                        mode="edit"
+                        handleAddShift={handleAddShift}
+                        mode="add"
                       />
                     </Dialog>
-                  </div>
-                ) : (
-                  <Dialog>
-                    <DialogTrigger asChild>
-                      <Button 
-                        variant="ghost" 
-                        className="w-full h-full"
-                        onClick={() => {
-                          setSelectedStaff(person.name);
-                          setSelectedDate(day.fullDate);
-                        }}
-                      >
-                        + Add Shift
-                      </Button>
-                    </DialogTrigger>
-                    <ShiftDialog
-                      selectedStaff={selectedStaff}
-                      selectedDate={selectedDate}
-                      newShift={newShift}
-                      setNewShift={setNewShift}
-                      handleAddShift={handleAddShift}
-                      mode="add"
-                    />
-                  </Dialog>
+                  )
                 )}
               </div>
             );
