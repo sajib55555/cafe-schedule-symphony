@@ -14,7 +14,7 @@ export function SchedulePdfExport({ scheduleRef }: SchedulePdfExportProps) {
   const handleDownload = async () => {
     if (scheduleRef.current) {
       try {
-        await toPdf(scheduleRef.current, {
+        await toPdf(() => scheduleRef.current, {
           filename: 'cafe-schedule.pdf',
           page: {
             margin: 20,
