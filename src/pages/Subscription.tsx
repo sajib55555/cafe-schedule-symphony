@@ -2,47 +2,45 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect } from "react";
+import { useNavigate } from "react-router-dom";
 
 export default function SubscriptionPage() {
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    const checkSession = async () => {
+      const { data: { session }, error } = await supabase.auth.getSession();
+      if (error || !session) {
+        navigate("/auth");
+      }
+    };
+
+    checkSession();
+  }, [navigate]);
 
   const handleSubscribe = async (priceId: string) => {
     try {
       const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (sessionError) {
+      if (sessionError || !session) {
         console.error('Session error:', sessionError);
-        throw new Error('Failed to get session');
-      }
-
-      if (!session) {
         toast({
           title: "Error",
           description: "Please sign in to subscribe",
           variant: "destructive",
         });
+        navigate("/auth");
         return;
       }
 
-      // Get a fresh access token
-      const { data: { session: refreshedSession }, error: refreshError } = 
-        await supabase.auth.refreshSession();
-
-      if (refreshError) {
-        console.error('Refresh error:', refreshError);
-        throw new Error('Failed to refresh session');
-      }
-
-      if (!refreshedSession) {
-        throw new Error('No session after refresh');
-      }
-
-      console.log('Using refreshed access token');
+      console.log('Using current session token');
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId },
         headers: {
-          Authorization: `Bearer ${refreshedSession.access_token}`,
+          Authorization: `Bearer ${session.access_token}`,
         },
       });
 
