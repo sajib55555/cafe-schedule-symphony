@@ -16,6 +16,8 @@ export type Database = {
           full_name: string | null
           id: string
           role: string | null
+          trial_end: string | null
+          trial_start: string | null
         }
         Insert: {
           created_at?: string
@@ -23,6 +25,8 @@ export type Database = {
           full_name?: string | null
           id: string
           role?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
         }
         Update: {
           created_at?: string
@@ -30,6 +34,8 @@ export type Database = {
           full_name?: string | null
           id?: string
           role?: string | null
+          trial_end?: string | null
+          trial_start?: string | null
         }
         Relationships: []
       }

@@ -2,36 +2,83 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { useEffect } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 
 export default function SubscriptionPage() {
   const { toast } = useToast();
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   useEffect(() => {
     const checkSession = async () => {
       const { data: { session }, error } = await supabase.auth.getSession();
       if (error || !session) {
         navigate("/auth");
+        return;
+      }
+
+      // Check if user already has an active trial
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('trial_start, trial_end')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profile?.trial_end && new Date(profile.trial_end) > new Date()) {
+        navigate("/");
+        toast({
+          title: "Active Trial",
+          description: "You already have an active trial. Redirecting to dashboard.",
+        });
       }
     };
 
     checkSession();
-
-    // Check if this is a return from successful payment
-    const urlParams = new URLSearchParams(window.location.search);
-    if (urlParams.get('success') === 'true') {
-      toast({
-        title: "Success!",
-        description: "Your trial has been activated successfully.",
-      });
-      navigate("/");
-    }
   }, [navigate, toast]);
 
-  const handleSubscribe = () => {
-    window.location.href = 'https://buy.stripe.com/9AQ4jFgOG3G100waEG';
+  const handleStartTrial = async () => {
+    setIsLoading(true);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (!session) {
+        toast({
+          title: "Error",
+          description: "Please sign in to start your trial.",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const trialStart = new Date();
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 30); // 30 days trial
+
+      const { error } = await supabase
+        .from('profiles')
+        .update({
+          trial_start: trialStart.toISOString(),
+          trial_end: trialEnd.toISOString(),
+        })
+        .eq('id', session.user.id);
+
+      if (error) throw error;
+
+      toast({
+        title: "Success!",
+        description: "Your 30-day free trial has been activated.",
+      });
+      navigate("/");
+    } catch (error) {
+      console.error('Error starting trial:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start your trial. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   return (
@@ -72,9 +119,10 @@ export default function SubscriptionPage() {
             </ul>
             <Button 
               className="w-full"
-              onClick={handleSubscribe}
+              onClick={handleStartTrial}
+              disabled={isLoading}
             >
-              Start Free Trial
+              {isLoading ? "Starting trial..." : "Start Free Trial"}
             </Button>
           </Card>
         </div>
