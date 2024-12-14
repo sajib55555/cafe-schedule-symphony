@@ -34,6 +34,7 @@ serve(async (req) => {
 
     const { priceId } = await req.json();
 
+    // First get or create the customer
     const customers = await stripe.customers.list({
       email: email,
       limit: 1,
