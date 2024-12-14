@@ -69,15 +69,6 @@ export default function AuthPage() {
           theme="light"
           providers={[]}
           redirectTo={window.location.origin}
-          onError={(error) => {
-            toast({
-              variant: "destructive",
-              title: "Authentication Error",
-              description: error.message === "Email not confirmed" 
-                ? "Please check your email and confirm your account before signing in."
-                : error.message,
-            });
-          }}
         />
       </div>
     </div>

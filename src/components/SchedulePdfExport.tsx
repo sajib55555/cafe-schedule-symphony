@@ -2,6 +2,7 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Download } from "lucide-react";
 import { useToast } from "@/components/ui/use-toast";
+import { toPDF } from 'react-to-pdf';
 
 interface SchedulePdfExportProps {
   scheduleRef: React.RefObject<HTMLDivElement>;
@@ -13,9 +14,7 @@ export function SchedulePdfExport({ scheduleRef }: SchedulePdfExportProps) {
   const handleDownload = async () => {
     if (scheduleRef.current) {
       try {
-        const pdfModule = await import('react-to-pdf');
-        await pdfModule.generatePdf({
-          element: scheduleRef.current,
+        await toPDF(scheduleRef.current, {
           filename: 'cafe-schedule.pdf',
           page: {
             margin: 20,

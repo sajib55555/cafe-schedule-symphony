@@ -2,10 +2,11 @@ import React from 'react';
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ShiftDialog } from './ShiftDialog';
+import { Staff } from '@/contexts/StaffContext';
 
 interface ScheduleGridProps {
   days: Array<{ name: string; fullDate: string }>;
-  staff: Array<{ id: string; name: string; hours: number }>;
+  staff: Staff[];
   currentWeekShifts: any;
   selectedStaff: string;
   setSelectedStaff: (staff: string) => void;
