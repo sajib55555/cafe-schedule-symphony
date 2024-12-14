@@ -20,48 +20,8 @@ export default function SubscriptionPage() {
     checkSession();
   }, [navigate]);
 
-  const handleSubscribe = async (priceId: string) => {
-    try {
-      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-      
-      if (sessionError || !session) {
-        console.error('Session error:', sessionError);
-        toast({
-          title: "Error",
-          description: "Please sign in to subscribe",
-          variant: "destructive",
-        });
-        navigate("/auth");
-        return;
-      }
-
-      console.log('Using current session token');
-
-      const { data, error } = await supabase.functions.invoke('create-checkout', {
-        body: { priceId },
-        headers: {
-          Authorization: `Bearer ${session.access_token}`,
-        },
-      });
-
-      if (error) {
-        console.error('Function error:', error);
-        throw error;
-      }
-
-      if (data?.url) {
-        window.location.href = data.url;
-      } else {
-        throw new Error('No checkout URL returned');
-      }
-    } catch (error) {
-      console.error('Error:', error);
-      toast({
-        title: "Error",
-        description: "Failed to start subscription process. Please try again.",
-        variant: "destructive",
-      });
-    }
+  const handleSubscribe = () => {
+    window.location.href = 'https://buy.stripe.com/9AQ4jFgOG3G100waEG';
   };
 
   return (
@@ -102,7 +62,7 @@ export default function SubscriptionPage() {
             </ul>
             <Button 
               className="w-full"
-              onClick={() => handleSubscribe('price_1QVwDpFk4w8hjVcVL872Hll8')}
+              onClick={handleSubscribe}
             >
               Start Free Trial
             </Button>
