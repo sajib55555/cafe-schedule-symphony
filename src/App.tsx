@@ -21,21 +21,25 @@ const App = () => {
   useEffect(() => {
     // Check current session and trial status
     const checkSessionAndTrial = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      setSession(session);
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        setSession(session);
 
-      if (session) {
-        // Check trial status
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('trial_start, trial_end')
-          .eq('id', session.user.id)
-          .single();
+        if (session) {
+          // Check trial status
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('trial_start, trial_end')
+            .eq('id', session.user.id)
+            .single();
 
-        setHasActiveTrial(profile?.trial_end && new Date(profile.trial_end) > new Date());
+          setHasActiveTrial(profile?.trial_end && new Date(profile.trial_end) > new Date());
+        }
+      } catch (error) {
+        console.error('Error checking session:', error);
+      } finally {
+        setIsLoading(false);
       }
-      
-      setIsLoading(false);
     };
 
     checkSessionAndTrial();
@@ -46,14 +50,20 @@ const App = () => {
     } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session) {
-        // Check trial status when auth state changes
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('trial_start, trial_end')
-          .eq('id', session.user.id)
-          .single();
+        try {
+          // Check trial status when auth state changes
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('trial_start, trial_end')
+            .eq('id', session.user.id)
+            .single();
 
-        setHasActiveTrial(profile?.trial_end && new Date(profile.trial_end) > new Date());
+          setHasActiveTrial(profile?.trial_end && new Date(profile.trial_end) > new Date());
+        } catch (error) {
+          console.error('Error checking trial status:', error);
+        }
+      } else {
+        setHasActiveTrial(false);
       }
     });
 
