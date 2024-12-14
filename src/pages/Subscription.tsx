@@ -8,8 +8,13 @@ export default function SubscriptionPage() {
 
   const handleSubscribe = async (priceId: string) => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
+      if (sessionError) {
+        console.error('Session error:', sessionError);
+        throw new Error('Failed to get session');
+      }
+
       if (!session) {
         toast({
           title: "Error",
@@ -19,7 +24,8 @@ export default function SubscriptionPage() {
         return;
       }
 
-      // Get the access token from the session
+      console.log('Session found:', session.access_token);
+
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId },
         headers: {
