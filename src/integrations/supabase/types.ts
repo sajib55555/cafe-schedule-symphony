@@ -9,7 +9,109 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
-      [_ in never]: never
+      profiles: {
+        Row: {
+          created_at: string
+          email: string | null
+          full_name: string | null
+          id: string
+          role: string | null
+        }
+        Insert: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id: string
+          role?: string | null
+        }
+        Update: {
+          created_at?: string
+          email?: string | null
+          full_name?: string | null
+          id?: string
+          role?: string | null
+        }
+        Relationships: []
+      }
+      shifts: {
+        Row: {
+          created_at: string
+          end_time: string
+          id: number
+          role: string | null
+          staff_id: number | null
+          start_time: string
+        }
+        Insert: {
+          created_at?: string
+          end_time: string
+          id?: number
+          role?: string | null
+          staff_id?: number | null
+          start_time: string
+        }
+        Update: {
+          created_at?: string
+          end_time?: string
+          id?: number
+          role?: string | null
+          staff_id?: number | null
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "shifts_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      staff: {
+        Row: {
+          availability: string[] | null
+          created_at: string
+          email: string | null
+          hours: number | null
+          id: number
+          name: string
+          phone: string | null
+          role: string | null
+          user_id: string | null
+        }
+        Insert: {
+          availability?: string[] | null
+          created_at?: string
+          email?: string | null
+          hours?: number | null
+          id?: number
+          name: string
+          phone?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Update: {
+          availability?: string[] | null
+          created_at?: string
+          email?: string | null
+          hours?: number | null
+          id?: number
+          name?: string
+          phone?: string | null
+          role?: string | null
+          user_id?: string | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_user_id_fkey"
+            columns: ["user_id"]
+            isOneToOne: false
+            referencedRelation: "profiles"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

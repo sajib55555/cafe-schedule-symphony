@@ -26,8 +26,14 @@ interface StaffShifts {
   };
 }
 
+const calculateHours = (startTime: string, endTime: string) => {
+  const start = new Date(`2000-01-01T${startTime}`);
+  const end = new Date(`2000-01-01T${endTime}`);
+  return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+};
+
 export function WeeklySchedule() {
-  const { staff } = useStaff();
+  const { staff, setStaff } = useStaff();
   const { toast } = useToast();
   const [selectedWeekStart, setSelectedWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
   const [shifts, setShifts] = useState<{ [weekStart: string]: StaffShifts }>({});
@@ -51,6 +57,7 @@ export function WeeklySchedule() {
     if (!selectedStaff || !selectedDate) return;
 
     const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+    const hours = calculateHours(newShift.startTime, newShift.endTime);
     
     setShifts(prev => ({
       ...prev,
@@ -61,6 +68,17 @@ export function WeeklySchedule() {
           [selectedDate]: newShift
         }
       }
+    }));
+
+    // Update staff hours
+    setStaff(prev => prev.map(person => {
+      if (person.name === selectedStaff) {
+        return {
+          ...person,
+          hours: Number(person.hours || 0) + hours
+        };
+      }
+      return person;
     }));
 
     toast({
