@@ -16,19 +16,45 @@ const queryClient = new QueryClient();
 const App = () => {
   const [isLoading, setIsLoading] = useState(true);
   const [session, setSession] = useState(null);
+  const [hasActiveTrial, setHasActiveTrial] = useState(false);
 
   useEffect(() => {
-    // Check current session
-    supabase.auth.getSession().then(({ data: { session } }) => {
+    // Check current session and trial status
+    const checkSessionAndTrial = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
       setSession(session);
+
+      if (session) {
+        // Check trial status
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('trial_start, trial_end')
+          .eq('id', session.user.id)
+          .single();
+
+        setHasActiveTrial(profile?.trial_end && new Date(profile.trial_end) > new Date());
+      }
+      
       setIsLoading(false);
-    });
+    };
+
+    checkSessionAndTrial();
 
     // Listen for auth changes
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((_event, session) => {
+    } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
+      if (session) {
+        // Check trial status when auth state changes
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('trial_start, trial_end')
+          .eq('id', session.user.id)
+          .single();
+
+        setHasActiveTrial(profile?.trial_end && new Date(profile.trial_end) > new Date());
+      }
     });
 
     return () => subscription.unsubscribe();
@@ -52,27 +78,41 @@ const App = () => {
             <Routes>
               <Route 
                 path="/auth" 
-                element={session ? <Navigate to="/subscription" replace /> : <AuthPage />} 
+                element={session ? <Navigate to={hasActiveTrial ? "/" : "/subscription"} replace /> : <AuthPage />} 
               />
               <Route
                 path="/"
                 element={
-                  <Navigate to="/subscription" replace />
+                  session ? (
+                    hasActiveTrial ? (
+                      <Layout>
+                        <Index />
+                      </Layout>
+                    ) : (
+                      <Navigate to="/subscription" replace />
+                    )
+                  ) : (
+                    <Navigate to="/auth" replace />
+                  )
                 }
               />
               <Route 
                 path="/subscription" 
                 element={
                   session ? (
-                    <Layout>
-                      <SubscriptionPage />
-                    </Layout>
+                    hasActiveTrial ? (
+                      <Navigate to="/" replace />
+                    ) : (
+                      <Layout>
+                        <SubscriptionPage />
+                      </Layout>
+                    )
                   ) : (
                     <Navigate to="/auth" replace />
                   )
                 } 
               />
-              <Route path="*" element={<Navigate to="/subscription" replace />} />
+              <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
         </StaffProvider>
