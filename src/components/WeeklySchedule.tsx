@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { Card } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
@@ -13,6 +13,7 @@ import {
 import { useToast } from "@/components/ui/use-toast";
 import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useStaff } from '@/contexts/StaffContext';
+import { SchedulePdfExport } from './SchedulePdfExport';
 
 interface Shift {
   startTime: string;
@@ -33,6 +34,7 @@ const calculateHours = (startTime: string, endTime: string) => {
 };
 
 export function WeeklySchedule() {
+  const scheduleRef = useRef<HTMLDivElement>(null);
   const { staff, setStaff } = useStaff();
   const { toast } = useToast();
   const [selectedWeekStart, setSelectedWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -110,10 +112,11 @@ export function WeeklySchedule() {
             Next Week
             <ChevronRight className="h-4 w-4" />
           </Button>
+          <SchedulePdfExport scheduleRef={scheduleRef} />
         </div>
       </div>
 
-      <div className="border rounded-lg overflow-hidden">
+      <div ref={scheduleRef} className="border rounded-lg overflow-hidden">
         <div className="grid grid-cols-[200px,repeat(7,1fr)]">
           <div className="bg-secondary text-white p-4 font-semibold">Staff</div>
           {days.map((day) => (
