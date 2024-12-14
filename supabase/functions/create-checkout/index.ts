@@ -27,8 +27,6 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
-    console.log('Auth header received:', authHeader);
-
     // Get the user from the JWT token
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);

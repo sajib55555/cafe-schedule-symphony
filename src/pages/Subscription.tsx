@@ -30,18 +30,25 @@ export default function SubscriptionPage() {
         body: { priceId },
         headers: {
           Authorization: `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Function error:', error);
+        throw error;
+      }
+
       if (data?.url) {
         window.location.href = data.url;
+      } else {
+        throw new Error('No checkout URL returned');
       }
     } catch (error) {
       console.error('Error:', error);
       toast({
         title: "Error",
-        description: "Failed to start subscription process",
+        description: "Failed to start subscription process. Please try again.",
         variant: "destructive",
       });
     }
