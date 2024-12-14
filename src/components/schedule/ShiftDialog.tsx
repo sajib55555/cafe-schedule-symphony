@@ -6,6 +6,7 @@ import {
   DialogContent,
   DialogHeader,
   DialogTitle,
+  DialogDescription,
 } from "@/components/ui/dialog";
 
 interface ShiftDialogProps {
@@ -22,6 +23,7 @@ interface ShiftDialogProps {
     role: 'Barista' | 'Floor';
   }>>;
   handleAddShift: () => void;
+  mode: 'add' | 'edit';
 }
 
 export function ShiftDialog({ 
@@ -29,12 +31,16 @@ export function ShiftDialog({
   selectedDate, 
   newShift, 
   setNewShift, 
-  handleAddShift 
+  handleAddShift,
+  mode
 }: ShiftDialogProps) {
   return (
     <DialogContent>
       <DialogHeader>
-        <DialogTitle>Add Shift for {selectedStaff}</DialogTitle>
+        <DialogTitle>{mode === 'add' ? 'Add' : 'Edit'} Shift for {selectedStaff}</DialogTitle>
+        <DialogDescription>
+          {mode === 'add' ? 'Add a new shift' : 'Edit existing shift'} for {selectedStaff}
+        </DialogDescription>
       </DialogHeader>
       <div className="space-y-4 pt-4">
         <div className="grid grid-cols-2 gap-4">
@@ -70,7 +76,7 @@ export function ShiftDialog({
           </select>
         </div>
         <Button className="w-full" onClick={handleAddShift}>
-          Add Shift
+          {mode === 'add' ? 'Add' : 'Save'} Shift
         </Button>
       </div>
     </DialogContent>

@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ShiftDialog } from './ShiftDialog';
 import { Staff } from '@/contexts/StaffContext';
+import { Edit2 } from 'lucide-react';
 
 interface ScheduleGridProps {
   days: Array<{ name: string; fullDate: string }>;
@@ -23,6 +24,7 @@ interface ScheduleGridProps {
     role: 'Barista' | 'Floor';
   }>>;
   handleAddShift: () => void;
+  handleEditShift: () => void;
 }
 
 export function ScheduleGrid({
@@ -35,7 +37,8 @@ export function ScheduleGrid({
   setSelectedDate,
   newShift,
   setNewShift,
-  handleAddShift
+  handleAddShift,
+  handleEditShift
 }: ScheduleGridProps) {
   return (
     <div className="grid grid-cols-[200px,repeat(7,1fr)]">
@@ -57,9 +60,34 @@ export function ScheduleGrid({
             return (
               <div key={`${person.name}-${day.fullDate}`} className="border-t border-l p-2 min-h-[100px]">
                 {shift ? (
-                  <div className="bg-primary text-white p-2 rounded-md text-sm">
+                  <div className="bg-primary text-white p-2 rounded-md text-sm space-y-2">
                     <div>{shift.startTime} - {shift.endTime}</div>
                     <div>{shift.role}</div>
+                    <Dialog>
+                      <DialogTrigger asChild>
+                        <Button 
+                          variant="secondary" 
+                          size="sm"
+                          className="w-full"
+                          onClick={() => {
+                            setSelectedStaff(person.name);
+                            setSelectedDate(day.fullDate);
+                            setNewShift(shift);
+                          }}
+                        >
+                          <Edit2 className="h-4 w-4 mr-1" />
+                          Edit
+                        </Button>
+                      </DialogTrigger>
+                      <ShiftDialog
+                        selectedStaff={selectedStaff}
+                        selectedDate={selectedDate}
+                        newShift={newShift}
+                        setNewShift={setNewShift}
+                        handleAddShift={handleEditShift}
+                        mode="edit"
+                      />
+                    </Dialog>
                   </div>
                 ) : (
                   <Dialog>
@@ -81,6 +109,7 @@ export function ScheduleGrid({
                       newShift={newShift}
                       setNewShift={setNewShift}
                       handleAddShift={handleAddShift}
+                      mode="add"
                     />
                   </Dialog>
                 )}

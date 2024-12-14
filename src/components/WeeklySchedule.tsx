@@ -78,6 +78,41 @@ export function WeeklySchedule() {
     });
   };
 
+  const handleEditShift = () => {
+    if (!selectedStaff || !selectedDate) return;
+
+    const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+    const oldShift = shifts[weekStartStr]?.[selectedStaff]?.[selectedDate];
+    const oldHours = oldShift ? calculateHours(oldShift.startTime, oldShift.endTime) : 0;
+    const newHours = calculateHours(newShift.startTime, newShift.endTime);
+    
+    setShifts(prev => ({
+      ...prev,
+      [weekStartStr]: {
+        ...(prev[weekStartStr] || {}),
+        [selectedStaff]: {
+          ...(prev[weekStartStr]?.[selectedStaff] || {}),
+          [selectedDate]: newShift
+        }
+      }
+    }));
+
+    setStaff(prev => prev.map(person => {
+      if (person.name === selectedStaff) {
+        return {
+          ...person,
+          hours: Number(person.hours || 0) - oldHours + newHours
+        };
+      }
+      return person;
+    }));
+
+    toast({
+      title: "Shift Updated",
+      description: `Updated shift for ${selectedStaff} on ${format(new Date(selectedDate), 'EEE, MMM d')}`,
+    });
+  };
+
   const navigateWeek = (direction: 'prev' | 'next') => {
     setSelectedWeekStart(current => 
       direction === 'prev' ? subWeeks(current, 1) : addWeeks(current, 1)
@@ -105,6 +140,7 @@ export function WeeklySchedule() {
           newShift={newShift}
           setNewShift={setNewShift}
           handleAddShift={handleAddShift}
+          handleEditShift={handleEditShift}
         />
       </div>
     </div>
