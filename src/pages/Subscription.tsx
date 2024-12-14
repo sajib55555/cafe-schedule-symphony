@@ -21,7 +21,10 @@ export default function SubscriptionPage() {
   }, [navigate]);
 
   const handleSubscribe = () => {
-    window.location.href = 'https://buy.stripe.com/9AQ4jFgOG3G100waEG';
+    // Add success_url parameter to redirect back to the schedule page
+    const successUrl = `${window.location.origin}/`;
+    const stripeUrl = `https://buy.stripe.com/9AQ4jFgOG3G100waEG?success_url=${encodeURIComponent(successUrl)}`;
+    window.location.href = stripeUrl;
   };
 
   return (
