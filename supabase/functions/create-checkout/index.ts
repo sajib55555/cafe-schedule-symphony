@@ -26,16 +26,25 @@ serve(async (req) => {
       throw new Error('No authorization header');
     }
 
+    console.log('Auth header received:', authHeader);
+
     // Get the user from the JWT token
     const token = authHeader.replace('Bearer ', '');
     const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
     
-    if (userError || !user) {
+    if (userError) {
+      console.error('User error:', userError);
       throw new Error('Invalid user token');
+    }
+
+    if (!user) {
+      console.error('No user found');
+      throw new Error('No user found');
     }
 
     const email = user.email;
     if (!email) {
+      console.error('No email found');
       throw new Error('No email found');
     }
 
