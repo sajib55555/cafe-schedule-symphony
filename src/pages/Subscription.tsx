@@ -19,8 +19,12 @@ export default function SubscriptionPage() {
         return;
       }
 
+      // Get the access token from the session
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: { priceId },
+        headers: {
+          Authorization: `Bearer ${session.access_token}`,
+        },
       });
 
       if (error) throw error;
