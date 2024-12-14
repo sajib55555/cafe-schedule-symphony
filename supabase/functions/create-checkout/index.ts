@@ -8,31 +8,45 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
-  const supabaseClient = createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_ANON_KEY') ?? '',
-  );
-
   try {
-    const authHeader = req.headers.get('Authorization')!;
-    const token = authHeader.replace('Bearer ', '');
-    const { data } = await supabaseClient.auth.getUser(token);
-    const user = data.user;
-    const email = user?.email;
+    // Initialize Supabase client
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    );
 
+    // Get the JWT token from the request headers
+    const authHeader = req.headers.get('Authorization');
+    if (!authHeader) {
+      throw new Error('No authorization header');
+    }
+
+    // Get the user from the JWT token
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user }, error: userError } = await supabaseClient.auth.getUser(token);
+    
+    if (userError || !user) {
+      throw new Error('Invalid user token');
+    }
+
+    const email = user.email;
     if (!email) {
       throw new Error('No email found');
     }
+
+    console.log('Creating checkout session for email:', email);
 
     const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
       apiVersion: '2023-10-16',
     });
 
     const { priceId } = await req.json();
+    console.log('Price ID:', priceId);
 
     // First get or create the customer
     const customers = await stripe.customers.list({
@@ -43,6 +57,9 @@ serve(async (req) => {
     let customer_id = undefined;
     if (customers.data.length > 0) {
       customer_id = customers.data[0].id;
+      console.log('Found existing customer:', customer_id);
+    } else {
+      console.log('Creating new customer for email:', email);
     }
 
     console.log('Creating payment session...');
@@ -60,6 +77,7 @@ serve(async (req) => {
       cancel_url: `${req.headers.get('origin')}/subscription`,
     });
 
+    console.log('Checkout session created successfully');
     return new Response(
       JSON.stringify({ url: session.url }),
       { 
