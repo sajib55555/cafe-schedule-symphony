@@ -1,6 +1,6 @@
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 
 const UpgradePage = () => {
@@ -21,23 +21,16 @@ const UpgradePage = () => {
         return;
       }
 
-      const response = await fetch('/functions/v1/create-checkout', {
-        method: 'POST',
-        headers: {
-          'Authorization': `Bearer ${session.access_token}`,
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
           priceId: 'price_1QVwDpFk4w8hjVcVL872Hll8',
-        }),
+        },
       });
 
-      const { url, error } = await response.json();
-      
-      if (error) throw new Error(error);
-      if (!url) throw new Error('No checkout URL returned');
+      if (error) throw error;
+      if (!data?.url) throw new Error('No checkout URL returned');
 
-      window.location.href = url;
+      window.location.href = data.url;
     } catch (error) {
       console.error('Error creating checkout session:', error);
       toast({
