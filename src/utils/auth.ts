@@ -1,5 +1,5 @@
 import { supabase } from "@/integrations/supabase/client";
-import { toast } from "@/hooks/use-toast";
+import { toast } from "sonner";
 
 export type SignUpData = {
   email: string;
@@ -12,6 +12,9 @@ export type SignUpData = {
 
 export const handleSignUp = async (values: SignUpData) => {
   try {
+    console.log('Starting signup process with values:', values);
+
+    // First create the user account
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
@@ -23,22 +26,22 @@ export const handleSignUp = async (values: SignUpData) => {
     });
 
     if (authError) {
+      console.error('Auth error:', authError);
       if (authError.message === "User already registered") {
-        toast({
-          title: "Account Already Exists",
-          description: "Please sign in instead or use a different email address.",
-          variant: "destructive",
-        });
+        toast.error("Account already exists. Please sign in instead.");
         return null;
       }
       throw authError;
     }
 
     if (!authData.user) {
+      console.error('No user data returned after signup');
       throw new Error("No user data returned after signup");
     }
 
-    // Create company after successful signup
+    console.log('User created successfully:', authData.user.id);
+
+    // Create company
     const { data: companyData, error: companyError } = await supabase
       .from('companies')
       .insert([
@@ -55,6 +58,8 @@ export const handleSignUp = async (values: SignUpData) => {
       console.error('Company creation error:', companyError);
       throw new Error("Failed to create company profile");
     }
+
+    console.log('Company created successfully:', companyData.id);
 
     // Set trial dates
     const trialStart = new Date();
@@ -76,9 +81,12 @@ export const handleSignUp = async (values: SignUpData) => {
       throw new Error("Failed to update profile with company information");
     }
 
+    console.log('Profile updated successfully with company and trial info');
+    toast.success("Account created successfully!");
     return authData.user;
   } catch (error: any) {
     console.error('Signup error:', error);
+    toast.error(error.message || "Failed to create account");
     throw error;
   }
 };
