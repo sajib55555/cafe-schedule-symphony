@@ -3,7 +3,7 @@ import { Input } from "@/components/ui/input";
 import { UseFormReturn } from "react-hook-form";
 import * as z from "zod";
 
-const formSchema = z.object({
+export const formSchema = z.object({
   email: z.string().email("Invalid email address"),
   password: z.string().min(6, "Password must be at least 6 characters"),
   fullName: z.string().min(2, "Full name is required"),
@@ -17,8 +17,6 @@ type FormData = z.infer<typeof formSchema>;
 interface SignUpFormFieldsProps {
   form: UseFormReturn<FormData>;
 }
-
-export const formSchema = formSchema;
 
 export const SignUpFormFields = ({ form }: SignUpFormFieldsProps) => {
   return (
