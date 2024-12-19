@@ -28,7 +28,7 @@ const Subscription = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: 'your_stripe_price_id', // Replace with your actual Stripe price ID
+          priceId: 'price_1QVwHDFk4w8hjVcVAXnqBo0a', // Specific Stripe price ID provided by user
         }),
       });
 
