@@ -5,9 +5,6 @@ export type SignUpData = {
   email: string;
   password: string;
   fullName: string;
-  companyName: string;
-  industry: string | null;
-  companySize: string | null;
 };
 
 export const handleSignUp = async (values: SignUpData) => {
@@ -40,54 +37,6 @@ export const handleSignUp = async (values: SignUpData) => {
     }
 
     console.log('User created successfully:', authData.user.id);
-
-    // Set session to use the new user's credentials for subsequent requests
-    const { data: sessionData } = await supabase.auth.getSession();
-    if (!sessionData.session) {
-      throw new Error("No session available after signup");
-    }
-
-    // Create company with the authenticated session
-    const { data: companyData, error: companyError } = await supabase
-      .from('companies')
-      .insert([
-        {
-          name: values.companyName,
-          industry: values.industry,
-          size: values.companySize,
-        }
-      ])
-      .select()
-      .single();
-
-    if (companyError) {
-      console.error('Company creation error:', companyError);
-      throw companyError;
-    }
-
-    console.log('Company created successfully:', companyData.id);
-
-    // Set trial dates
-    const trialStart = new Date();
-    const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 30);
-
-    // Update profile with company_id and trial dates
-    const { error: profileError } = await supabase
-      .from('profiles')
-      .update({
-        company_id: companyData.id,
-        trial_start: trialStart.toISOString(),
-        trial_end: trialEnd.toISOString(),
-      })
-      .eq('id', authData.user.id);
-
-    if (profileError) {
-      console.error('Profile update error:', profileError);
-      throw profileError;
-    }
-
-    console.log('Profile updated successfully with company and trial info');
     return authData.user;
   } catch (error: any) {
     console.error('Signup error:', error);

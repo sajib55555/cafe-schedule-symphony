@@ -4,7 +4,6 @@ import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoFields } from "./signup/PersonalInfoFields";
-import { CompanyInfoFields } from "./signup/CompanyInfoFields";
 import { FormData, formSchema } from "./signup/types";
 import { handleSignUp } from "@/utils/auth";
 import { toast } from "sonner";
@@ -18,9 +17,6 @@ export const SignUpForm = () => {
       email: "",
       password: "",
       fullName: "",
-      companyName: "",
-      industry: "",
-      companySize: "",
     },
   });
 
@@ -30,9 +26,6 @@ export const SignUpForm = () => {
         email: data.email,
         password: data.password,
         fullName: data.fullName,
-        companyName: data.companyName,
-        industry: data.industry || null,
-        companySize: data.companySize || null,
       });
       
       if (user) {
@@ -48,10 +41,7 @@ export const SignUpForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
-        <div className="space-y-6">
-          <PersonalInfoFields form={form} />
-          <CompanyInfoFields form={form} />
-        </div>
+        <PersonalInfoFields form={form} />
         <Button type="submit" className="w-full">
           Create Account
         </Button>
