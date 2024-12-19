@@ -82,7 +82,6 @@ export const handleSignUp = async (values: SignUpData) => {
     }
 
     console.log('Profile updated successfully with company and trial info');
-    toast.success("Account created successfully!");
     return authData.user;
   } catch (error: any) {
     console.error('Signup error:', error);

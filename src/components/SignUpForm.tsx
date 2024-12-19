@@ -2,15 +2,14 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { supabase } from "@/integrations/supabase/client";
-import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoFields } from "./signup/PersonalInfoFields";
 import { CompanyInfoFields } from "./signup/CompanyInfoFields";
 import { FormData, formSchema } from "./signup/types";
+import { handleSignUp } from "@/utils/auth";
+import { toast } from "sonner";
 
 export const SignUpForm = () => {
-  const { toast } = useToast();
   const navigate = useNavigate();
 
   const form = useForm<FormData>({
@@ -25,64 +24,23 @@ export const SignUpForm = () => {
     },
   });
 
-  const handleSignUp = async (data: FormData) => {
+  const onSubmit = async (data: FormData) => {
     try {
-      // Sign up the user
-      const { error: signUpError } = await supabase.auth.signUp({
-        email: data.email,
-        password: data.password,
-        options: {
-          data: {
-            full_name: data.fullName,
-          },
-        },
-      });
-
-      if (signUpError) throw signUpError;
-
-      // Create company
-      const { data: companyData, error: companyError } = await supabase
-        .from("companies")
-        .insert([
-          {
-            name: data.companyName,
-            industry: data.industry || null,
-            size: data.companySize || null,
-          },
-        ])
-        .select()
-        .single();
-
-      if (companyError) throw companyError;
-
-      // Update user's profile with company_id
-      const { error: profileError } = await supabase
-        .from("profiles")
-        .update({ company_id: companyData.id })
-        .eq("email", data.email);
-
-      if (profileError) throw profileError;
-
-      toast({
-        title: "Success",
-        description: "Your account has been created. Please check your email to verify your account.",
-      });
-
-      // Navigate to index page
-      navigate("/");
+      const user = await handleSignUp(data);
+      
+      if (user) {
+        toast.success("Your account has been created. Please check your email to verify your account.");
+        navigate("/");
+      }
     } catch (error) {
       console.error("Error during sign up:", error);
-      toast({
-        title: "Error",
-        description: "There was an error creating your account. Please try again.",
-        variant: "destructive",
-      });
+      toast.error("There was an error creating your account. Please try again.");
     }
   };
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <div className="space-y-6">
           <PersonalInfoFields form={form} />
           <CompanyInfoFields form={form} />
