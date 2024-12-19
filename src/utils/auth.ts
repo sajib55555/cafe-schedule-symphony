@@ -41,7 +41,13 @@ export const handleSignUp = async (values: SignUpData) => {
 
     console.log('User created successfully:', authData.user.id);
 
-    // Create company
+    // Set session to use the new user's credentials for subsequent requests
+    const { data: sessionData } = await supabase.auth.getSession();
+    if (!sessionData.session) {
+      throw new Error("No session available after signup");
+    }
+
+    // Create company with the authenticated session
     const { data: companyData, error: companyError } = await supabase
       .from('companies')
       .insert([
