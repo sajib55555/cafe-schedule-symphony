@@ -10,18 +10,21 @@ import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 import Subscription from "./pages/Subscription";
 import UpgradePage from "./pages/UpgradePage";
+import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
 const App = () => {
   const [loading, setLoading] = useState(true);
   const [hasActiveTrial, setHasActiveTrial] = useState(false);
+  const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
+    checkSession();
     checkTrialStatus();
     
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
       if (session) {
         checkTrialStatus();
       } else {
@@ -33,6 +36,11 @@ const App = () => {
       subscription.unsubscribe();
     };
   }, []);
+
+  const checkSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+  };
 
   const checkTrialStatus = async () => {
     try {
@@ -76,14 +84,28 @@ const App = () => {
               <Route
                 path="/"
                 element={
-                  hasActiveTrial ? (
-                    <Layout>
-                      <Index />
-                    </Layout>
+                  session ? (
+                    hasActiveTrial ? (
+                      <Layout>
+                        <Index />
+                      </Layout>
+                    ) : (
+                      <Navigate to="/upgrade" replace />
+                    )
                   ) : (
-                    <Navigate to="/upgrade" replace />
+                    <Navigate to="/auth" replace />
                   )
                 }
+              />
+              <Route 
+                path="/auth" 
+                element={
+                  session ? (
+                    <Navigate to="/" replace />
+                  ) : (
+                    <Auth />
+                  )
+                } 
               />
               <Route path="/subscription" element={<Subscription />} />
               <Route path="/upgrade" element={<UpgradePage />} />
