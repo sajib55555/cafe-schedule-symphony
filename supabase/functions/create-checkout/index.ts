@@ -15,7 +15,10 @@ serve(async (req) => {
 
   try {
     const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
+    console.log('Initializing Stripe...'); // Debug log
+
     if (!stripeKey) {
+      console.error('Missing Stripe secret key');
       throw new Error('Missing Stripe secret key');
     }
 
@@ -26,6 +29,7 @@ serve(async (req) => {
     // Get the authorization header from the request
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
+      console.error('No authorization header provided');
       throw new Error('No authorization header');
     }
 
