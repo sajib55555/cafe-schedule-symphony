@@ -39,7 +39,7 @@ serve(async (req) => {
 
     // Get the user from the JWT token
     const token = authHeader.replace('Bearer ', '');
-    console.log('Processing request with token');
+    console.log('Processing request with token:', token);
 
     const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
     
