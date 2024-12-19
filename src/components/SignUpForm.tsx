@@ -2,10 +2,12 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { SignUpFormFields, formSchema, FormData } from "./SignUpFormFields";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
+import { PersonalInfoFields } from "./signup/PersonalInfoFields";
+import { CompanyInfoFields } from "./signup/CompanyInfoFields";
+import { FormData, formSchema } from "./signup/types";
 
 export const SignUpForm = () => {
   const { toast } = useToast();
@@ -81,7 +83,10 @@ export const SignUpForm = () => {
   return (
     <Form {...form}>
       <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-6">
-        <SignUpFormFields form={form} />
+        <div className="space-y-6">
+          <PersonalInfoFields form={form} />
+          <CompanyInfoFields form={form} />
+        </div>
         <Button type="submit" className="w-full">
           Create Account
         </Button>
