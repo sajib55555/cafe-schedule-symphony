@@ -11,7 +11,19 @@ export const handleSignUp = async (values: SignUpData) => {
   try {
     console.log('Starting signup process with values:', values);
 
-    // First create the user account
+    // First check if user exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', values.email)
+      .single();
+
+    if (existingUser) {
+      toast.error("An account with this email already exists. Please sign in instead.");
+      return null;
+    }
+
+    // Create the user account
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
@@ -59,7 +71,11 @@ export const handleSignUp = async (values: SignUpData) => {
     return authData.user;
   } catch (error: any) {
     console.error('Signup error:', error);
-    toast.error(error.message || "Failed to create account");
+    if (error.message.includes("already registered")) {
+      toast.error("An account with this email already exists. Please sign in instead.");
+    } else {
+      toast.error(error.message || "Failed to create account");
+    }
     throw error;
   }
 };

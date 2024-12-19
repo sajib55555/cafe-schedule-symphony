@@ -32,9 +32,9 @@ export const SignUpForm = () => {
         toast.success("Your account has been created. Please check your email to verify your account.");
         navigate("/");
       }
-    } catch (error) {
+    } catch (error: any) {
+      // Error is already handled in handleSignUp
       console.error("Error during sign up:", error);
-      // Toast error is already handled in handleSignUp
     }
   };
 
