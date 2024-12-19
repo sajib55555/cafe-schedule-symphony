@@ -12,7 +12,6 @@ export type SignUpData = {
 
 export const handleSignUp = async (values: SignUpData) => {
   try {
-    // First attempt to sign up
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,

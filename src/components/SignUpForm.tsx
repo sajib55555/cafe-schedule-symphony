@@ -8,11 +8,13 @@ import { SignUpFormFields, formSchema } from "./SignUpFormFields";
 import { handleSignUp } from "@/utils/auth";
 import type { z } from "zod";
 
+type FormData = z.infer<typeof formSchema>;
+
 export function SignUpForm() {
   const { toast } = useToast();
   const navigate = useNavigate();
 
-  const form = useForm<z.infer<typeof formSchema>>({
+  const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
     defaultValues: {
       email: "",
@@ -24,9 +26,16 @@ export function SignUpForm() {
     },
   });
 
-  const onSubmit = async (values: z.infer<typeof formSchema>) => {
+  const onSubmit = async (values: FormData) => {
     try {
-      const user = await handleSignUp(values);
+      const user = await handleSignUp({
+        email: values.email,
+        password: values.password,
+        fullName: values.fullName,
+        companyName: values.companyName,
+        industry: values.industry,
+        companySize: values.companySize,
+      });
       
       if (user) {
         toast({
