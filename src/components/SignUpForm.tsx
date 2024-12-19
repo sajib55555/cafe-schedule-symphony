@@ -35,7 +35,20 @@ export function SignUpForm() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Create company first
+      // Sign up user first
+      const { data: authData, error: authError } = await supabase.auth.signUp({
+        email: values.email,
+        password: values.password,
+        options: {
+          data: {
+            full_name: values.fullName,
+          },
+        },
+      });
+
+      if (authError) throw authError;
+
+      // Now that we're authenticated, create company
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .insert([
@@ -50,24 +63,12 @@ export function SignUpForm() {
 
       if (companyError) throw companyError;
 
-      // Sign up user
-      const { data: authData, error: authError } = await supabase.auth.signUp({
-        email: values.email,
-        password: values.password,
-        options: {
-          data: {
-            full_name: values.fullName,
-          },
-        },
-      });
-
-      if (authError) throw authError;
-
-      // Update profile with company_id and trial dates
+      // Set trial dates
       const trialStart = new Date();
       const trialEnd = new Date();
       trialEnd.setDate(trialEnd.getDate() + 30);
 
+      // Update profile with company_id and trial dates
       const { error: profileError } = await supabase
         .from('profiles')
         .update({
