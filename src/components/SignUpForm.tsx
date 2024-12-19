@@ -26,7 +26,14 @@ export const SignUpForm = () => {
 
   const onSubmit = async (data: FormData) => {
     try {
-      const user = await handleSignUp(data);
+      const user = await handleSignUp({
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName,
+        companyName: data.companyName,
+        industry: data.industry || null,
+        companySize: data.companySize || null,
+      });
       
       if (user) {
         toast.success("Your account has been created. Please check your email to verify your account.");
