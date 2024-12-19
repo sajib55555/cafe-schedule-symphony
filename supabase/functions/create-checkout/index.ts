@@ -14,6 +14,11 @@ serve(async (req) => {
   }
 
   try {
+    // Initialize Stripe
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    });
+
     // Initialize Supabase client with admin privileges
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
@@ -56,14 +61,7 @@ serve(async (req) => {
 
     console.log('Creating checkout session for email:', email);
 
-    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
-      apiVersion: '2023-10-16',
-    });
-
-    const { priceId } = await req.json();
-    console.log('Price ID:', priceId);
-
-    // First get or create the customer
+    // Get or create customer
     const customers = await stripe.customers.list({
       email: email,
       limit: 1,
@@ -80,6 +78,9 @@ serve(async (req) => {
       customerId = newCustomer.id;
       console.log('Created new customer:', customerId);
     }
+
+    const { priceId } = await req.json();
+    console.log('Price ID:', priceId);
 
     console.log('Creating payment session...');
     const session = await stripe.checkout.sessions.create({
