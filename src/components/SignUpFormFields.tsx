@@ -12,7 +12,7 @@ export const formSchema = z.object({
   companySize: z.string().optional(),
 });
 
-type FormData = z.infer<typeof formSchema>;
+export type FormData = z.infer<typeof formSchema>;
 
 interface SignUpFormFieldsProps {
   form: UseFormReturn<FormData>;

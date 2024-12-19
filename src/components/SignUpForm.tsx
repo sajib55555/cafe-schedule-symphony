@@ -2,19 +2,10 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { SignUpFormFields, formSchema } from "./SignUpFormFields";
+import { SignUpFormFields, formSchema, FormData } from "./SignUpFormFields";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/components/ui/use-toast";
 import { useNavigate } from "react-router-dom";
-
-type FormData = {
-  email: string;
-  password: string;
-  fullName: string;
-  companyName: string;
-  industry?: string;
-  companySize?: string;
-};
 
 export const SignUpForm = () => {
   const { toast } = useToast();
