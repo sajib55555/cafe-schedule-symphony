@@ -8,7 +8,7 @@ import { FormData, formSchema } from "./signup/types";
 import { handleSignUp } from "@/utils/auth";
 import { toast } from "sonner";
 
-export const SignUpForm = () => {
+export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
 
   const form = useForm<FormData>({
@@ -42,9 +42,23 @@ export const SignUpForm = () => {
     <Form {...form}>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <PersonalInfoFields form={form} />
-        <Button type="submit" className="w-full">
-          Create Account
-        </Button>
+        <div className="space-y-4">
+          <Button type="submit" className="w-full">
+            Create Account
+          </Button>
+          <div className="text-center">
+            <div className="text-sm text-muted-foreground">
+              Already have an account?{" "}
+              <button
+                type="button"
+                onClick={() => onModeChange('signin')}
+                className="text-primary hover:underline"
+              >
+                Sign in
+              </button>
+            </div>
+          </div>
+        </div>
       </form>
     </Form>
   );

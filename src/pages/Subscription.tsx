@@ -1,6 +1,24 @@
 import { SignUpForm } from "@/components/SignUpForm";
+import { SignInForm } from "@/components/SignInForm";
+import { ResetPasswordForm } from "@/components/ResetPasswordForm";
+import { useState } from "react";
 
 const Subscription = () => {
+  const [authMode, setAuthMode] = useState<'signup' | 'signin' | 'reset'>('signin');
+
+  const getFormTitle = () => {
+    switch (authMode) {
+      case 'signup':
+        return 'Start Your Free Trial';
+      case 'signin':
+        return 'Welcome Back';
+      case 'reset':
+        return 'Reset Password';
+      default:
+        return '';
+    }
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Hero Section */}
@@ -13,11 +31,13 @@ const Subscription = () => {
         </p>
       </section>
 
-      {/* Sign Up Form Section */}
+      {/* Auth Form Section */}
       <section className="py-16 px-4">
         <div className="max-w-md mx-auto bg-card p-8 rounded-lg shadow-lg border">
-          <h2 className="text-2xl font-bold text-center mb-8">Start Your Free Trial</h2>
-          <SignUpForm />
+          <h2 className="text-2xl font-bold text-center mb-8">{getFormTitle()}</h2>
+          {authMode === 'signup' && <SignUpForm onModeChange={setAuthMode} />}
+          {authMode === 'signin' && <SignInForm onModeChange={setAuthMode} />}
+          {authMode === 'reset' && <ResetPasswordForm onModeChange={setAuthMode} />}
         </div>
       </section>
 
