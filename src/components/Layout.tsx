@@ -57,6 +57,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
     }
   };
 
+  const handleUpgrade = () => {
+    navigate("/subscription");
+  };
+
   return (
     <div className="min-h-screen bg-[#FDF6E3]">
       <header className="bg-white shadow-sm">
@@ -64,9 +68,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
           <div className="flex items-center space-x-4">
             <h1 className="text-xl font-semibold text-secondary">Café Schedule Manager</h1>
             {trialDaysLeft !== null && (
-              <span className="text-sm text-primary-foreground bg-primary px-3 py-1 rounded-full">
-                {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} left in trial
-              </span>
+              <div className="flex items-center space-x-2">
+                <span className="text-sm text-primary-foreground bg-primary px-3 py-1 rounded-full">
+                  {trialDaysLeft} {trialDaysLeft === 1 ? 'day' : 'days'} left in trial
+                </span>
+                <Button 
+                  variant="secondary" 
+                  size="sm" 
+                  onClick={handleUpgrade}
+                >
+                  Upgrade Now
+                </Button>
+              </div>
             )}
           </div>
           <Button variant="outline" onClick={handleSignOut}>Sign Out</Button>
