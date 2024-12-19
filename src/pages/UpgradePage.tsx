@@ -28,7 +28,7 @@ const UpgradePage = () => {
           'Content-Type': 'application/json',
         },
         body: JSON.stringify({
-          priceId: 'price_1QVwHDFk4w8hjVcVAXnqBo0a',
+          priceId: 'price_1QVwDpFk4w8hjVcVL872Hll8',
         }),
       });
 
