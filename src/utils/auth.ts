@@ -14,18 +14,6 @@ export const handleSignUp = async (values: SignUpData) => {
   try {
     console.log('Starting signup process with values:', values);
 
-    // Check if user exists first using maybeSingle() instead of single()
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', values.email)
-      .maybeSingle();
-
-    if (existingUser) {
-      toast.error("An account with this email already exists. Please sign in instead.");
-      return null;
-    }
-
     // First create the user account
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: values.email,
@@ -39,6 +27,10 @@ export const handleSignUp = async (values: SignUpData) => {
 
     if (authError) {
       console.error('Auth error:', authError);
+      if (authError.message === "User already registered") {
+        toast.error("An account with this email already exists. Please sign in instead.");
+        return null;
+      }
       throw authError;
     }
 
@@ -93,10 +85,6 @@ export const handleSignUp = async (values: SignUpData) => {
     return authData.user;
   } catch (error: any) {
     console.error('Signup error:', error);
-    if (error.message === "User already registered") {
-      toast.error("Account already exists. Please sign in instead.");
-      return null;
-    }
     toast.error(error.message || "Failed to create account");
     throw error;
   }

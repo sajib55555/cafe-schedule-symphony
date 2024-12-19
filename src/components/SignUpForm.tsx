@@ -41,7 +41,7 @@ export const SignUpForm = () => {
       }
     } catch (error) {
       console.error("Error during sign up:", error);
-      toast.error("There was an error creating your account. Please try again.");
+      // Toast error is already handled in handleSignUp
     }
   };
 
