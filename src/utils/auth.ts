@@ -14,12 +14,12 @@ export const handleSignUp = async (values: SignUpData) => {
   try {
     console.log('Starting signup process with values:', values);
 
-    // Check if user exists first
+    // Check if user exists first using maybeSingle() instead of single()
     const { data: existingUser } = await supabase
       .from('profiles')
       .select('id')
       .eq('email', values.email)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       toast.error("An account with this email already exists. Please sign in instead.");
