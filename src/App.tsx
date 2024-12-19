@@ -9,6 +9,7 @@ import Index from "./pages/Index";
 import { useEffect, useState } from "react";
 import { supabase } from "./integrations/supabase/client";
 import Subscription from "./pages/Subscription";
+import UpgradePage from "./pages/UpgradePage";
 
 const queryClient = new QueryClient();
 
@@ -80,11 +81,12 @@ const App = () => {
                       <Index />
                     </Layout>
                   ) : (
-                    <Navigate to="/subscription" replace />
+                    <Navigate to="/upgrade" replace />
                   )
                 }
               />
               <Route path="/subscription" element={<Subscription />} />
+              <Route path="/upgrade" element={<UpgradePage />} />
               <Route path="*" element={<Navigate to="/" replace />} />
             </Routes>
           </BrowserRouter>
