@@ -36,6 +36,25 @@ export const handleSignUp = async (values: SignUpData) => {
       throw new Error("No user data returned after signup");
     }
 
+    // Set trial dates
+    const trialStart = new Date();
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 30); // 30-day trial
+
+    // Update profile with trial dates
+    const { error: profileError } = await supabase
+      .from('profiles')
+      .update({
+        trial_start: trialStart.toISOString(),
+        trial_end: trialEnd.toISOString(),
+      })
+      .eq('id', authData.user.id);
+
+    if (profileError) {
+      console.error('Profile update error:', profileError);
+      throw profileError;
+    }
+
     console.log('User created successfully:', authData.user.id);
     return authData.user;
   } catch (error: any) {
