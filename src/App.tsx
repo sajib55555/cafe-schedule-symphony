@@ -18,6 +18,19 @@ const App = () => {
 
   useEffect(() => {
     checkTrialStatus();
+    
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      if (session) {
+        checkTrialStatus();
+      } else {
+        setHasActiveTrial(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, []);
 
   const checkTrialStatus = async () => {
