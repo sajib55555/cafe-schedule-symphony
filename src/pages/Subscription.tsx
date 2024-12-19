@@ -1,109 +1,104 @@
-import { SignUpForm } from "@/components/SignUpForm";
-import { SignInForm } from "@/components/SignInForm";
-import { ResetPasswordForm } from "@/components/ResetPasswordForm";
 import { useState } from "react";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 const Subscription = () => {
-  const [authMode, setAuthMode] = useState<'signup' | 'signin' | 'reset'>('signin');
+  const { toast } = useToast();
+  const [loading, setLoading] = useState(false);
 
-  const getFormTitle = () => {
-    switch (authMode) {
-      case 'signup':
-        return 'Start Your Free Trial';
-      case 'signin':
-        return 'Welcome Back';
-      case 'reset':
-        return 'Reset Password';
-      default:
-        return '';
+  const handleUpgrade = async () => {
+    try {
+      setLoading(true);
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Error",
+          description: "Please sign in to upgrade your subscription",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const response = await fetch('/functions/v1/create-checkout', {
+        method: 'POST',
+        headers: {
+          'Authorization': `Bearer ${session.access_token}`,
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          priceId: 'your_stripe_price_id', // Replace with your actual Stripe price ID
+        }),
+      });
+
+      const { url, error } = await response.json();
+      
+      if (error) throw new Error(error);
+      if (!url) throw new Error('No checkout URL returned');
+
+      window.location.href = url;
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start upgrade process. Please try again.",
+        variant: "destructive",
+      });
+    } finally {
+      setLoading(false);
     }
   };
 
   return (
     <div className="min-h-screen bg-background">
-      {/* Hero Section */}
-      <section className="py-20 px-4 text-center">
-        <h1 className="text-5xl font-bold mb-6">
-          Streamline Your Staff Management
-        </h1>
-        <p className="text-xl text-muted-foreground mb-8 max-w-2xl mx-auto">
-          Join thousands of businesses that trust us with their scheduling needs. Start your 30-day free trial today.
-        </p>
-      </section>
-
-      {/* Auth Form Section */}
-      <section className="py-16 px-4">
-        <div className="max-w-md mx-auto bg-card p-8 rounded-lg shadow-lg border">
-          <h2 className="text-2xl font-bold text-center mb-8">{getFormTitle()}</h2>
-          {authMode === 'signup' && <SignUpForm onModeChange={setAuthMode} />}
-          {authMode === 'signin' && <SignInForm onModeChange={setAuthMode} />}
-          {authMode === 'reset' && <ResetPasswordForm onModeChange={setAuthMode} />}
+      <div className="max-w-4xl mx-auto px-4 py-16">
+        <div className="text-center mb-12">
+          <h1 className="text-4xl font-bold mb-4">Upgrade Your Plan</h1>
+          <p className="text-xl text-muted-foreground">
+            Get full access to all features and start managing your schedule effectively
+          </p>
         </div>
-      </section>
 
-      {/* Features Section */}
-      <section className="py-16 bg-muted/50">
-        <div className="max-w-7xl mx-auto px-4">
-          <h2 className="text-3xl font-bold text-center mb-12">
-            Everything You Need to Manage Your Team
-          </h2>
-          <div className="grid md:grid-cols-3 gap-8">
-            <FeatureCard
-              title="Smart Scheduling"
-              description="Create and manage employee schedules with ease. Our intuitive drag-and-drop interface makes scheduling a breeze."
-            />
-            <FeatureCard
-              title="Time & Attendance"
-              description="Track employee hours, breaks, and overtime automatically. Generate accurate timesheets with one click."
-            />
-            <FeatureCard
-              title="Team Communication"
-              description="Keep everyone on the same page with built-in messaging, shift swapping, and announcements."
-            />
+        <div className="bg-card rounded-lg shadow-lg p-8 max-w-md mx-auto">
+          <div className="text-center mb-8">
+            <div className="text-4xl font-bold mb-2">£9.95<span className="text-lg font-normal">/month</span></div>
+            <p className="text-muted-foreground">Full access to all features</p>
           </div>
-        </div>
-      </section>
 
-      {/* Benefits Section */}
-      <section className="py-20 px-4">
-        <div className="max-w-7xl mx-auto">
-          <h2 className="text-3xl font-bold text-center mb-12">Why Choose Us?</h2>
-          <div className="grid md:grid-cols-2 lg:grid-cols-4 gap-8">
-            <BenefitCard
-              title="Save Time"
-              description="Reduce scheduling time by up to 80% with our automated tools"
-            />
-            <BenefitCard
-              title="Reduce Costs"
-              description="Cut labor costs by optimizing schedules and preventing overtime"
-            />
-            <BenefitCard
-              title="Improve Compliance"
-              description="Stay compliant with labor laws and industry regulations"
-            />
-            <BenefitCard
-              title="Boost Productivity"
-              description="Increase team efficiency with better schedule management"
-            />
-          </div>
+          <ul className="space-y-4 mb-8">
+            <li className="flex items-center">
+              <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Unlimited staff management
+            </li>
+            <li className="flex items-center">
+              <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Advanced scheduling features
+            </li>
+            <li className="flex items-center">
+              <svg className="w-5 h-5 text-green-500 mr-2" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M5 13l4 4L19 7" />
+              </svg>
+              Export schedules to PDF
+            </li>
+          </ul>
+
+          <Button 
+            className="w-full" 
+            size="lg"
+            onClick={handleUpgrade}
+            disabled={loading}
+          >
+            {loading ? "Processing..." : "Upgrade Now"}
+          </Button>
         </div>
-      </section>
+      </div>
     </div>
   );
 };
-
-const FeatureCard = ({ title, description }: { title: string; description: string }) => (
-  <div className="p-6 rounded-lg bg-background border">
-    <h3 className="text-xl font-semibold mb-3">{title}</h3>
-    <p className="text-muted-foreground">{description}</p>
-  </div>
-);
-
-const BenefitCard = ({ title, description }: { title: string; description: string }) => (
-  <div className="text-center p-6">
-    <h3 className="text-lg font-semibold mb-2">{title}</h3>
-    <p className="text-muted-foreground">{description}</p>
-  </div>
-);
 
 export default Subscription;

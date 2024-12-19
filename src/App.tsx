@@ -40,14 +40,17 @@ const App = () => {
       if (session?.user) {
         const { data: profile } = await supabase
           .from('profiles')
-          .select('trial_start, trial_end')
+          .select('trial_start, trial_end, subscription_status')
           .eq('id', session.user.id)
           .single();
 
         if (profile) {
           const now = new Date();
           const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
-          setHasActiveTrial(trialEnd ? trialEnd > now : false);
+          setHasActiveTrial(
+            profile.subscription_status === 'active' || 
+            (trialEnd ? trialEnd > now : false)
+          );
         }
       }
     } catch (error) {
