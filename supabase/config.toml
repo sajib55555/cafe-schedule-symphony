@@ -26,5 +26,6 @@ port = 54325
 [realtime]
 enabled = true
 
+[functions]
 [functions.create-checkout]
 verify_jwt = true
