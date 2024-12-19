@@ -35,7 +35,7 @@ export function SignUpForm() {
 
   const onSubmit = async (values: z.infer<typeof formSchema>) => {
     try {
-      // Sign up user first
+      // First attempt to sign up
       const { data: authData, error: authError } = await supabase.auth.signUp({
         email: values.email,
         password: values.password,
@@ -46,9 +46,24 @@ export function SignUpForm() {
         },
       });
 
-      if (authError) throw authError;
+      if (authError) {
+        // Handle user already exists error specifically
+        if (authError.message === "User already registered") {
+          toast({
+            title: "Account Already Exists",
+            description: "Please sign in instead or use a different email address.",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw authError;
+      }
 
-      // Now that we're authenticated, create company
+      if (!authData.user) {
+        throw new Error("No user data returned after signup");
+      }
+
+      // Create company after successful signup
       const { data: companyData, error: companyError } = await supabase
         .from('companies')
         .insert([
@@ -61,7 +76,10 @@ export function SignUpForm() {
         .select()
         .single();
 
-      if (companyError) throw companyError;
+      if (companyError) {
+        console.error('Company creation error:', companyError);
+        throw new Error("Failed to create company profile");
+      }
 
       // Set trial dates
       const trialStart = new Date();
@@ -76,9 +94,12 @@ export function SignUpForm() {
           trial_start: trialStart.toISOString(),
           trial_end: trialEnd.toISOString(),
         })
-        .eq('id', authData.user!.id);
+        .eq('id', authData.user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw new Error("Failed to update profile with company information");
+      }
 
       toast({
         title: "Success!",
