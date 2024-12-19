@@ -2,15 +2,21 @@ import { zodResolver } from "@hookform/resolvers/zod";
 import { useForm } from "react-hook-form";
 import { Button } from "@/components/ui/button";
 import { Form } from "@/components/ui/form";
-import { useToast } from "@/hooks/use-toast";
-import { useNavigate } from "react-router-dom";
 import { SignUpFormFields, formSchema } from "./SignUpFormFields";
-import { handleSignUp } from "@/utils/auth";
-import type { z } from "zod";
+import { supabase } from "@/integrations/supabase/client";
+import { useToast } from "@/components/ui/use-toast";
+import { useNavigate } from "react-router-dom";
 
-type FormData = z.infer<typeof formSchema>;
+type FormData = {
+  email: string;
+  password: string;
+  fullName: string;
+  companyName: string;
+  industry?: string;
+  companySize?: string;
+};
 
-export function SignUpForm() {
+export const SignUpForm = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
 
@@ -26,29 +32,56 @@ export function SignUpForm() {
     },
   });
 
-  const onSubmit = async (values: FormData) => {
+  const handleSignUp = async (data: FormData) => {
     try {
-      const user = await handleSignUp({
-        email: values.email,
-        password: values.password,
-        fullName: values.fullName,
-        companyName: values.companyName,
-        industry: values.industry,
-        companySize: values.companySize,
+      // Sign up the user
+      const { error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+          },
+        },
       });
-      
-      if (user) {
-        toast({
-          title: "Success!",
-          description: "Your account has been created and your 30-day trial has started.",
-        });
-        navigate('/');
-      }
-    } catch (error: any) {
-      console.error('Error:', error);
+
+      if (signUpError) throw signUpError;
+
+      // Create company
+      const { data: companyData, error: companyError } = await supabase
+        .from("companies")
+        .insert([
+          {
+            name: data.companyName,
+            industry: data.industry || null,
+            size: data.companySize || null,
+          },
+        ])
+        .select()
+        .single();
+
+      if (companyError) throw companyError;
+
+      // Update user's profile with company_id
+      const { error: profileError } = await supabase
+        .from("profiles")
+        .update({ company_id: companyData.id })
+        .eq("email", data.email);
+
+      if (profileError) throw profileError;
+
+      toast({
+        title: "Success",
+        description: "Your account has been created. Please check your email to verify your account.",
+      });
+
+      // Navigate to index page
+      navigate("/");
+    } catch (error) {
+      console.error("Error during sign up:", error);
       toast({
         title: "Error",
-        description: error.message || "Something went wrong. Please try again.",
+        description: "There was an error creating your account. Please try again.",
         variant: "destructive",
       });
     }
@@ -56,12 +89,12 @@ export function SignUpForm() {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+      <form onSubmit={form.handleSubmit(handleSignUp)} className="space-y-6">
         <SignUpFormFields form={form} />
         <Button type="submit" className="w-full">
-          Start Free Trial
+          Create Account
         </Button>
       </form>
     </Form>
   );
-}
+};
