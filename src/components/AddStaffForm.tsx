@@ -14,7 +14,8 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
     email: "",
     phone: "",
     availability: [] as string[],
-    hours: 0
+    hours: 0,
+    hourly_pay: 0
   });
   const { toast } = useToast();
 
@@ -44,7 +45,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
     };
 
     setStaff([...staff, employee]);
-    setNewEmployee({ name: "", role: "", email: "", phone: "", availability: [], hours: 0 });
+    setNewEmployee({ name: "", role: "", email: "", phone: "", availability: [], hours: 0, hourly_pay: 0 });
     toast({
       title: "Success",
       description: "New staff member added successfully",
@@ -100,6 +101,18 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           value={newEmployee.phone}
           onChange={(e) => setNewEmployee({ ...newEmployee, phone: e.target.value })}
           placeholder="Enter phone number"
+        />
+      </div>
+      <div className="space-y-2">
+        <Label htmlFor="hourly_pay">Hourly Pay ($) *</Label>
+        <Input
+          id="hourly_pay"
+          type="number"
+          min="0"
+          step="0.01"
+          value={newEmployee.hourly_pay}
+          onChange={(e) => setNewEmployee({ ...newEmployee, hourly_pay: parseFloat(e.target.value) })}
+          placeholder="Enter hourly pay rate"
         />
       </div>
       <div className="space-y-2">

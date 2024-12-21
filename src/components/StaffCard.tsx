@@ -18,6 +18,11 @@ export function StaffCard({ employee, onEdit }: {
     });
   };
 
+  const calculateMonthlyWages = () => {
+    const monthlyWages = employee.hours * employee.hourly_pay;
+    return monthlyWages.toFixed(2);
+  };
+
   return (
     <Card className="p-4 hover:shadow-lg transition-shadow">
       <div className="space-y-2">
@@ -29,6 +34,12 @@ export function StaffCard({ employee, onEdit }: {
             <p className="text-sm text-gray-600">{employee.phone}</p>
             <p className="text-sm text-gray-600 mt-2">
               Monthly Hours: {employee.hours} hrs
+            </p>
+            <p className="text-sm text-gray-600">
+              Hourly Pay: ${employee.hourly_pay}/hr
+            </p>
+            <p className="text-sm font-semibold text-primary mt-1">
+              Monthly Wages: ${calculateMonthlyWages()}
             </p>
           </div>
           <div className="space-y-2">

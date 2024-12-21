@@ -126,6 +126,7 @@ export type Database = {
           availability: string[] | null
           created_at: string
           email: string | null
+          hourly_pay: number | null
           hours: number | null
           id: number
           name: string
@@ -137,6 +138,7 @@ export type Database = {
           availability?: string[] | null
           created_at?: string
           email?: string | null
+          hourly_pay?: number | null
           hours?: number | null
           id?: number
           name: string
@@ -148,6 +150,7 @@ export type Database = {
           availability?: string[] | null
           created_at?: string
           email?: string | null
+          hourly_pay?: number | null
           hours?: number | null
           id?: number
           name?: string

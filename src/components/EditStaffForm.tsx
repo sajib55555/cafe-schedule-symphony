@@ -81,6 +81,19 @@ export function EditStaffForm({
         />
       </div>
       <div className="space-y-2">
+        <Label htmlFor="edit-hourly-pay">Hourly Pay ($)</Label>
+        <Input
+          id="edit-hourly-pay"
+          type="number"
+          min="0"
+          step="0.01"
+          value={employee.hourly_pay}
+          onChange={(e) => setStaff(staff.map(emp => 
+            emp.id === employee.id ? { ...emp, hourly_pay: parseFloat(e.target.value) } : emp
+          ))}
+        />
+      </div>
+      <div className="space-y-2">
         <Label>Availability</Label>
         <div className="grid grid-cols-2 gap-2">
           {daysOfWeek.map((day) => (
