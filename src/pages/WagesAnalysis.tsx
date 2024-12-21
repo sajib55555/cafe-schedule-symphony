@@ -8,6 +8,9 @@ import { CurrencySelector } from "@/components/wages/CurrencySelector";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
+import { Button } from "@/components/ui/button";
+import { useNavigate } from "react-router-dom";
+import { Home } from "lucide-react";
 
 const WagesAnalysis = () => {
   const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
@@ -15,6 +18,11 @@ const WagesAnalysis = () => {
   const [yearlyPrediction, setYearlyPrediction] = useState<number>(0);
   const { session } = useAuth();
   const { toast } = useToast();
+  const navigate = useNavigate();
+
+  const handleBackToIndex = () => {
+    navigate("/dashboard");
+  };
 
   useEffect(() => {
     const loadWageData = async () => {
@@ -68,7 +76,18 @@ const WagesAnalysis = () => {
   return (
     <Layout>
       <div className="container mx-auto py-8">
-        <h1 className="text-3xl font-bold mb-8">Staff Wages Analysis</h1>
+        <div className="flex justify-between items-center mb-8">
+          <h1 className="text-3xl font-bold">Staff Wages Analysis</h1>
+          <Button 
+            variant="outline" 
+            size="sm" 
+            onClick={handleBackToIndex}
+            className="flex items-center gap-2"
+          >
+            <Home className="h-4 w-4" />
+            Back to Dashboard
+          </Button>
+        </div>
         
         <div className="grid gap-8 md:grid-cols-2">
           <div className="space-y-8">
