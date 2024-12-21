@@ -36,10 +36,6 @@ export const handleSignUp = async (values: SignUpData) => {
 
     if (authError) {
       console.error('Auth error:', authError);
-      if (authError.message === "User already registered") {
-        toast.error("An account with this email already exists. Please sign in instead.");
-        return null;
-      }
       throw authError;
     }
 
@@ -48,7 +44,10 @@ export const handleSignUp = async (values: SignUpData) => {
       throw new Error("No user data returned after signup");
     }
 
-    // Create a new company for the user
+    // Wait for a short time to ensure the user is created and session is established
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Create a new company for the user using the established session
     const { data: companyData, error: companyError } = await supabase
       .from('companies')
       .insert([
@@ -66,7 +65,7 @@ export const handleSignUp = async (values: SignUpData) => {
       throw companyError;
     }
 
-    // Set trial dates and update profile with company_id
+    // Set trial dates
     const trialStart = new Date();
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 2); // 2 days trial period
@@ -77,7 +76,8 @@ export const handleSignUp = async (values: SignUpData) => {
       .update({
         trial_start: trialStart.toISOString(),
         trial_end: trialEnd.toISOString(),
-        company_id: companyData.id
+        company_id: companyData.id,
+        full_name: values.fullName
       })
       .eq('id', authData.user.id);
 
