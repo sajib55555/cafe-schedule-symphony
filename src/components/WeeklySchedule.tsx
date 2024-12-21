@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { format, startOfWeek, addDays, addWeeks, subWeeks } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { useStaff } from '@/contexts/StaffContext';
@@ -42,13 +42,51 @@ export function WeeklySchedule() {
     role: 'Barista'
   });
 
-  const days = Array.from({ length: 7 }, (_, index) => {
-    const date = addDays(selectedWeekStart, index);
-    return {
-      name: format(date, 'EEE, MMM d'),
-      fullDate: format(date, 'yyyy-MM-dd')
+  // Load existing shifts when component mounts or week changes
+  useEffect(() => {
+    const loadShifts = async () => {
+      const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+      const endOfWeekDate = addDays(selectedWeekStart, 7);
+      
+      const { data: existingShifts, error } = await supabase
+        .from('shifts')
+        .select('*, staff(name, role)')
+        .gte('start_time', `${weekStartStr}T00:00:00`)
+        .lt('start_time', format(endOfWeekDate, 'yyyy-MM-dd'));
+
+      if (error) {
+        console.error('Error loading shifts:', error);
+        return;
+      }
+
+      if (existingShifts) {
+        const formattedShifts: { [weekStart: string]: StaffShifts } = {};
+        formattedShifts[weekStartStr] = {};
+
+        existingShifts.forEach((shift) => {
+          if (!shift.staff?.name) return;
+          
+          const shiftDate = format(new Date(shift.start_time), 'yyyy-MM-dd');
+          const startTime = format(new Date(shift.start_time), 'HH:mm');
+          const endTime = format(new Date(shift.end_time), 'HH:mm');
+
+          if (!formattedShifts[weekStartStr][shift.staff.name]) {
+            formattedShifts[weekStartStr][shift.staff.name] = {};
+          }
+
+          formattedShifts[weekStartStr][shift.staff.name][shiftDate] = {
+            startTime,
+            endTime,
+            role: shift.role as 'Barista' | 'Floor'
+          };
+        });
+
+        setShifts(formattedShifts);
+      }
     };
-  });
+
+    loadShifts();
+  }, [selectedWeekStart]);
 
   const handleSaveSchedule = async () => {
     setIsSaving(true);
@@ -73,7 +111,10 @@ export function WeeklySchedule() {
       
       for (const [staffName, staffShifts] of Object.entries(currentWeekShifts)) {
         const staffMember = staff.find(s => s.name === staffName);
-        if (!staffMember) continue;
+        if (!staffMember?.id) {
+          console.error(`Staff member ${staffName} not found or has no ID`);
+          continue;
+        }
 
         for (const [date, shift] of Object.entries(staffShifts)) {
           shiftsToInsert.push({
@@ -90,7 +131,10 @@ export function WeeklySchedule() {
           .from('shifts')
           .insert(shiftsToInsert);
 
-        if (insertError) throw insertError;
+        if (insertError) {
+          console.error('Insert error:', insertError);
+          throw insertError;
+        }
       }
 
       toast({
@@ -224,7 +268,13 @@ export function WeeklySchedule() {
     );
   };
 
-  const currentWeekShifts = shifts[format(selectedWeekStart, 'yyyy-MM-dd')] || {};
+  const days = Array.from({ length: 7 }, (_, index) => {
+    const date = addDays(selectedWeekStart, index);
+    return {
+      name: format(date, 'EEE, MMM d'),
+      fullDate: format(date, 'yyyy-MM-dd')
+    };
+  });
 
   return (
     <div className="space-y-4">
