@@ -28,7 +28,7 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
       
       const { data: existingShifts, error } = await supabase
         .from('shifts')
-        .select('*, staff(name, role)')
+        .select('*, staff(id, name, role)')
         .gte('start_time', `${weekStartStr}T00:00:00`)
         .lt('start_time', format(endOfWeekDate, 'yyyy-MM-dd'));
 
@@ -75,6 +75,7 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
       const startOfWeekDate = new Date(weekStartStr);
       const endOfWeekDate = addDays(startOfWeekDate, 7);
       
+      // Delete existing shifts for the week
       const { error: deleteError } = await supabase
         .from('shifts')
         .delete()
