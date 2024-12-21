@@ -109,7 +109,11 @@ const App = () => {
                 path="/auth" 
                 element={
                   session ? (
-                    <Navigate to="/" replace />
+                    hasAccess ? (
+                      <Navigate to="/" replace />
+                    ) : (
+                      <Navigate to="/upgrade" replace />
+                    )
                   ) : (
                     <Auth />
                   )
@@ -129,7 +133,11 @@ const App = () => {
                 path="/upgrade" 
                 element={
                   session ? (
-                    <UpgradePage />
+                    hasAccess ? (
+                      <Navigate to="/" replace />
+                    ) : (
+                      <UpgradePage />
+                    )
                   ) : (
                     <Navigate to="/auth" replace />
                   )
