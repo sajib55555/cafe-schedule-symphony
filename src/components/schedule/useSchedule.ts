@@ -67,6 +67,28 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
     const currentWeekShifts = shifts[weekStartStr] || {};
     
     try {
+      // First, ensure all staff members exist in the database
+      for (const staffName of Object.keys(currentWeekShifts)) {
+        const existingStaff = staff.find(s => s.name === staffName);
+        if (!existingStaff) {
+          const { error: staffError } = await supabase
+            .from('staff')
+            .insert([{ name: staffName }]);
+          
+          if (staffError) {
+            console.error('Error creating staff member:', staffError);
+            throw new Error(`Failed to create staff member ${staffName}`);
+          }
+        }
+      }
+
+      // Get fresh staff data to ensure we have all IDs
+      const { data: updatedStaff, error: staffError } = await supabase
+        .from('staff')
+        .select('id, name');
+      
+      if (staffError) throw staffError;
+
       const startOfWeekDate = new Date(weekStartStr);
       const endOfWeekDate = addDays(startOfWeekDate, 7);
       
@@ -82,8 +104,7 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
       const shiftsToInsert = [];
       
       for (const [staffName, staffShifts] of Object.entries(currentWeekShifts)) {
-        // Find the staff member's ID from the staff array
-        const staffMember = staff.find(s => s.name === staffName);
+        const staffMember = updatedStaff.find(s => s.name === staffName);
         if (!staffMember?.id) {
           console.error(`Staff member ${staffName} not found or has no ID`);
           continue;
