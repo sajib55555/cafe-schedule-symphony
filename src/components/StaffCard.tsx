@@ -32,7 +32,7 @@ export function StaffCard({ employee, onEdit }: {
             </p>
           </div>
           <div className="space-y-2">
-            <Button variant="outline" onClick={() => onEdit(employee.id)}>
+            <Button onClick={() => onEdit(employee.id)}>
               Edit
             </Button>
             <Button variant="destructive" onClick={handleDelete}>
