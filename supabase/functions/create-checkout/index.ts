@@ -8,7 +8,6 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
-  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
@@ -27,14 +26,12 @@ serve(async (req) => {
     });
     console.log('Stripe initialized successfully');
 
-    // Get the authorization header
     const authHeader = req.headers.get('Authorization');
     if (!authHeader) {
       console.error('No authorization header provided');
       throw new Error('Authentication required');
     }
 
-    // Initialize Supabase client
     const supabaseAdmin = createClient(
       Deno.env.get('SUPABASE_URL') ?? '',
       Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
@@ -46,7 +43,6 @@ serve(async (req) => {
       }
     );
 
-    // Get user from JWT token
     const token = authHeader.replace('Bearer ', '');
     console.log('Processing request for authenticated user');
 
@@ -70,7 +66,6 @@ serve(async (req) => {
 
     console.log('Creating checkout session for email:', email);
 
-    // Get or create customer
     const customers = await stripe.customers.list({
       email: email,
       limit: 1,
@@ -88,7 +83,7 @@ serve(async (req) => {
       console.log('Created new Stripe customer:', customerId);
     }
 
-    const { priceId } = await req.json();
+    const { priceId, successUrl, cancelUrl } = await req.json();
     if (!priceId) {
       console.error('No price ID provided');
       throw new Error('Price ID is required');
@@ -105,8 +100,8 @@ serve(async (req) => {
         },
       ],
       mode: 'subscription',
-      success_url: `${req.headers.get('origin')}/`,
-      cancel_url: `${req.headers.get('origin')}/upgrade`,
+      success_url: successUrl || `${req.headers.get('origin')}/`,
+      cancel_url: cancelUrl || `${req.headers.get('origin')}/upgrade`,
     });
 
     console.log('Checkout session created successfully:', session.id);
