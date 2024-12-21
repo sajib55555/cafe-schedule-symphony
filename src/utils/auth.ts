@@ -16,7 +16,7 @@ export const handleSignUp = async (values: SignUpData) => {
       .from('profiles')
       .select('id')
       .eq('email', values.email)
-      .single();
+      .maybeSingle();
 
     if (existingUser) {
       toast.error("An account with this email already exists. Please sign in instead.");
