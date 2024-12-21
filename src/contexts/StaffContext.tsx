@@ -9,6 +9,7 @@ export interface Staff {
   email: string;
   phone: string;
   availability: string[];
+  hourly_pay: number;
 }
 
 interface StaffContextType {
@@ -29,12 +30,12 @@ export const useStaff = () => {
 
 export const StaffProvider = ({ children }: { children: React.ReactNode }) => {
   const [staff, setStaff] = useState<Staff[]>([
-    { id: 1, name: 'Courtney', hours: 0, role: 'Barista', email: 'courtney@example.com', phone: '123-456-7890', availability: ['Monday', 'Tuesday'] },
-    { id: 2, name: 'Saj', hours: 0, role: 'Floor', email: 'saj@example.com', phone: '234-567-8901', availability: ['Wednesday', 'Thursday'] },
-    { id: 3, name: 'Tia', hours: 0, role: 'Barista', email: 'tia@example.com', phone: '345-678-9012', availability: ['Friday', 'Saturday'] },
-    { id: 4, name: 'Lucy', hours: 0, role: 'Floor', email: 'lucy@example.com', phone: '456-789-0123', availability: ['Sunday', 'Monday'] },
-    { id: 5, name: 'Nick', hours: 0, role: 'Barista', email: 'nick@example.com', phone: '567-890-1234', availability: ['Tuesday', 'Wednesday'] },
-    { id: 6, name: 'Niloufar', hours: 0, role: 'Floor', email: 'niloufar@example.com', phone: '678-901-2345', availability: ['Thursday', 'Friday'] }
+    { id: 1, name: 'Courtney', hours: 0, role: 'Barista', email: 'courtney@example.com', phone: '123-456-7890', availability: ['Monday', 'Tuesday'], hourly_pay: 15 },
+    { id: 2, name: 'Saj', hours: 0, role: 'Floor', email: 'saj@example.com', phone: '234-567-8901', availability: ['Wednesday', 'Thursday'], hourly_pay: 15 },
+    { id: 3, name: 'Tia', hours: 0, role: 'Barista', email: 'tia@example.com', phone: '345-678-9012', availability: ['Friday', 'Saturday'], hourly_pay: 15 },
+    { id: 4, name: 'Lucy', hours: 0, role: 'Floor', email: 'lucy@example.com', phone: '456-789-0123', availability: ['Sunday', 'Monday'], hourly_pay: 15 },
+    { id: 5, name: 'Nick', hours: 0, role: 'Barista', email: 'nick@example.com', phone: '567-890-1234', availability: ['Tuesday', 'Wednesday'], hourly_pay: 15 },
+    { id: 6, name: 'Niloufar', hours: 0, role: 'Floor', email: 'niloufar@example.com', phone: '678-901-2345', availability: ['Thursday', 'Friday'], hourly_pay: 15 }
   ]);
 
   const resetAllHours = async () => {

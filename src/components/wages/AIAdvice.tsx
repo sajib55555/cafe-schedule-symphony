@@ -3,6 +3,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { Loader2 } from "lucide-react";
+import { supabase } from "@/integrations/supabase/client";
 
 interface AIAdviceProps {
   monthlyBudget: number;
@@ -18,21 +19,16 @@ export const AIAdvice = ({ monthlyBudget, currentCost, yearlyPrediction }: AIAdv
   const getAIAdvice = async () => {
     setLoading(true);
     try {
-      const response = await fetch('/api/generate-wage-advice', {
-        method: 'POST',
-        headers: {
-          'Content-Type': 'application/json',
-        },
-        body: JSON.stringify({
+      const { data, error } = await supabase.functions.invoke('generate-wage-advice', {
+        body: {
           monthlyBudget,
           currentCost,
           yearlyPrediction,
-        }),
+        },
       });
 
-      if (!response.ok) throw new Error('Failed to get AI advice');
+      if (error) throw error;
       
-      const data = await response.json();
       setAdvice(data.advice);
     } catch (error) {
       console.error('Error getting AI advice:', error);
