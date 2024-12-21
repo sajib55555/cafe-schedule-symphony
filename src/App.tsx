@@ -57,11 +57,16 @@ const App = () => {
           const now = new Date();
           const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
           
-          // Grant access if user has an active subscription or is within trial period
-          setHasAccess(
-            profile.subscription_status === 'active' || 
-            (trialEnd && trialEnd > now)
-          );
+          // Check if user has an active subscription or is within trial period
+          const hasActiveSubscription = profile.subscription_status === 'active';
+          const hasActiveTrial = trialEnd && now < trialEnd;
+          
+          console.log('Trial end:', trialEnd);
+          console.log('Current time:', now);
+          console.log('Has active subscription:', hasActiveSubscription);
+          console.log('Has active trial:', hasActiveTrial);
+          
+          setHasAccess(hasActiveSubscription || hasActiveTrial);
         }
       }
     } catch (error) {
