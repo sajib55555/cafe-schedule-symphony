@@ -23,8 +23,9 @@ const AppRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/" element={<Auth />} />
       <Route
-        path="/"
+        path="/dashboard"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Index />
@@ -32,26 +33,12 @@ const AppRoutes = () => {
         }
       />
       <Route 
-        path="/auth" 
-        element={
-          session ? (
-            hasAccess ? (
-              <Navigate to="/" replace />
-            ) : (
-              <Navigate to="/upgrade" replace />
-            )
-          ) : (
-            <Auth />
-          )
-        } 
-      />
-      <Route 
         path="/subscription" 
         element={
           session ? (
             <Subscription />
           ) : (
-            <Navigate to="/auth" replace />
+            <Navigate to="/" replace />
           )
         } 
       />
@@ -60,12 +47,12 @@ const AppRoutes = () => {
         element={
           session ? (
             hasAccess ? (
-              <Navigate to="/" replace />
+              <Navigate to="/dashboard" replace />
             ) : (
               <UpgradePage />
             )
           ) : (
-            <Navigate to="/auth" replace />
+            <Navigate to="/" replace />
           )
         } 
       />

@@ -29,7 +29,7 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       if (error) throw error;
 
       toast.success("Successfully signed in!");
-      navigate("/");
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Sign in error:", error);
       toast.error(error.message || "Failed to sign in");

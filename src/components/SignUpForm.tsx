@@ -30,10 +30,9 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       
       if (user) {
         toast.success("Your account has been created with a 2-day trial period.");
-        navigate("/");
+        navigate("/dashboard");
       }
     } catch (error: any) {
-      // Error is already handled in handleSignUp
       console.error("Error during sign up:", error);
     }
   };
