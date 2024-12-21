@@ -82,6 +82,7 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
       const shiftsToInsert = [];
       
       for (const [staffName, staffShifts] of Object.entries(currentWeekShifts)) {
+        // Find the staff member's ID from the staff array
         const staffMember = staff.find(s => s.name === staffName);
         if (!staffMember?.id) {
           console.error(`Staff member ${staffName} not found or has no ID`);
