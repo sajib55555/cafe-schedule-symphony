@@ -47,7 +47,7 @@ export const handleSignUp = async (values: SignUpData) => {
     // Wait for session to be established
     await new Promise(resolve => setTimeout(resolve, 2000));
 
-    // Get fresh session
+    // Get fresh session and ensure we're authenticated
     const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
     if (sessionError) {
@@ -60,7 +60,10 @@ export const handleSignUp = async (values: SignUpData) => {
       throw new Error("No session available after signup");
     }
 
-    // Create a new company using service role client
+    // Set the session in the Supabase client
+    await supabase.auth.setSession(session);
+
+    // Create a new company with the authenticated client
     const { data: companyData, error: companyError } = await supabase
       .from('companies')
       .insert([
