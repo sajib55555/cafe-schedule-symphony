@@ -3,18 +3,7 @@ import { format, addDays } from "date-fns";
 import { supabase } from '@/integrations/supabase/client';
 import { Staff } from '@/contexts/StaffContext';
 import { useToast } from "@/components/ui/use-toast";
-
-interface Shift {
-  startTime: string;
-  endTime: string;
-  role: 'Barista' | 'Floor';
-}
-
-interface StaffShifts {
-  [key: string]: {
-    [key: string]: Shift;
-  };
-}
+import { StaffShifts } from './types';
 
 export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: React.Dispatch<React.SetStateAction<Staff[]>>) => {
   const { toast } = useToast();
@@ -26,45 +15,51 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
       const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
       const endOfWeekDate = addDays(selectedWeekStart, 7);
       
-      const { data: existingShifts, error } = await supabase
-        .from('shifts')
-        .select('*, staff(id, name, role)')
-        .gte('start_time', `${weekStartStr}T00:00:00`)
-        .lt('start_time', format(endOfWeekDate, 'yyyy-MM-dd'));
+      try {
+        const { data: existingShifts, error } = await supabase
+          .from('shifts')
+          .select('*, staff(id, name, role)')
+          .gte('start_time', `${weekStartStr}T00:00:00`)
+          .lt('start_time', format(endOfWeekDate, 'yyyy-MM-dd'));
 
-      if (error) {
+        if (error) throw error;
+
+        if (existingShifts) {
+          const formattedShifts: { [weekStart: string]: StaffShifts } = {};
+          formattedShifts[weekStartStr] = {};
+
+          existingShifts.forEach((shift) => {
+            if (!shift.staff?.name) return;
+            
+            const shiftDate = format(new Date(shift.start_time), 'yyyy-MM-dd');
+            const startTime = format(new Date(shift.start_time), 'HH:mm');
+            const endTime = format(new Date(shift.end_time), 'HH:mm');
+
+            if (!formattedShifts[weekStartStr][shift.staff.name]) {
+              formattedShifts[weekStartStr][shift.staff.name] = {};
+            }
+
+            formattedShifts[weekStartStr][shift.staff.name][shiftDate] = {
+              startTime,
+              endTime,
+              role: shift.role as 'Barista' | 'Floor'
+            };
+          });
+
+          setShifts(formattedShifts);
+        }
+      } catch (error) {
         console.error('Error loading shifts:', error);
-        return;
-      }
-
-      if (existingShifts) {
-        const formattedShifts: { [weekStart: string]: StaffShifts } = {};
-        formattedShifts[weekStartStr] = {};
-
-        existingShifts.forEach((shift) => {
-          if (!shift.staff?.name) return;
-          
-          const shiftDate = format(new Date(shift.start_time), 'yyyy-MM-dd');
-          const startTime = format(new Date(shift.start_time), 'HH:mm');
-          const endTime = format(new Date(shift.end_time), 'HH:mm');
-
-          if (!formattedShifts[weekStartStr][shift.staff.name]) {
-            formattedShifts[weekStartStr][shift.staff.name] = {};
-          }
-
-          formattedShifts[weekStartStr][shift.staff.name][shiftDate] = {
-            startTime,
-            endTime,
-            role: shift.role as 'Barista' | 'Floor'
-          };
+        toast({
+          title: "Error",
+          description: "Failed to load shifts. Please try again.",
+          variant: "destructive"
         });
-
-        setShifts(formattedShifts);
       }
     };
 
     loadShifts();
-  }, [selectedWeekStart]);
+  }, [selectedWeekStart, toast]);
 
   const handleSaveSchedule = async () => {
     setIsSaving(true);
