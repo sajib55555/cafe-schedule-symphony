@@ -4,156 +4,89 @@ import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
 import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { StaffProvider } from "./contexts/StaffContext";
-import { Layout } from "./components/Layout";
+import { AuthProvider } from "./contexts/AuthContext";
+import { useAuth } from "./contexts/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import Index from "./pages/Index";
-import { useEffect, useState } from "react";
-import { supabase } from "./integrations/supabase/client";
 import Subscription from "./pages/Subscription";
 import UpgradePage from "./pages/UpgradePage";
 import Auth from "./pages/Auth";
 
 const queryClient = new QueryClient();
 
-const App = () => {
-  const [loading, setLoading] = useState(true);
-  const [hasAccess, setHasAccess] = useState(false);
-  const [session, setSession] = useState<any>(null);
-  const [trialEnded, setTrialEnded] = useState(false);
-
-  useEffect(() => {
-    checkSession();
-    checkAccessStatus();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        checkAccessStatus();
-      } else {
-        setHasAccess(false);
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, []);
-
-  const checkSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setSession(session);
-  };
-
-  const checkAccessStatus = async () => {
-    try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('trial_start, trial_end, subscription_status')
-          .eq('id', session.user.id)
-          .single();
-
-        if (profile) {
-          const now = new Date();
-          const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
-          
-          // Check if user has an active subscription or is within trial period
-          const hasActiveSubscription = profile.subscription_status === 'active';
-          const hasActiveTrial = trialEnd ? now <= trialEnd : false;
-          
-          console.log('Trial end:', trialEnd);
-          console.log('Current time:', now);
-          console.log('Has active subscription:', hasActiveSubscription);
-          console.log('Has active trial:', hasActiveTrial);
-          console.log('Trial comparison result:', trialEnd ? now <= trialEnd : false);
-          
-          setHasAccess(hasActiveSubscription || hasActiveTrial);
-          // Set trial ended state if trial has expired and no active subscription
-          setTrialEnded(!hasActiveSubscription && trialEnd && now > trialEnd);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking access status:', error);
-    } finally {
-      setLoading(false);
-    }
-  };
+const AppRoutes = () => {
+  const { loading, hasAccess, session, trialEnded } = useAuth();
 
   if (loading) {
     return <div>Loading...</div>;
   }
 
   return (
+    <Routes>
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <Index />
+          </ProtectedRoute>
+        }
+      />
+      <Route 
+        path="/auth" 
+        element={
+          session ? (
+            hasAccess ? (
+              <Navigate to="/" replace />
+            ) : (
+              <Navigate to="/upgrade" replace />
+            )
+          ) : (
+            <Auth />
+          )
+        } 
+      />
+      <Route 
+        path="/subscription" 
+        element={
+          session ? (
+            <Subscription />
+          ) : (
+            <Navigate to="/auth" replace />
+          )
+        } 
+      />
+      <Route 
+        path="/upgrade" 
+        element={
+          session ? (
+            hasAccess ? (
+              <Navigate to="/" replace />
+            ) : (
+              <UpgradePage />
+            )
+          ) : (
+            <Navigate to="/auth" replace />
+          )
+        } 
+      />
+      <Route path="*" element={<Navigate to="/" replace />} />
+    </Routes>
+  );
+};
+
+const App = () => {
+  return (
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
-        <StaffProvider>
-          <Toaster />
-          <Sonner />
-          <BrowserRouter>
-            <Routes>
-              <Route
-                path="/"
-                element={
-                  session ? (
-                    trialEnded ? (
-                      <Navigate to="/upgrade" replace />
-                    ) : (
-                      hasAccess ? (
-                        <Layout>
-                          <Index />
-                        </Layout>
-                      ) : (
-                        <Navigate to="/upgrade" replace />
-                      )
-                    )
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                }
-              />
-              <Route 
-                path="/auth" 
-                element={
-                  session ? (
-                    hasAccess ? (
-                      <Navigate to="/" replace />
-                    ) : (
-                      <Navigate to="/upgrade" replace />
-                    )
-                  ) : (
-                    <Auth />
-                  )
-                } 
-              />
-              <Route 
-                path="/subscription" 
-                element={
-                  session ? (
-                    <Subscription />
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                } 
-              />
-              <Route 
-                path="/upgrade" 
-                element={
-                  session ? (
-                    hasAccess ? (
-                      <Navigate to="/" replace />
-                    ) : (
-                      <UpgradePage />
-                    )
-                  ) : (
-                    <Navigate to="/auth" replace />
-                  )
-                } 
-              />
-              <Route path="*" element={<Navigate to="/" replace />} />
-            </Routes>
-          </BrowserRouter>
-        </StaffProvider>
+        <AuthProvider>
+          <StaffProvider>
+            <Toaster />
+            <Sonner />
+            <BrowserRouter>
+              <AppRoutes />
+            </BrowserRouter>
+          </StaffProvider>
+        </AuthProvider>
       </TooltipProvider>
     </QueryClientProvider>
   );
