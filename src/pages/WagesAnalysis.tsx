@@ -4,6 +4,7 @@ import { WageBudgetForm } from "@/components/wages/WageBudgetForm";
 import { WagesStats } from "@/components/wages/WagesStats";
 import { WagesChart } from "@/components/wages/WagesChart";
 import { AIAdvice } from "@/components/wages/AIAdvice";
+import { CurrencySelector } from "@/components/wages/CurrencySelector";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useAuth } from "@/contexts/AuthContext";
@@ -71,6 +72,7 @@ const WagesAnalysis = () => {
         
         <div className="grid gap-8 md:grid-cols-2">
           <div className="space-y-8">
+            <CurrencySelector />
             <WageBudgetForm 
               currentBudget={monthlyBudget} 
               onUpdate={setMonthlyBudget} 
