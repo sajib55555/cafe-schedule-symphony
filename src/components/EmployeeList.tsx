@@ -8,7 +8,7 @@ import { AddStaffForm } from "./AddStaffForm";
 import { EditStaffForm } from "./EditStaffForm";
 
 export function EmployeeList() {
-  const { staff, resetAllHours } = useStaff();
+  const { staff } = useStaff();
   const [editingEmployee, setEditingEmployee] = useState<number | null>(null);
   const { toast } = useToast();
   const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
@@ -21,22 +21,11 @@ export function EmployeeList() {
     });
   };
 
-  const handleResetHours = async () => {
-    await resetAllHours();
-    toast({
-      title: "Success",
-      description: "All staff hours have been reset to zero",
-    });
-  };
-
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-secondary">Staff</h2>
         <div className="space-x-2">
-          <Button variant="outline" onClick={handleResetHours}>
-            Reset Hours
-          </Button>
           <Sheet open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
             <SheetTrigger asChild>
               <Button>Add Staff</Button>
