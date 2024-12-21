@@ -59,12 +59,13 @@ const App = () => {
           
           // Check if user has an active subscription or is within trial period
           const hasActiveSubscription = profile.subscription_status === 'active';
-          const hasActiveTrial = trialEnd && now < trialEnd;
+          const hasActiveTrial = trialEnd ? now <= trialEnd : false;
           
           console.log('Trial end:', trialEnd);
           console.log('Current time:', now);
           console.log('Has active subscription:', hasActiveSubscription);
           console.log('Has active trial:', hasActiveTrial);
+          console.log('Trial comparison result:', trialEnd ? now <= trialEnd : false);
           
           setHasAccess(hasActiveSubscription || hasActiveTrial);
         }
