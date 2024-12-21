@@ -7,127 +7,74 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-const initializeStripe = () => {
-  const stripeKey = Deno.env.get('STRIPE_SECRET_KEY');
-  if (!stripeKey) {
-    throw new Error('Missing Stripe secret key');
-  }
-  return new Stripe(stripeKey, { apiVersion: '2023-10-16' });
-};
-
-const initializeSupabase = () => {
-  return createClient(
-    Deno.env.get('SUPABASE_URL') ?? '',
-    Deno.env.get('SUPABASE_SERVICE_ROLE_KEY') ?? '',
-    {
-      auth: {
-        autoRefreshToken: false,
-        persistSession: false,
-        detectSessionInUrl: false,
-      }
-    }
-  );
-};
-
-const getUserEmail = async (supabaseAdmin: any, token: string) => {
-  const { data: { user }, error: userError } = await supabaseAdmin.auth.getUser(token);
-  if (userError) {
-    console.error('Error getting user:', userError);
-    throw new Error('Error getting user details');
-  }
-  if (!user?.email) {
-    throw new Error('User email not found');
-  }
-  return user.email;
-};
-
-const getOrCreateCustomer = async (stripe: Stripe, email: string) => {
-  const customers = await stripe.customers.list({
-    email: email,
-    limit: 1,
-  });
-
-  if (customers.data.length > 0) {
-    console.log('Found existing Stripe customer');
-    return customers.data[0].id;
-  }
-
-  const newCustomer = await stripe.customers.create({
-    email: email,
-  });
-  console.log('Created new Stripe customer:', newCustomer.id);
-  return newCustomer.id;
-};
-
-const createCheckoutSession = async (stripe: Stripe, params: {
-  customerId: string;
-  priceId: string;
-  successUrl: string;
-  cancelUrl: string;
-}) => {
-  return await stripe.checkout.sessions.create({
-    customer: params.customerId,
-    line_items: [
-      {
-        price: params.priceId,
-        quantity: 1,
-      },
-    ],
-    mode: 'subscription',
-    success_url: params.successUrl,
-    cancel_url: params.cancelUrl,
-  });
-};
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
-    const stripe = initializeStripe();
-    console.log('Stripe initialized successfully');
+    const stripe = new Stripe(Deno.env.get('STRIPE_SECRET_KEY') || '', {
+      apiVersion: '2023-10-16',
+    });
 
-    const authHeader = req.headers.get('Authorization');
-    if (!authHeader) {
-      console.error('No authorization header provided');
-      throw new Error('Authentication required');
+    const supabaseClient = createClient(
+      Deno.env.get('SUPABASE_URL') ?? '',
+      Deno.env.get('SUPABASE_ANON_KEY') ?? '',
+    );
+
+    const authHeader = req.headers.get('Authorization')!;
+    const token = authHeader.replace('Bearer ', '');
+    const { data: { user } } = await supabaseClient.auth.getUser(token);
+
+    if (!user?.email) {
+      throw new Error('No email found');
     }
 
-    const supabaseAdmin = initializeSupabase();
-    const token = authHeader.replace('Bearer ', '');
-    console.log('Processing request for authenticated user');
-
-    const email = await getUserEmail(supabaseAdmin, token);
-    console.log('Creating checkout session for email:', email);
-
-    const customerId = await getOrCreateCustomer(stripe, email);
-
     const { priceId, successUrl, cancelUrl } = await req.json();
+    
     if (!priceId) {
-      console.error('No price ID provided');
       throw new Error('Price ID is required');
     }
 
-    const session = await createCheckoutSession(stripe, {
-      customerId,
-      priceId,
-      successUrl: successUrl || `${req.headers.get('origin')}/`,
-      cancelUrl: cancelUrl || `${req.headers.get('origin')}/upgrade`,
+    const customers = await stripe.customers.list({
+      email: user.email,
+      limit: 1,
     });
 
-    console.log('Checkout session created successfully:', session.id);
+    let customerId;
+    if (customers.data.length > 0) {
+      customerId = customers.data[0].id;
+    }
 
-    return new Response(JSON.stringify({ url: session.url }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 200,
+    const session = await stripe.checkout.sessions.create({
+      customer: customerId,
+      customer_email: customerId ? undefined : user.email,
+      line_items: [
+        {
+          price: priceId,
+          quantity: 1,
+        },
+      ],
+      mode: 'subscription',
+      success_url: successUrl,
+      cancel_url: cancelUrl,
     });
 
+    return new Response(
+      JSON.stringify({ url: session.url }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    );
   } catch (error) {
     console.error('Error:', error);
-    return new Response(JSON.stringify({ error: error.message }), {
-      headers: { ...corsHeaders, 'Content-Type': 'application/json' },
-      status: 400,
-    });
+    return new Response(
+      JSON.stringify({ error: error.message }),
+      { 
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 400,
+      }
+    );
   }
 });

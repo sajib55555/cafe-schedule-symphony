@@ -1,5 +1,7 @@
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
+import { useToast } from "@/hooks/use-toast";
+import { supabase } from "@/integrations/supabase/client";
 
 interface TrialBannerProps {
   daysLeft: number;
@@ -7,9 +9,41 @@ interface TrialBannerProps {
 
 export function TrialBanner({ daysLeft }: TrialBannerProps) {
   const navigate = useNavigate();
+  const { toast } = useToast();
 
-  const handleUpgrade = () => {
-    navigate("/subscription");
+  const handleUpgrade = async () => {
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        toast({
+          title: "Error",
+          description: "Please sign in to upgrade your subscription",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      const { data, error } = await supabase.functions.invoke('create-checkout', {
+        body: {
+          priceId: 'price_1QVwDpFk4w8hjVcVL872Hll8',
+          successUrl: `${window.location.origin}/dashboard`,
+          cancelUrl: `${window.location.origin}/upgrade`,
+        },
+      });
+
+      if (error) throw error;
+      if (!data?.url) throw new Error('No checkout URL returned');
+
+      window.location.href = data.url;
+    } catch (error) {
+      console.error('Error creating checkout session:', error);
+      toast({
+        title: "Error",
+        description: "Failed to start upgrade process. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
