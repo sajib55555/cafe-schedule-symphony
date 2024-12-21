@@ -16,19 +16,19 @@ const queryClient = new QueryClient();
 
 const App = () => {
   const [loading, setLoading] = useState(true);
-  const [hasActiveTrial, setHasActiveTrial] = useState(false);
+  const [hasAccess, setHasAccess] = useState(false);
   const [session, setSession] = useState<any>(null);
 
   useEffect(() => {
     checkSession();
-    checkTrialStatus();
+    checkAccessStatus();
     
     const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
       setSession(session);
       if (session) {
-        checkTrialStatus();
+        checkAccessStatus();
       } else {
-        setHasActiveTrial(false);
+        setHasAccess(false);
       }
     });
 
@@ -42,7 +42,7 @@ const App = () => {
     setSession(session);
   };
 
-  const checkTrialStatus = async () => {
+  const checkAccessStatus = async () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
@@ -56,14 +56,16 @@ const App = () => {
         if (profile) {
           const now = new Date();
           const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
-          setHasActiveTrial(
+          
+          // Grant access if user has an active subscription or is within trial period
+          setHasAccess(
             profile.subscription_status === 'active' || 
-            (trialEnd ? trialEnd > now : false)
+            (trialEnd && trialEnd > now)
           );
         }
       }
     } catch (error) {
-      console.error('Error checking trial status:', error);
+      console.error('Error checking access status:', error);
     } finally {
       setLoading(false);
     }
@@ -85,7 +87,7 @@ const App = () => {
                 path="/"
                 element={
                   session ? (
-                    hasActiveTrial ? (
+                    hasAccess ? (
                       <Layout>
                         <Index />
                       </Layout>
