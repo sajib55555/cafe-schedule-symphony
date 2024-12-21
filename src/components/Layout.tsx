@@ -44,29 +44,30 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     try {
-      // First check if we have a session
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session }, error: sessionError } = await supabase.auth.getSession();
       
-      if (!session) {
-        // If no session, just navigate to auth page
+      if (sessionError) {
+        console.error("Session error:", sessionError);
         navigate("/auth");
         return;
       }
 
-      // Attempt to sign out
+      if (!session) {
+        navigate("/auth");
+        return;
+      }
+
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        // If we get a session_not_found error, just navigate to auth
         if (error.message.includes('session_not_found')) {
+          console.log('Session not found, redirecting to auth page');
           navigate("/auth");
           return;
         }
-        // For other errors, show the error message
         throw error;
       }
 
-      // Successfully signed out
       navigate("/auth");
     } catch (error: any) {
       console.error("Sign out error:", error);
