@@ -44,15 +44,23 @@ export const handleSignUp = async (values: SignUpData) => {
       throw new Error("No user data returned after signup");
     }
 
-    // Get the session to ensure we have the auth context
-    const { data: { session } } = await supabase.auth.getSession();
+    // Wait for session to be established
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Get fresh session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
     
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      throw sessionError;
+    }
+
     if (!session) {
       console.error('No session available after signup');
       throw new Error("No session available after signup");
     }
 
-    // Create a new company
+    // Create a new company using service role client
     const { data: companyData, error: companyError } = await supabase
       .from('companies')
       .insert([
