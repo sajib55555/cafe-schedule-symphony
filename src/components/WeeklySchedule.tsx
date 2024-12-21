@@ -114,6 +114,47 @@ export function WeeklySchedule() {
     });
   };
 
+  const handleDeleteShift = (staffName: string, date: string) => {
+    const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+    const shift = shifts[weekStartStr]?.[staffName]?.[date];
+    
+    if (shift) {
+      const hours = calculateHours(shift.startTime, shift.endTime);
+      
+      setShifts(prev => {
+        const newShifts = { ...prev };
+        const staffShifts = { ...newShifts[weekStartStr]?.[staffName] };
+        delete staffShifts[date];
+        
+        if (Object.keys(staffShifts).length === 0) {
+          delete newShifts[weekStartStr][staffName];
+        } else {
+          newShifts[weekStartStr] = {
+            ...newShifts[weekStartStr],
+            [staffName]: staffShifts
+          };
+        }
+        
+        return newShifts;
+      });
+
+      setStaff(prev => prev.map(person => {
+        if (person.name === staffName) {
+          return {
+            ...person,
+            hours: Math.max(0, Number(person.hours || 0) - hours)
+          };
+        }
+        return person;
+      }));
+
+      toast({
+        title: "Shift Deleted",
+        description: `Deleted shift for ${staffName} on ${format(new Date(date), 'EEE, MMM d')}`,
+      });
+    }
+  };
+
   const navigateWeek = (direction: 'prev' | 'next') => {
     setSelectedWeekStart(current => 
       direction === 'prev' ? subWeeks(current, 1) : addWeeks(current, 1)
@@ -143,6 +184,7 @@ export function WeeklySchedule() {
           setNewShift={setNewShift}
           handleAddShift={handleAddShift}
           handleEditShift={handleEditShift}
+          handleDeleteShift={handleDeleteShift}
           isPdfGenerating={isPdfGenerating}
         />
       </div>

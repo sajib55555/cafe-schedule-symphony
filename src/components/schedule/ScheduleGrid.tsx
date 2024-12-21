@@ -3,7 +3,7 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ShiftDialog } from './ShiftDialog';
 import { Staff } from '@/contexts/StaffContext';
-import { Edit2 } from 'lucide-react';
+import { Edit2, Trash2 } from 'lucide-react';
 
 interface ScheduleGridProps {
   days: Array<{ name: string; fullDate: string }>;
@@ -25,6 +25,7 @@ interface ScheduleGridProps {
   }>>;
   handleAddShift: () => void;
   handleEditShift: () => void;
+  handleDeleteShift: (staffName: string, date: string) => void;
   isPdfGenerating?: boolean;
 }
 
@@ -40,6 +41,7 @@ export function ScheduleGrid({
   setNewShift,
   handleAddShift,
   handleEditShift,
+  handleDeleteShift,
   isPdfGenerating = false
 }: ScheduleGridProps) {
   return (
@@ -66,31 +68,42 @@ export function ScheduleGrid({
                     <div>{shift.startTime} - {shift.endTime}</div>
                     <div>{shift.role}</div>
                     {!isPdfGenerating && (
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button 
-                            variant="secondary" 
-                            size="sm"
-                            className="w-full"
-                            onClick={() => {
-                              setSelectedStaff(person.name);
-                              setSelectedDate(day.fullDate);
-                              setNewShift(shift);
-                            }}
-                          >
-                            <Edit2 className="h-4 w-4 mr-1" />
-                            Edit
-                          </Button>
-                        </DialogTrigger>
-                        <ShiftDialog
-                          selectedStaff={selectedStaff}
-                          selectedDate={selectedDate}
-                          newShift={newShift}
-                          setNewShift={setNewShift}
-                          handleAddShift={handleEditShift}
-                          mode="edit"
-                        />
-                      </Dialog>
+                      <div className="flex gap-2">
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button 
+                              variant="secondary" 
+                              size="sm"
+                              className="flex-1"
+                              onClick={() => {
+                                setSelectedStaff(person.name);
+                                setSelectedDate(day.fullDate);
+                                setNewShift(shift);
+                              }}
+                            >
+                              <Edit2 className="h-4 w-4 mr-1" />
+                              Edit
+                            </Button>
+                          </DialogTrigger>
+                          <ShiftDialog
+                            selectedStaff={selectedStaff}
+                            selectedDate={selectedDate}
+                            newShift={newShift}
+                            setNewShift={setNewShift}
+                            handleAddShift={handleEditShift}
+                            mode="edit"
+                          />
+                        </Dialog>
+                        <Button 
+                          variant="destructive" 
+                          size="sm"
+                          className="flex-1"
+                          onClick={() => handleDeleteShift(person.name, day.fullDate)}
+                        >
+                          <Trash2 className="h-4 w-4 mr-1" />
+                          Delete
+                        </Button>
+                      </div>
                     )}
                   </div>
                 ) : (
