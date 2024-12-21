@@ -4,6 +4,9 @@ import { useToast } from "@/components/ui/use-toast";
 import { useStaff } from '@/contexts/StaffContext';
 import { ScheduleHeader } from './schedule/ScheduleHeader';
 import { ScheduleGrid } from './schedule/ScheduleGrid';
+import { Button } from "@/components/ui/button";
+import { supabase } from '@/integrations/supabase/client';
+import { Save } from 'lucide-react';
 
 interface Shift {
   startTime: string;
@@ -32,6 +35,7 @@ export function WeeklySchedule() {
   const [selectedStaff, setSelectedStaff] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+  const [isSaving, setIsSaving] = useState(false);
   const [newShift, setNewShift] = useState<Shift>({
     startTime: '09:00',
     endTime: '17:00',
@@ -45,6 +49,65 @@ export function WeeklySchedule() {
       fullDate: format(date, 'yyyy-MM-dd')
     };
   });
+
+  const handleSaveSchedule = async () => {
+    setIsSaving(true);
+    const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+    const currentWeekShifts = shifts[weekStartStr] || {};
+    
+    try {
+      // First, delete all existing shifts for this week
+      const startOfWeekDate = new Date(weekStartStr);
+      const endOfWeekDate = addDays(startOfWeekDate, 7);
+      
+      const { error: deleteError } = await supabase
+        .from('shifts')
+        .delete()
+        .gte('start_time', startOfWeekDate.toISOString())
+        .lt('start_time', endOfWeekDate.toISOString());
+
+      if (deleteError) throw deleteError;
+
+      // Then insert all current shifts
+      const shiftsToInsert = [];
+      
+      for (const [staffName, staffShifts] of Object.entries(currentWeekShifts)) {
+        const staffMember = staff.find(s => s.name === staffName);
+        if (!staffMember) continue;
+
+        for (const [date, shift] of Object.entries(staffShifts)) {
+          shiftsToInsert.push({
+            staff_id: staffMember.id,
+            start_time: `${date}T${shift.startTime}:00`,
+            end_time: `${date}T${shift.endTime}:00`,
+            role: shift.role
+          });
+        }
+      }
+
+      if (shiftsToInsert.length > 0) {
+        const { error: insertError } = await supabase
+          .from('shifts')
+          .insert(shiftsToInsert);
+
+        if (insertError) throw insertError;
+      }
+
+      toast({
+        title: "Success",
+        description: "Schedule saved successfully",
+      });
+    } catch (error) {
+      console.error('Error saving schedule:', error);
+      toast({
+        title: "Error",
+        description: "Failed to save schedule. Please try again.",
+        variant: "destructive"
+      });
+    } finally {
+      setIsSaving(false);
+    }
+  };
 
   const handleAddShift = () => {
     if (!selectedStaff || !selectedDate) return;
@@ -165,12 +228,22 @@ export function WeeklySchedule() {
 
   return (
     <div className="space-y-4">
-      <ScheduleHeader
-        selectedWeekStart={selectedWeekStart}
-        navigateWeek={navigateWeek}
-        scheduleRef={scheduleRef}
-        onPdfGenerating={setIsPdfGenerating}
-      />
+      <div className="flex justify-between items-center">
+        <ScheduleHeader
+          selectedWeekStart={selectedWeekStart}
+          navigateWeek={navigateWeek}
+          scheduleRef={scheduleRef}
+          onPdfGenerating={setIsPdfGenerating}
+        />
+        <Button 
+          onClick={handleSaveSchedule} 
+          disabled={isSaving}
+          className="ml-4"
+        >
+          <Save className="w-4 h-4 mr-2" />
+          {isSaving ? 'Saving...' : 'Save Schedule'}
+        </Button>
+      </div>
       <div ref={scheduleRef} className="border rounded-lg overflow-hidden">
         <ScheduleGrid
           days={days}
