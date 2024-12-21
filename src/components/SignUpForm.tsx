@@ -29,7 +29,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       });
       
       if (user) {
-        toast.success("Your account has been created. Please check your email to verify your account.");
+        toast.success("Your account has been created with a 2-day trial period.");
         navigate("/");
       }
     } catch (error: any) {
