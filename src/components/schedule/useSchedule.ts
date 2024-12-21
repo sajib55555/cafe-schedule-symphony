@@ -3,7 +3,14 @@ import { format, addDays } from "date-fns";
 import { supabase } from '@/integrations/supabase/client';
 import { Staff } from '@/contexts/StaffContext';
 import { useToast } from "@/components/ui/use-toast";
-import { StaffShifts } from './types';
+import { StaffShifts } from './types/shift.types';
+import {
+  ensureStaffExists,
+  getUpdatedStaff,
+  deleteExistingShifts,
+  insertShifts,
+  prepareShiftsForInsert
+} from './services/shift.service';
 
 export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: React.Dispatch<React.SetStateAction<Staff[]>>) => {
   const { toast } = useToast();
@@ -67,69 +74,16 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
     const currentWeekShifts = shifts[weekStartStr] || {};
     
     try {
-      // First, ensure all staff members exist in the database
-      for (const staffName of Object.keys(currentWeekShifts)) {
-        const existingStaff = staff.find(s => s.name === staffName);
-        if (!existingStaff) {
-          const { error: staffError } = await supabase
-            .from('staff')
-            .insert([{ name: staffName }]);
-          
-          if (staffError) {
-            console.error('Error creating staff member:', staffError);
-            throw new Error(`Failed to create staff member ${staffName}`);
-          }
-        }
-      }
-
-      // Get fresh staff data to ensure we have all IDs
-      const { data: updatedStaff, error: staffError } = await supabase
-        .from('staff')
-        .select('id, name');
+      await ensureStaffExists(Object.keys(currentWeekShifts));
+      const updatedStaff = await getUpdatedStaff();
       
-      if (staffError) throw staffError;
-
       const startOfWeekDate = new Date(weekStartStr);
       const endOfWeekDate = addDays(startOfWeekDate, 7);
       
-      // Delete existing shifts for the week
-      const { error: deleteError } = await supabase
-        .from('shifts')
-        .delete()
-        .gte('start_time', startOfWeekDate.toISOString())
-        .lt('start_time', endOfWeekDate.toISOString());
-
-      if (deleteError) throw deleteError;
-
-      const shiftsToInsert = [];
+      await deleteExistingShifts(startOfWeekDate, endOfWeekDate);
       
-      for (const [staffName, staffShifts] of Object.entries(currentWeekShifts)) {
-        const staffMember = updatedStaff.find(s => s.name === staffName);
-        if (!staffMember?.id) {
-          console.error(`Staff member ${staffName} not found or has no ID`);
-          continue;
-        }
-
-        for (const [date, shift] of Object.entries(staffShifts)) {
-          shiftsToInsert.push({
-            staff_id: staffMember.id,
-            start_time: `${date}T${shift.startTime}:00`,
-            end_time: `${date}T${shift.endTime}:00`,
-            role: shift.role
-          });
-        }
-      }
-
-      if (shiftsToInsert.length > 0) {
-        const { error: insertError } = await supabase
-          .from('shifts')
-          .insert(shiftsToInsert);
-
-        if (insertError) {
-          console.error('Insert error:', insertError);
-          throw insertError;
-        }
-      }
+      const shiftsToInsert = prepareShiftsForInsert(currentWeekShifts, updatedStaff, weekStartStr);
+      await insertShifts(shiftsToInsert);
 
       toast({
         title: "Success",
