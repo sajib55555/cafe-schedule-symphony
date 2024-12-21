@@ -7,12 +7,25 @@ const corsHeaders = {
 };
 
 serve(async (req) => {
+  // Handle CORS preflight requests
   if (req.method === 'OPTIONS') {
     return new Response(null, { headers: corsHeaders });
   }
 
   try {
     const { monthlyBudget, currentCost, yearlyPrediction } = await req.json();
+    const openAIApiKey = Deno.env.get('OPENAI_API_KEY');
+
+    if (!openAIApiKey) {
+      console.error('OpenAI API key is missing');
+      return new Response(
+        JSON.stringify({ error: 'OpenAI API key is not configured' }),
+        { 
+          status: 500,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
 
     const prompt = `
       As a business advisor, provide concise advice for a café manager with the following financial situation:
@@ -26,7 +39,7 @@ serve(async (req) => {
     const response = await fetch('https://api.openai.com/v1/chat/completions', {
       method: 'POST',
       headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
+        'Authorization': `Bearer ${openAIApiKey}`,
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({
@@ -38,6 +51,18 @@ serve(async (req) => {
       }),
     });
 
+    if (!response.ok) {
+      const errorBody = await response.text();
+      console.error('OpenAI API error:', errorBody);
+      return new Response(
+        JSON.stringify({ error: 'Failed to get advice from OpenAI' }),
+        { 
+          status: response.status,
+          headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        }
+      );
+    }
+
     const data = await response.json();
     const advice = data.choices[0].message.content;
 
@@ -48,7 +73,7 @@ serve(async (req) => {
       },
     );
   } catch (error) {
-    console.error('Error:', error);
+    console.error('Error in generate-wage-advice function:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
