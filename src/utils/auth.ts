@@ -48,17 +48,36 @@ export const handleSignUp = async (values: SignUpData) => {
       throw new Error("No user data returned after signup");
     }
 
-    // Set trial dates
+    // Create a new company for the user
+    const { data: companyData, error: companyError } = await supabase
+      .from('companies')
+      .insert([
+        { 
+          name: `${values.fullName}'s Company`,
+          industry: 'Other',
+          size: 'Small'
+        }
+      ])
+      .select()
+      .single();
+
+    if (companyError) {
+      console.error('Company creation error:', companyError);
+      throw companyError;
+    }
+
+    // Set trial dates and update profile with company_id
     const trialStart = new Date();
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 2); // 2 days trial period
 
-    // Update profile with trial dates
+    // Update profile with trial dates and company_id
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
         trial_start: trialStart.toISOString(),
         trial_end: trialEnd.toISOString(),
+        company_id: companyData.id
       })
       .eq('id', authData.user.id);
 
@@ -67,7 +86,7 @@ export const handleSignUp = async (values: SignUpData) => {
       throw profileError;
     }
 
-    console.log('User created successfully:', authData.user.id);
+    console.log('User and company created successfully:', authData.user.id);
     return authData.user;
   } catch (error: any) {
     console.error('Signup error:', error);
