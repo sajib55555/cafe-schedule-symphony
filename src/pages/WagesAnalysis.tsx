@@ -6,9 +6,16 @@ import { AIAdvice } from "@/components/wages/AIAdvice";
 import { CurrencySelector } from "@/components/wages/CurrencySelector";
 import { WagesHeader } from "@/components/wages/WagesHeader";
 import { useWageData } from "@/hooks/useWageData";
+import { useStaff } from "@/contexts/StaffContext";
 
 const WagesAnalysis = () => {
   const { monthlyBudget, setMonthlyBudget, currentCost, yearlyPrediction } = useWageData();
+  const { staff } = useStaff();
+
+  // Calculate total monthly wages
+  const totalMonthlyWages = staff.reduce((total, employee) => {
+    return total + (employee.hours * (employee.hourly_pay || 0));
+  }, 0);
 
   return (
     <Layout>
@@ -24,20 +31,20 @@ const WagesAnalysis = () => {
             />
             <WagesStats 
               monthlyBudget={monthlyBudget}
-              currentCost={currentCost}
-              yearlyPrediction={yearlyPrediction}
+              currentCost={totalMonthlyWages}
+              yearlyPrediction={totalMonthlyWages * 12}
             />
           </div>
           
           <div className="space-y-8">
             <WagesChart 
               monthlyBudget={monthlyBudget}
-              currentCost={currentCost}
+              currentCost={totalMonthlyWages}
             />
             <AIAdvice 
               monthlyBudget={monthlyBudget}
-              currentCost={currentCost}
-              yearlyPrediction={yearlyPrediction}
+              currentCost={totalMonthlyWages}
+              yearlyPrediction={totalMonthlyWages * 12}
             />
           </div>
         </div>
