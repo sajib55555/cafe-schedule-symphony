@@ -26,34 +26,26 @@ export function Header() {
     
     setIsSigningOut(true);
     try {
-      const { data: { session } } = await supabase.auth.getSession();
-      
-      if (!session) {
-        console.log('No active session found, redirecting to auth page');
-        navigate("/auth");
-        return;
-      }
-
       const { error } = await supabase.auth.signOut();
       
       if (error) {
-        if (error.message.includes('session_not_found')) {
-          console.log('Session not found, redirecting to auth page');
-          navigate("/auth");
-          return;
-        }
         throw error;
       }
+
+      toast({
+        title: "Success",
+        description: "You have been signed out successfully.",
+        variant: "default",
+      });
 
       navigate("/auth");
     } catch (error: any) {
       console.error("Sign out error:", error);
       toast({
-        title: "Notice",
-        description: "You have been signed out.",
-        variant: "default",
+        title: "Error",
+        description: error.message || "An error occurred while signing out.",
+        variant: "destructive",
       });
-      navigate("/auth");
     } finally {
       setIsSigningOut(false);
     }
