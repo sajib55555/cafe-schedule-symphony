@@ -44,16 +44,38 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   const handleSignOut = async () => {
     try {
+      // First check if we have a session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // If no session, just navigate to auth page
+        navigate("/auth");
+        return;
+      }
+
+      // Attempt to sign out
       const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      
+      if (error) {
+        // If we get a session_not_found error, just navigate to auth
+        if (error.message.includes('session_not_found')) {
+          navigate("/auth");
+          return;
+        }
+        // For other errors, show the error message
+        throw error;
+      }
+
+      // Successfully signed out
       navigate("/auth");
-    } catch (error) {
+    } catch (error: any) {
       console.error("Sign out error:", error);
       toast({
-        title: "Error",
-        description: "Failed to sign out",
-        variant: "destructive",
+        title: "Notice",
+        description: "You have been signed out.",
+        variant: "default",
       });
+      navigate("/auth");
     }
   };
 
