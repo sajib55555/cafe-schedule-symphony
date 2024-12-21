@@ -18,6 +18,7 @@ const App = () => {
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
   const [session, setSession] = useState<any>(null);
+  const [trialEnded, setTrialEnded] = useState(false);
 
   useEffect(() => {
     checkSession();
@@ -68,6 +69,8 @@ const App = () => {
           console.log('Trial comparison result:', trialEnd ? now <= trialEnd : false);
           
           setHasAccess(hasActiveSubscription || hasActiveTrial);
+          // Set trial ended state if trial has expired and no active subscription
+          setTrialEnded(!hasActiveSubscription && trialEnd && now > trialEnd);
         }
       }
     } catch (error) {
@@ -93,12 +96,16 @@ const App = () => {
                 path="/"
                 element={
                   session ? (
-                    hasAccess ? (
-                      <Layout>
-                        <Index />
-                      </Layout>
-                    ) : (
+                    trialEnded ? (
                       <Navigate to="/upgrade" replace />
+                    ) : (
+                      hasAccess ? (
+                        <Layout>
+                          <Index />
+                        </Layout>
+                      ) : (
+                        <Navigate to="/upgrade" replace />
+                      )
                     )
                   ) : (
                     <Navigate to="/auth" replace />
