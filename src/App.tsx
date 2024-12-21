@@ -11,6 +11,7 @@ import Index from "./pages/Index";
 import Subscription from "./pages/Subscription";
 import UpgradePage from "./pages/UpgradePage";
 import Auth from "./pages/Auth";
+import WagesAnalysis from "./pages/WagesAnalysis";
 
 const queryClient = new QueryClient();
 
@@ -29,6 +30,14 @@ const AppRoutes = () => {
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Index />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/wages"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <WagesAnalysis />
           </ProtectedRoute>
         }
       />
