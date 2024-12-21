@@ -118,16 +118,20 @@ const App = () => {
               <Route 
                 path="/subscription" 
                 element={
-                  <Subscription />
+                  session ? (
+                    <Subscription />
+                  ) : (
+                    <Navigate to="/auth" replace />
+                  )
                 } 
               />
               <Route 
                 path="/upgrade" 
                 element={
-                  hasAccess ? (
-                    <Navigate to="/" replace />
-                  ) : (
+                  session ? (
                     <UpgradePage />
+                  ) : (
+                    <Navigate to="/auth" replace />
                   )
                 } 
               />
