@@ -2,7 +2,7 @@ import { useState } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { format } from "date-fns";
-import { Staff } from '@/contexts/StaffContext';
+import { useAuth } from '@/contexts/AuthContext';
 
 export const useAISchedule = (
   selectedWeekStart: Date,
@@ -11,6 +11,7 @@ export const useAISchedule = (
 ) => {
   const [isGeneratingAISchedule, setIsGeneratingAISchedule] = useState(false);
   const { toast } = useToast();
+  const { session } = useAuth();
 
   const handleGenerateAISchedule = async () => {
     try {
@@ -33,26 +34,18 @@ export const useAISchedule = (
       }
 
       // Call the AI schedule generation function
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/generate-schedule`,
-        {
-          method: 'POST',
-          headers: {
-            'Authorization': `Bearer ${import.meta.env.VITE_SUPABASE_ANON_KEY}`,
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            weekStart: format(selectedWeekStart, 'yyyy-MM-dd'),
-            companyId: profile.company_id
-          }),
+      const response = await supabase.functions.invoke('generate-schedule', {
+        body: {
+          weekStart: format(selectedWeekStart, 'yyyy-MM-dd'),
+          companyId: profile.company_id
         }
-      );
+      });
 
-      if (!response.ok) {
-        throw new Error('Failed to generate schedule');
+      if (response.error) {
+        throw new Error(response.error.message);
       }
 
-      const aiSchedule = await response.json();
+      const aiSchedule = response.data;
       
       // Update the shifts state with the AI-generated schedule
       setShifts(prev => ({
