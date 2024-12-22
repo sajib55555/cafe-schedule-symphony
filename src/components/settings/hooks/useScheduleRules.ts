@@ -66,7 +66,7 @@ export function useScheduleRules() {
 
       const newRule = {
         company_id: profile.company_id,
-        role: "Barista",
+        role: "Barista" as const,
         day_of_week: 1,
         start_time: "09:00",
         end_time: "17:00",
@@ -101,7 +101,6 @@ export function useScheduleRules() {
     try {
       const updatedRule = { ...rules[index], [field]: value };
       
-      // Ensure max_staff is not less than min_staff
       if (field === "min_staff" && typeof value === "number" && updatedRule.max_staff < value) {
         updatedRule.max_staff = value;
       }
