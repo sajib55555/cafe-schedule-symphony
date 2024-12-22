@@ -107,8 +107,8 @@ export function ScheduleRulesForm() {
       const updatedRule = { ...rules[index], [field]: value };
       
       // Ensure max_staff is not less than min_staff
-      if (field === "min_staff" && updatedRule.max_staff < value) {
-        updatedRule.max_staff = value as number;
+      if (field === "min_staff" && typeof value === "number" && updatedRule.max_staff < value) {
+        updatedRule.max_staff = value;
       }
 
       const { error } = await supabase

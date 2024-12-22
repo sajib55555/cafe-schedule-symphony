@@ -1,6 +1,6 @@
 export interface ScheduleRule {
   id?: number;
-  role: string;
+  role: StaffRole;
   day_of_week: number;
   start_time: string;
   end_time: string;
@@ -18,7 +18,26 @@ export const DAYS = [
   { value: 6, label: "Saturday" },
 ];
 
-export const ROLES = [
+export type StaffRole = 
+  | "Barista"
+  | "Floor"
+  | "Waiter"
+  | "Waitress"
+  | "Team Leader"
+  | "Shift Leader"
+  | "Assistant Manager"
+  | "General Manager"
+  | "Operation Manager"
+  | "Duty Manager"
+  | "Food Runner"
+  | "Cleaner"
+  | "Kitchen Porter"
+  | "Head Chef"
+  | "Sous Chef"
+  | "Commie Chef"
+  | "Cook";
+
+export const ROLES: StaffRole[] = [
   "Barista",
   "Floor",
   "Waiter",
