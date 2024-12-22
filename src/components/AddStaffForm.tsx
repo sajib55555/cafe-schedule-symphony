@@ -53,11 +53,19 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         throw new Error('Could not get company ID');
       }
 
+      // Convert roles array to a comma-separated string for the role column
+      const roleString = newEmployee.roles.join(', ');
+
       const { data: insertedStaff, error: insertError } = await supabase
         .from('staff')
         .insert([{
-          ...newEmployee,
-          role: newEmployee.roles.join(', '),
+          name: newEmployee.name,
+          role: roleString, // Use role (singular) instead of roles
+          email: newEmployee.email,
+          phone: newEmployee.phone,
+          availability: newEmployee.availability,
+          hours: newEmployee.hours,
+          hourly_pay: newEmployee.hourly_pay,
           company_id: profileData.company_id
         }])
         .select()
