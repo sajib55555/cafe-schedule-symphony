@@ -13,26 +13,29 @@ export const useWageData = () => {
   useEffect(() => {
     const loadWageData = async () => {
       try {
+        if (!session?.user?.id) return;
+
         const { data: profile } = await supabase
           .from('profiles')
           .select('company_id')
-          .eq('id', session?.user.id)
-          .single();
+          .eq('id', session.user.id)
+          .maybeSingle();
 
         if (profile?.company_id) {
+          // Use maybeSingle() instead of single() to handle no data case
           const { data: budget } = await supabase
             .from('wage_budgets')
             .select('monthly_budget')
             .eq('company_id', profile.company_id)
-            .single();
+            .maybeSingle();
 
-          if (budget) {
-            setMonthlyBudget(budget.monthly_budget);
-          }
+          // Set budget to 0 if no data exists
+          setMonthlyBudget(budget?.monthly_budget || 0);
 
           const { data: staff } = await supabase
             .from('staff')
-            .select('hours, hourly_pay');
+            .select('hours, hourly_pay')
+            .eq('company_id', profile.company_id);
 
           const totalCost = staff?.reduce((acc, curr) => {
             return acc + (curr.hours || 0) * (curr.hourly_pay || 0);
