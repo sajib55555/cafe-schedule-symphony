@@ -7,13 +7,15 @@ import { Checkbox } from "@/components/ui/checkbox";
 import { useStaff } from '@/contexts/StaffContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
+import { Card } from "@/components/ui/card";
+import { ScrollArea } from "@/components/ui/scroll-area";
 
 export function AddStaffForm({ onClose }: { onClose: () => void }) {
   const { staff, setStaff } = useStaff();
   const { session } = useAuth();
   const [newEmployee, setNewEmployee] = useState({
     name: "",
-    role: "",
+    roles: [] as string[],
     email: "",
     phone: "",
     availability: [] as string[],
@@ -21,6 +23,25 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
     hourly_pay: 0
   });
   const { toast } = useToast();
+
+  const ROLES = [
+    "Waiter",
+    "Waitress",
+    "Team Leader",
+    "Shift Leader",
+    "Assistant Manager",
+    "General Manager",
+    "Operation Manager",
+    "Duty Manager",
+    "Food Runner",
+    "Cleaner",
+    "Kitchen Porter",
+    "Head Chef",
+    "Sous Chef",
+    "Commie Chef",
+    "Cook",
+    "Waiting Staff"
+  ];
 
   const daysOfWeek = [
     "Monday",
@@ -42,17 +63,16 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    if (!newEmployee.name || !newEmployee.role || !newEmployee.email || !newEmployee.phone) {
+    if (!newEmployee.name || newEmployee.roles.length === 0 || !newEmployee.email || !newEmployee.phone) {
       toast({
         title: "Error",
-        description: "Please fill in all required fields",
+        description: "Please fill in all required fields and select at least one role",
         variant: "destructive",
       });
       return;
     }
 
     try {
-      // Get the user's company_id
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('company_id')
@@ -67,6 +87,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         .from('staff')
         .insert([{
           ...newEmployee,
+          role: newEmployee.roles.join(', '), // Join multiple roles with comma
           company_id: profileData.company_id
         }])
         .select()
@@ -76,7 +97,15 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
 
       if (insertedStaff) {
         setStaff([...staff, insertedStaff]);
-        setNewEmployee({ name: "", role: "", email: "", phone: "", availability: [], hours: 0, hourly_pay: 0 });
+        setNewEmployee({ 
+          name: "", 
+          roles: [], 
+          email: "", 
+          phone: "", 
+          availability: [], 
+          hours: 0, 
+          hourly_pay: 0 
+        });
         toast({
           title: "Success",
           description: "New staff member added successfully",
@@ -91,6 +120,15 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         variant: "destructive",
       });
     }
+  };
+
+  const handleRoleToggle = (role: string) => {
+    setNewEmployee(prev => ({
+      ...prev,
+      roles: prev.roles.includes(role)
+        ? prev.roles.filter(r => r !== role)
+        : [...prev.roles, role]
+    }));
   };
 
   const handleAvailabilityChange = (day: string) => {
@@ -116,13 +154,28 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         />
       </div>
       <div className="space-y-2">
-        <Label htmlFor="role">Role *</Label>
-        <Input
-          id="role"
-          value={newEmployee.role}
-          onChange={(e) => setNewEmployee({ ...newEmployee, role: e.target.value })}
-          placeholder="Enter staff role"
-        />
+        <Label>Roles *</Label>
+        <Card className="p-4">
+          <ScrollArea className="h-[200px] pr-4">
+            <div className="space-y-2">
+              {ROLES.map((role) => (
+                <div key={role} className="flex items-center space-x-2">
+                  <Checkbox
+                    id={`role-${role}`}
+                    checked={newEmployee.roles.includes(role)}
+                    onCheckedChange={() => handleRoleToggle(role)}
+                  />
+                  <label
+                    htmlFor={`role-${role}`}
+                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+                  >
+                    {role}
+                  </label>
+                </div>
+              ))}
+            </div>
+          </ScrollArea>
+        </Card>
       </div>
       <div className="space-y-2">
         <Label htmlFor="email">Email *</Label>
@@ -175,4 +228,4 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
       </Button>
     </div>
   );
-};
+}
