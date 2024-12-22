@@ -148,6 +148,7 @@ export type Database = {
       staff: {
         Row: {
           availability: string[] | null
+          company_id: string | null
           created_at: string
           email: string | null
           hourly_pay: number | null
@@ -160,6 +161,7 @@ export type Database = {
         }
         Insert: {
           availability?: string[] | null
+          company_id?: string | null
           created_at?: string
           email?: string | null
           hourly_pay?: number | null
@@ -172,6 +174,7 @@ export type Database = {
         }
         Update: {
           availability?: string[] | null
+          company_id?: string | null
           created_at?: string
           email?: string | null
           hourly_pay?: number | null
@@ -183,6 +186,13 @@ export type Database = {
           user_id?: string | null
         }
         Relationships: [
+          {
+            foreignKeyName: "staff_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
           {
             foreignKeyName: "staff_user_id_fkey"
             columns: ["user_id"]

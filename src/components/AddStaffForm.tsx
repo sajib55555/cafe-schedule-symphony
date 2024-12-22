@@ -5,9 +5,12 @@ import { Label } from "@/components/ui/label";
 import { useToast } from "@/components/ui/use-toast";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useStaff } from '@/contexts/StaffContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useAuth } from '@/contexts/AuthContext';
 
 export function AddStaffForm({ onClose }: { onClose: () => void }) {
   const { staff, setStaff } = useStaff();
+  const { session } = useAuth();
   const [newEmployee, setNewEmployee] = useState({
     name: "",
     role: "",
@@ -29,7 +32,16 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
     "Sunday",
   ];
 
-  const handleAddEmployee = () => {
+  const handleAddEmployee = async () => {
+    if (!session?.user?.id) {
+      toast({
+        title: "Error",
+        description: "You must be logged in to add staff members",
+        variant: "destructive",
+      });
+      return;
+    }
+
     if (!newEmployee.name || !newEmployee.role || !newEmployee.email || !newEmployee.phone) {
       toast({
         title: "Error",
@@ -39,18 +51,46 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
       return;
     }
 
-    const employee = {
-      id: Math.max(0, ...staff.map(s => s.id)) + 1,
-      ...newEmployee,
-    };
+    try {
+      // Get the user's company_id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', session.user.id)
+        .single();
 
-    setStaff([...staff, employee]);
-    setNewEmployee({ name: "", role: "", email: "", phone: "", availability: [], hours: 0, hourly_pay: 0 });
-    toast({
-      title: "Success",
-      description: "New staff member added successfully",
-    });
-    onClose();
+      if (profileError || !profileData?.company_id) {
+        throw new Error('Could not get company ID');
+      }
+
+      const { data: insertedStaff, error: insertError } = await supabase
+        .from('staff')
+        .insert([{
+          ...newEmployee,
+          company_id: profileData.company_id
+        }])
+        .select()
+        .single();
+
+      if (insertError) throw insertError;
+
+      if (insertedStaff) {
+        setStaff([...staff, insertedStaff]);
+        setNewEmployee({ name: "", role: "", email: "", phone: "", availability: [], hours: 0, hourly_pay: 0 });
+        toast({
+          title: "Success",
+          description: "New staff member added successfully",
+        });
+        onClose();
+      }
+    } catch (error) {
+      console.error('Error adding staff member:', error);
+      toast({
+        title: "Error",
+        description: "Failed to add staff member. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleAvailabilityChange = (day: string) => {
@@ -135,4 +175,4 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
       </Button>
     </div>
   );
-}
+};

@@ -3,6 +3,8 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useStaff } from '@/contexts/StaffContext';
+import { supabase } from '@/integrations/supabase/client';
+import { useToast } from "@/components/ui/use-toast";
 
 export function EditStaffForm({ 
   employee,
@@ -14,6 +16,7 @@ export function EditStaffForm({
   onCancel: () => void;
 }) {
   const { staff, setStaff } = useStaff();
+  const { toast } = useToast();
   
   const daysOfWeek = [
     "Monday",
@@ -25,16 +28,55 @@ export function EditStaffForm({
     "Sunday",
   ];
 
-  const handleAvailabilityChange = (day: string) => {
-    setStaff(staff.map(emp => {
-      if (emp.id === employee.id) {
-        const newAvailability = emp.availability.includes(day)
-          ? emp.availability.filter((d) => d !== day)
-          : [...emp.availability, day];
-        return { ...emp, availability: newAvailability };
-      }
-      return emp;
-    }));
+  const handleAvailabilityChange = async (day: string) => {
+    const newAvailability = employee.availability.includes(day)
+      ? employee.availability.filter((d) => d !== day)
+      : [...employee.availability, day];
+
+    try {
+      const { error } = await supabase
+        .from('staff')
+        .update({ availability: newAvailability })
+        .eq('id', employee.id);
+
+      if (error) throw error;
+
+      setStaff(staff.map(emp => {
+        if (emp.id === employee.id) {
+          return { ...emp, availability: newAvailability };
+        }
+        return emp;
+      }));
+    } catch (error) {
+      console.error('Error updating availability:', error);
+      toast({
+        title: "Error",
+        description: "Failed to update availability. Please try again.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleFieldUpdate = async (field: string, value: any) => {
+    try {
+      const { error } = await supabase
+        .from('staff')
+        .update({ [field]: value })
+        .eq('id', employee.id);
+
+      if (error) throw error;
+
+      setStaff(staff.map(emp => 
+        emp.id === employee.id ? { ...emp, [field]: value } : emp
+      ));
+    } catch (error) {
+      console.error(`Error updating ${field}:`, error);
+      toast({
+        title: "Error",
+        description: `Failed to update ${field}. Please try again.`,
+        variant: "destructive",
+      });
+    }
   };
 
   return (
