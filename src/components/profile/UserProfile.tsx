@@ -1,101 +1,38 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
-import { useNavigate } from "react-router-dom";
-import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Label } from "@/components/ui/label";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import {
-  AlertDialog,
-  AlertDialogAction,
-  AlertDialogCancel,
-  AlertDialogContent,
-  AlertDialogDescription,
-  AlertDialogFooter,
-  AlertDialogHeader,
-  AlertDialogTitle,
-  AlertDialogTrigger,
-} from "@/components/ui/alert-dialog";
-import { toast } from "sonner";
+import { Button } from "@/components/ui/button";
+import { useToast } from "@/components/ui/use-toast";
+import { EditProfileForm } from "./EditProfileForm";
+import { DeleteAccountButton } from "./DeleteAccountButton";
+import { Pencil } from "lucide-react";
 
-export const UserProfile = () => {
-  const { session } = useAuth();
-  const navigate = useNavigate();
+export function UserProfile() {
+  const [loading, setLoading] = useState(true);
+  const [profile, setProfile] = useState<any>(null);
   const [isEditing, setIsEditing] = useState(false);
-  const [loading, setLoading] = useState(false);
-  const [formData, setFormData] = useState({
-    fullName: "",
-    email: "",
-    position: "",
-    department: "",
-    phone: "",
-  });
+  const { session } = useAuth();
+  const { toast } = useToast();
 
   const fetchProfile = async () => {
     try {
-      const { data: profile, error } = await supabase
+      setLoading(true);
+      const { data, error } = await supabase
         .from("profiles")
         .select("*")
         .eq("id", session?.user?.id)
         .single();
 
       if (error) throw error;
-
-      setFormData({
-        fullName: profile.full_name || "",
-        email: profile.email || "",
-        position: profile.position || "",
-        department: profile.department || "",
-        phone: profile.phone || "",
-      });
+      setProfile(data);
     } catch (error) {
       console.error("Error fetching profile:", error);
-      toast.error("Failed to load profile");
-    }
-  };
-
-  const handleUpdateProfile = async () => {
-    try {
-      setLoading(true);
-      const { error } = await supabase
-        .from("profiles")
-        .update({
-          full_name: formData.fullName,
-          position: formData.position,
-          department: formData.department,
-          phone: formData.phone,
-        })
-        .eq("id", session?.user?.id);
-
-      if (error) throw error;
-
-      toast.success("Profile updated successfully");
-      setIsEditing(false);
-    } catch (error) {
-      console.error("Error updating profile:", error);
-      toast.error("Failed to update profile");
-    } finally {
-      setLoading(false);
-    }
-  };
-
-  const handleDeleteAccount = async () => {
-    try {
-      setLoading(true);
-      
-      // Call the Edge Function to delete the user
-      const { data, error } = await supabase.functions.invoke('delete-user', {
-        body: { userId: session?.user?.id },
+      toast({
+        variant: "destructive",
+        title: "Error",
+        description: "Failed to fetch profile",
       });
-
-      if (error) throw error;
-
-      toast.success("Account deleted successfully");
-      navigate("/auth");
-    } catch (error) {
-      console.error("Error deleting account:", error);
-      toast.error("Failed to delete account");
     } finally {
       setLoading(false);
     }
@@ -107,121 +44,63 @@ export const UserProfile = () => {
     }
   }, [session?.user?.id]);
 
+  if (loading) {
+    return <div>Loading...</div>;
+  }
+
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card>
       <CardHeader>
         <CardTitle>Profile Settings</CardTitle>
       </CardHeader>
-      <CardContent className="space-y-6">
-        <div className="space-y-4">
-          <div className="grid gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="fullName">Full Name</Label>
-              <Input
-                id="fullName"
-                value={formData.fullName}
-                onChange={(e) =>
-                  setFormData({ ...formData, fullName: e.target.value })
-                }
-                disabled={!isEditing}
-              />
+      <CardContent className="space-y-4">
+        {isEditing ? (
+          <EditProfileForm
+            profile={profile}
+            onCancel={() => setIsEditing(false)}
+            onSuccess={() => {
+              setIsEditing(false);
+              fetchProfile();
+            }}
+          />
+        ) : (
+          <div className="space-y-4">
+            <div className="grid gap-2">
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Full Name</p>
+                <p className="text-sm">{profile?.full_name || "Not set"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Email</p>
+                <p className="text-sm">{profile?.email || "Not set"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                <p className="text-sm">{profile?.phone || "Not set"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Position</p>
+                <p className="text-sm">{profile?.position || "Not set"}</p>
+              </div>
+              <div>
+                <p className="text-sm font-medium text-muted-foreground">Department</p>
+                <p className="text-sm">{profile?.department || "Not set"}</p>
+              </div>
             </div>
             <div className="space-y-2">
-              <Label htmlFor="email">Email</Label>
-              <Input
-                id="email"
-                value={formData.email}
-                disabled={true}
-                type="email"
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="position">Position</Label>
-              <Input
-                id="position"
-                value={formData.position}
-                onChange={(e) =>
-                  setFormData({ ...formData, position: e.target.value })
-                }
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="department">Department</Label>
-              <Input
-                id="department"
-                value={formData.department}
-                onChange={(e) =>
-                  setFormData({ ...formData, department: e.target.value })
-                }
-                disabled={!isEditing}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="phone">Phone</Label>
-              <Input
-                id="phone"
-                value={formData.phone}
-                onChange={(e) =>
-                  setFormData({ ...formData, phone: e.target.value })
-                }
-                disabled={!isEditing}
-              />
-            </div>
-          </div>
-
-          <div className="flex justify-between">
-            {!isEditing ? (
-              <Button onClick={() => setIsEditing(true)} disabled={loading}>
+              <Button
+                onClick={() => setIsEditing(true)}
+                className="w-full"
+                variant="outline"
+              >
+                <Pencil className="mr-2 h-4 w-4" />
                 Edit Profile
               </Button>
-            ) : (
-              <div className="space-x-2">
-                <Button
-                  onClick={handleUpdateProfile}
-                  disabled={loading}
-                  variant="default"
-                >
-                  Save Changes
-                </Button>
-                <Button
-                  onClick={() => setIsEditing(false)}
-                  disabled={loading}
-                  variant="outline"
-                >
-                  Cancel
-                </Button>
-              </div>
-            )}
-
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" disabled={loading}>
-                  Delete Account
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Are you sure?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    This action cannot be undone. This will permanently delete your
-                    account and remove your data from our servers.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancel</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={handleDeleteAccount}
-                    className="bg-destructive text-destructive-foreground"
-                  >
-                    Delete Account
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
+              <DeleteAccountButton />
+            </div>
           </div>
-        </div>
+        )}
       </CardContent>
     </Card>
   );
-};
+}
