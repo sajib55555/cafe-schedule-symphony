@@ -5,7 +5,6 @@ import { useNavigate } from "react-router-dom";
 import { ChartBar, DollarSign, Rocket, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/Layout";
-import { UserProfile } from "@/components/profile/UserProfile";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -63,8 +62,6 @@ const Index = () => {
               )}
             </div>
           </header>
-          
-          <UserProfile />
           
           <div className="grid md:grid-cols-[300px,1fr] gap-8">
             <aside>
