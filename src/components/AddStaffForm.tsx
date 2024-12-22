@@ -1,14 +1,12 @@
-import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { useToast } from "@/components/ui/use-toast";
-import { Checkbox } from "@/components/ui/checkbox";
 import { useStaff } from '@/contexts/StaffContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { Card } from "@/components/ui/card";
-import { ScrollArea } from "@/components/ui/scroll-area";
+import { useToast } from "@/components/ui/use-toast";
+import { RolesSelector } from "./staff/RolesSelector";
+import { AvailabilitySelector } from "./staff/AvailabilitySelector";
 
 export function AddStaffForm({ onClose }: { onClose: () => void }) {
   const { staff, setStaff } = useStaff();
@@ -23,35 +21,6 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
     hourly_pay: 0
   });
   const { toast } = useToast();
-
-  const ROLES = [
-    "Waiter",
-    "Waitress",
-    "Team Leader",
-    "Shift Leader",
-    "Assistant Manager",
-    "General Manager",
-    "Operation Manager",
-    "Duty Manager",
-    "Food Runner",
-    "Cleaner",
-    "Kitchen Porter",
-    "Head Chef",
-    "Sous Chef",
-    "Commie Chef",
-    "Cook",
-    "Waiting Staff"
-  ];
-
-  const daysOfWeek = [
-    "Monday",
-    "Tuesday",
-    "Wednesday",
-    "Thursday",
-    "Friday",
-    "Saturday",
-    "Sunday",
-  ];
 
   const handleAddEmployee = async () => {
     if (!session?.user?.id) {
@@ -87,7 +56,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         .from('staff')
         .insert([{
           ...newEmployee,
-          role: newEmployee.roles.join(', '), // Join multiple roles with comma
+          role: newEmployee.roles.join(', '),
           company_id: profileData.company_id
         }])
         .select()
@@ -132,14 +101,12 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
   };
 
   const handleAvailabilityChange = (day: string) => {
-    const newAvailability = newEmployee.availability.includes(day)
-      ? newEmployee.availability.filter((d) => d !== day)
-      : [...newEmployee.availability, day];
-    
-    setNewEmployee({
-      ...newEmployee,
-      availability: newAvailability,
-    });
+    setNewEmployee(prev => ({
+      ...prev,
+      availability: prev.availability.includes(day)
+        ? prev.availability.filter((d) => d !== day)
+        : [...prev.availability, day]
+    }));
   };
 
   return (
@@ -153,30 +120,12 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           placeholder="Enter staff name"
         />
       </div>
-      <div className="space-y-2">
-        <Label>Roles *</Label>
-        <Card className="p-4">
-          <ScrollArea className="h-[200px] pr-4">
-            <div className="space-y-2">
-              {ROLES.map((role) => (
-                <div key={role} className="flex items-center space-x-2">
-                  <Checkbox
-                    id={`role-${role}`}
-                    checked={newEmployee.roles.includes(role)}
-                    onCheckedChange={() => handleRoleToggle(role)}
-                  />
-                  <label
-                    htmlFor={`role-${role}`}
-                    className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
-                  >
-                    {role}
-                  </label>
-                </div>
-              ))}
-            </div>
-          </ScrollArea>
-        </Card>
-      </div>
+
+      <RolesSelector
+        selectedRoles={newEmployee.roles}
+        onRoleToggle={handleRoleToggle}
+      />
+
       <div className="space-y-2">
         <Label htmlFor="email">Email *</Label>
         <Input
@@ -187,6 +136,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           placeholder="Enter email address"
         />
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="phone">Phone *</Label>
         <Input
@@ -196,6 +146,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           placeholder="Enter phone number"
         />
       </div>
+
       <div className="space-y-2">
         <Label htmlFor="hourly_pay">Hourly Pay ($) *</Label>
         <Input
@@ -208,21 +159,12 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           placeholder="Enter hourly pay rate"
         />
       </div>
-      <div className="space-y-2">
-        <Label>Availability</Label>
-        <div className="grid grid-cols-2 gap-2">
-          {daysOfWeek.map((day) => (
-            <div key={day} className="flex items-center space-x-2">
-              <Checkbox
-                id={`new-${day}`}
-                checked={newEmployee.availability.includes(day)}
-                onCheckedChange={() => handleAvailabilityChange(day)}
-              />
-              <label htmlFor={`new-${day}`} className="text-sm">{day}</label>
-            </div>
-          ))}
-        </div>
-      </div>
+
+      <AvailabilitySelector
+        availability={newEmployee.availability}
+        onAvailabilityChange={handleAvailabilityChange}
+      />
+
       <Button onClick={handleAddEmployee} className="w-full">
         Add Staff Member
       </Button>
