@@ -1,13 +1,8 @@
 import { format } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { Staff } from '@/contexts/StaffContext';
-import { supabase } from '@/integrations/supabase/client';
-
-const calculateHours = (startTime: string, endTime: string) => {
-  const start = new Date(`2000-01-01T${startTime}`);
-  const end = new Date(`2000-01-01T${endTime}`);
-  return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-};
+import { calculateHours, calculateTotalHours } from './utils/timeCalculations';
+import { updateStaffHours } from './services/staffService';
 
 export const useShiftActions = (
   shifts: any,
@@ -17,30 +12,6 @@ export const useShiftActions = (
   setStaff: React.Dispatch<React.SetStateAction<Staff[]>>
 ) => {
   const { toast } = useToast();
-
-  const updateStaffHours = async (staffId: number, newHours: number) => {
-    const { error } = await supabase
-      .from('staff')
-      .update({ hours: newHours })
-      .eq('id', staffId);
-
-    if (error) {
-      console.error('Error updating staff hours:', error);
-      throw error;
-    }
-  };
-
-  const calculateTotalHours = (staffName: string, weekStartStr: string, currentShifts: any) => {
-    let totalHours = 0;
-    const staffShifts = currentShifts[staffName] || {};
-    
-    for (const shift of Object.values(staffShifts)) {
-      const shiftData = shift as { startTime: string; endTime: string };
-      totalHours += calculateHours(shiftData.startTime, shiftData.endTime);
-    }
-    
-    return totalHours;
-  };
 
   const handleAddShift = async (selectedStaff: string, selectedDate: string, newShift: any) => {
     if (!selectedStaff || !selectedDate) return;
@@ -74,10 +45,7 @@ export const useShiftActions = (
 
         setStaff(prev => prev.map(person => {
           if (person.id === staffMember.id) {
-            return {
-              ...person,
-              hours: newTotalHours
-            };
+            return { ...person, hours: newTotalHours };
           }
           return person;
         }));
@@ -128,10 +96,7 @@ export const useShiftActions = (
 
         setStaff(prev => prev.map(person => {
           if (person.id === staffMember.id) {
-            return {
-              ...person,
-              hours: newTotalHours
-            };
+            return { ...person, hours: newTotalHours };
           }
           return person;
         }));
@@ -157,6 +122,7 @@ export const useShiftActions = (
     
     if (shift) {
       try {
+        // First update the shifts state
         setShifts(prev => {
           const newShifts = { ...prev };
           const staffShifts = { ...newShifts[weekStartStr]?.[staffName] };
@@ -174,8 +140,10 @@ export const useShiftActions = (
           return newShifts;
         });
 
+        // Find the staff member and update their hours
         const staffMember = staff.find(person => person.name === staffName);
         if (staffMember) {
+          // Calculate new total hours after deletion
           const newTotalHours = calculateTotalHours(staffName, weekStartStr, {
             ...shifts[weekStartStr],
             [staffName]: {
@@ -184,8 +152,10 @@ export const useShiftActions = (
             }
           });
 
+          // Update staff hours in the database
           await updateStaffHours(staffMember.id, newTotalHours);
 
+          // Update staff state with new hours
           setStaff(prev => prev.map(person => {
             if (person.id === staffMember.id) {
               return {
