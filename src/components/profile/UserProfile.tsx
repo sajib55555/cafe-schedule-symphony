@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
@@ -85,34 +85,23 @@ export const UserProfile = () => {
       setLoading(true);
       
       // Call the Edge Function to delete the user
-      const response = await fetch(
-        `${import.meta.env.VITE_SUPABASE_URL}/functions/v1/delete-user`,
-        {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${session?.access_token}`,
-          },
-          body: JSON.stringify({ userId: session?.user?.id }),
-        }
-      );
+      const { data, error } = await supabase.functions.invoke('delete-user', {
+        body: { userId: session?.user?.id },
+      });
 
-      if (!response.ok) {
-        const error = await response.json();
-        throw new Error(error.message || 'Failed to delete account');
-      }
+      if (error) throw error;
 
       toast.success("Account deleted successfully");
       navigate("/auth");
     } catch (error) {
       console.error("Error deleting account:", error);
-      toast.error(error.message || "Failed to delete account");
+      toast.error("Failed to delete account");
     } finally {
       setLoading(false);
     }
   };
 
-  useState(() => {
+  useEffect(() => {
     if (session?.user?.id) {
       fetchProfile();
     }
