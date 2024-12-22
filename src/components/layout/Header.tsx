@@ -10,7 +10,6 @@ export function Header() {
   const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
-    // Check session status when component mounts
     checkSession();
   }, []);
 
@@ -22,13 +21,32 @@ export function Header() {
   };
 
   const handleSignOut = async () => {
-    if (isSigningOut) return; // Prevent multiple sign-out attempts
+    if (isSigningOut) return;
     
     setIsSigningOut(true);
     try {
-      const { error } = await supabase.auth.signOut();
+      // First check if we have a valid session
+      const { data: { session } } = await supabase.auth.getSession();
+      
+      if (!session) {
+        // If no session exists, just redirect to auth
+        navigate("/auth");
+        return;
+      }
+
+      // Attempt to sign out
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'  // Changed from 'global' to 'local' to avoid session verification
+      });
       
       if (error) {
+        // If error is session-related, we still want to clear local state
+        if (error.message.includes('session') || error.status === 403) {
+          console.log('Session error during sign out, clearing local state');
+          await supabase.auth.signOut({ scope: 'local' });
+          navigate("/auth");
+          return;
+        }
         throw error;
       }
 
