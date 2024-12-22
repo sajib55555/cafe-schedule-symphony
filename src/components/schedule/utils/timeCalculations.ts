@@ -8,9 +8,10 @@ export const calculateTotalHours = (staffName: string, weekStartStr: string, cur
   let totalHours = 0;
   const staffShifts = currentShifts[staffName] || {};
   
-  for (const shift of Object.values(staffShifts)) {
-    const shiftData = shift as { startTime: string; endTime: string };
-    totalHours += calculateHours(shiftData.startTime, shiftData.endTime);
+  for (const [date, shift] of Object.entries(staffShifts)) {
+    if (shift && 'startTime' in shift && 'endTime' in shift) {
+      totalHours += calculateHours(shift.startTime, shift.endTime);
+    }
   }
   
   return totalHours;
