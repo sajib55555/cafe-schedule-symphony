@@ -29,16 +29,7 @@ const Index = () => {
           <header className="text-center mb-12 relative">
             <h1 className="text-4xl font-bold text-secondary mb-2">Café Schedule Manager</h1>
             <p className="text-gray-600">Easily manage your staff schedule</p>
-            <div className="absolute top-0 right-0 flex gap-2">
-              <Button 
-                variant="outline"
-                size="sm"
-                onClick={handleSettings}
-                className="flex items-center gap-2"
-              >
-                <Settings className="h-4 w-4" />
-                Settings
-              </Button>
+            <div className="absolute top-0 right-0 flex flex-col gap-2">
               <Button 
                 variant="secondary"
                 size="lg"
@@ -48,6 +39,15 @@ const Index = () => {
                 <DollarSign className="h-5 w-5" />
                 <ChartBar className="h-5 w-5" />
                 <span className="font-semibold">Wages Analysis</span>
+              </Button>
+              <Button 
+                variant="outline"
+                size="lg"
+                onClick={handleSettings}
+                className="flex items-center gap-2 shadow-md hover:shadow-lg transition-all duration-300 bg-white hover:bg-gray-50"
+              >
+                <Settings className="h-5 w-5 text-secondary" />
+                <span className="font-medium text-secondary">Settings & Profile</span>
               </Button>
               {!hasAccess && (
                 <Button 
