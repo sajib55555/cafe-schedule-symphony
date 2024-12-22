@@ -46,6 +46,7 @@ export const useAISchedule = (
       }
 
       const aiSchedule = response.data;
+      console.log('AI Generated Schedule:', aiSchedule);
       
       // Update the shifts state with the AI-generated schedule
       setShifts(prev => ({
