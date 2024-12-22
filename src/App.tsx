@@ -28,9 +28,11 @@ const AppRoutes = () => {
       <Route
         path="/dashboard"
         element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+          session ? (
             <Index />
-          </ProtectedRoute>
+          ) : (
+            <Navigate to="/" replace />
+          )
         }
       />
       <Route
