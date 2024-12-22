@@ -30,6 +30,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: FormData) => {
     try {
+      console.log("Starting signup process...");
       const user = await handleSignUp({
         email: data.email,
         password: data.password,
@@ -45,9 +46,14 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       });
       
       if (user) {
+        console.log("Signup successful, user:", user);
         toast.success("Your account has been created with a 2-day trial period.");
-        console.log("Redirecting to dashboard...");
-        navigate("/dashboard", { replace: true });
+        
+        // Add a small delay to ensure the toast is visible and auth state is updated
+        setTimeout(() => {
+          console.log("Redirecting to dashboard...");
+          navigate("/dashboard", { replace: true });
+        }, 1000);
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
