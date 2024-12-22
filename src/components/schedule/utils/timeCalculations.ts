@@ -1,10 +1,12 @@
+import { StaffShifts } from '../types/shift.types';
+
 export const calculateHours = (startTime: string, endTime: string) => {
   const start = new Date(`2000-01-01T${startTime}`);
   const end = new Date(`2000-01-01T${endTime}`);
   return (end.getTime() - start.getTime()) / (1000 * 60 * 60);
 };
 
-export const calculateTotalHours = (staffName: string, weekStartStr: string, currentShifts: any) => {
+export const calculateTotalHours = (staffName: string, weekStartStr: string, currentShifts: StaffShifts) => {
   let totalHours = 0;
   const staffShifts = currentShifts[staffName] || {};
   
