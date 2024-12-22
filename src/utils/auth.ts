@@ -5,6 +5,14 @@ export type SignUpData = {
   email: string;
   password: string;
   fullName: string;
+  companyName: string;
+  companyAddress?: string;
+  companyPhone?: string;
+  companyWebsite?: string;
+  companyDescription?: string;
+  position: string;
+  department?: string;
+  phone?: string;
 };
 
 export const handleSignUp = async (values: SignUpData) => {
@@ -68,7 +76,11 @@ export const handleSignUp = async (values: SignUpData) => {
       .from('companies')
       .insert([
         { 
-          name: `${values.fullName}'s Company`,
+          name: values.companyName,
+          address: values.companyAddress,
+          phone: values.companyPhone,
+          website: values.companyWebsite,
+          description: values.companyDescription,
           industry: 'Other',
           size: 'Small'
         }
@@ -86,14 +98,17 @@ export const handleSignUp = async (values: SignUpData) => {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 2); // 2 days trial period
 
-    // Update profile with trial dates and company_id
+    // Update profile with trial dates, company_id, and additional info
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
         trial_start: trialStart.toISOString(),
         trial_end: trialEnd.toISOString(),
         company_id: companyData.id,
-        full_name: values.fullName
+        full_name: values.fullName,
+        position: values.position,
+        department: values.department,
+        phone: values.phone
       })
       .eq('id', authData.user.id);
 

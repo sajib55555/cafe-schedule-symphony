@@ -11,25 +11,37 @@ export type Database = {
     Tables: {
       companies: {
         Row: {
+          address: string | null
           created_at: string
+          description: string | null
           id: string
           industry: string | null
           name: string
+          phone: string | null
           size: string | null
+          website: string | null
         }
         Insert: {
+          address?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           industry?: string | null
           name: string
+          phone?: string | null
           size?: string | null
+          website?: string | null
         }
         Update: {
+          address?: string | null
           created_at?: string
+          description?: string | null
           id?: string
           industry?: string | null
           name?: string
+          phone?: string | null
           size?: string | null
+          website?: string | null
         }
         Relationships: []
       }
@@ -38,9 +50,12 @@ export type Database = {
           company_id: string | null
           created_at: string
           currency_symbol: string | null
+          department: string | null
           email: string | null
           full_name: string | null
           id: string
+          phone: string | null
+          position: string | null
           role: string | null
           stripe_customer_id: string | null
           stripe_subscription_id: string | null
@@ -53,9 +68,12 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           currency_symbol?: string | null
+          department?: string | null
           email?: string | null
           full_name?: string | null
           id: string
+          phone?: string | null
+          position?: string | null
           role?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null
@@ -68,9 +86,12 @@ export type Database = {
           company_id?: string | null
           created_at?: string
           currency_symbol?: string | null
+          department?: string | null
           email?: string | null
           full_name?: string | null
           id?: string
+          phone?: string | null
+          position?: string | null
           role?: string | null
           stripe_customer_id?: string | null
           stripe_subscription_id?: string | null

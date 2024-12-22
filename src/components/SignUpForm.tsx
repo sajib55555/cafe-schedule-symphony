@@ -17,6 +17,14 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       email: "",
       password: "",
       fullName: "",
+      companyName: "",
+      companyAddress: "",
+      companyPhone: "",
+      companyWebsite: "",
+      companyDescription: "",
+      position: "",
+      department: "",
+      phone: "",
     },
   });
 
@@ -26,6 +34,14 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         email: data.email,
         password: data.password,
         fullName: data.fullName,
+        companyName: data.companyName,
+        companyAddress: data.companyAddress,
+        companyPhone: data.companyPhone,
+        companyWebsite: data.companyWebsite,
+        companyDescription: data.companyDescription,
+        position: data.position,
+        department: data.department,
+        phone: data.phone,
       });
       
       if (user) {
@@ -34,6 +50,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
+      toast.error(error.message || "Failed to create account");
     }
   };
 
