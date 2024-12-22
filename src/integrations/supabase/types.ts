@@ -110,6 +110,44 @@ export type Database = {
           },
         ]
       }
+      schedule_rules: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          day_of_week: number
+          end_time: string
+          id: number
+          role: string
+          start_time: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          day_of_week: number
+          end_time: string
+          id?: number
+          role: string
+          start_time: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          day_of_week?: number
+          end_time?: string
+          id?: number
+          role?: string
+          start_time?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "schedule_rules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       shifts: {
         Row: {
           created_at: string

@@ -12,6 +12,7 @@ import Subscription from "./pages/Subscription";
 import UpgradePage from "./pages/UpgradePage";
 import Auth from "./pages/Auth";
 import WagesAnalysis from "./pages/WagesAnalysis";
+import Settings from "./pages/Settings";
 
 const queryClient = new QueryClient();
 
@@ -66,6 +67,16 @@ const AppRoutes = () => {
             <Navigate to="/" replace />
           )
         } 
+      />
+      <Route
+        path="/settings"
+        element={
+          session ? (
+            <Settings />
+          ) : (
+            <Navigate to="/" replace />
+          )
+        }
       />
       <Route path="*" element={<Navigate to="/" replace />} />
     </Routes>
