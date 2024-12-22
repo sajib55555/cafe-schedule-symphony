@@ -2,30 +2,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Input } from "@/components/ui/input";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { useToast } from "@/components/ui/use-toast";
-import { Trash2 } from "lucide-react";
-
-interface ScheduleRule {
-  id?: number;
-  role: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-}
-
-const DAYS = [
-  { value: 0, label: "Sunday" },
-  { value: 1, label: "Monday" },
-  { value: 2, label: "Tuesday" },
-  { value: 3, label: "Wednesday" },
-  { value: 4, label: "Thursday" },
-  { value: 5, label: "Friday" },
-  { value: 6, label: "Saturday" },
-];
-
-const ROLES = ["Barista", "Floor"];
+import { useToast } from "@/hooks/use-toast";
+import { ScheduleRule, ROLES } from "./types";
+import { ScheduleRuleItem } from "./ScheduleRuleItem";
 
 export function ScheduleRulesForm() {
   const [rules, setRules] = useState<ScheduleRule[]>([]);
@@ -97,6 +76,8 @@ export function ScheduleRulesForm() {
         day_of_week: 1,
         start_time: "09:00",
         end_time: "17:00",
+        min_staff: 1,
+        max_staff: 1,
       };
 
       const { data, error } = await supabase
@@ -124,6 +105,12 @@ export function ScheduleRulesForm() {
   const handleUpdateRule = async (index: number, field: keyof ScheduleRule, value: string | number) => {
     try {
       const updatedRule = { ...rules[index], [field]: value };
+      
+      // Ensure max_staff is not less than min_staff
+      if (field === "min_staff" && updatedRule.max_staff < value) {
+        updatedRule.max_staff = value as number;
+      }
+
       const { error } = await supabase
         .from("schedule_rules")
         .update(updatedRule)
@@ -181,61 +168,12 @@ export function ScheduleRulesForm() {
     <div className="space-y-6">
       <div className="space-y-4">
         {rules.map((rule, index) => (
-          <div key={rule.id} className="flex items-center gap-4 p-4 border rounded-lg">
-            <Select
-              value={rule.role}
-              onValueChange={(value) => handleUpdateRule(index, "role", value)}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select role" />
-              </SelectTrigger>
-              <SelectContent>
-                {ROLES.map((role) => (
-                  <SelectItem key={role} value={role}>
-                    {role}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Select
-              value={rule.day_of_week.toString()}
-              onValueChange={(value) => handleUpdateRule(index, "day_of_week", parseInt(value))}
-            >
-              <SelectTrigger className="w-[180px]">
-                <SelectValue placeholder="Select day" />
-              </SelectTrigger>
-              <SelectContent>
-                {DAYS.map((day) => (
-                  <SelectItem key={day.value} value={day.value.toString()}>
-                    {day.label}
-                  </SelectItem>
-                ))}
-              </SelectContent>
-            </Select>
-
-            <Input
-              type="time"
-              value={rule.start_time}
-              onChange={(e) => handleUpdateRule(index, "start_time", e.target.value)}
-              className="w-[150px]"
-            />
-
-            <Input
-              type="time"
-              value={rule.end_time}
-              onChange={(e) => handleUpdateRule(index, "end_time", e.target.value)}
-              className="w-[150px]"
-            />
-
-            <Button
-              variant="destructive"
-              size="icon"
-              onClick={() => rule.id && handleDeleteRule(rule.id)}
-            >
-              <Trash2 className="h-4 w-4" />
-            </Button>
-          </div>
+          <ScheduleRuleItem
+            key={rule.id}
+            rule={rule}
+            onUpdate={(field, value) => handleUpdateRule(index, field, value)}
+            onDelete={() => rule.id && handleDeleteRule(rule.id)}
+          />
         ))}
       </div>
 

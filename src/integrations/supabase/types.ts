@@ -117,7 +117,9 @@ export type Database = {
           day_of_week: number
           end_time: string
           id: number
-          role: string
+          max_staff: number
+          min_staff: number
+          role: Database["public"]["Enums"]["staff_role"]
           start_time: string
         }
         Insert: {
@@ -126,7 +128,9 @@ export type Database = {
           day_of_week: number
           end_time: string
           id?: number
-          role: string
+          max_staff?: number
+          min_staff?: number
+          role: Database["public"]["Enums"]["staff_role"]
           start_time: string
         }
         Update: {
@@ -135,7 +139,9 @@ export type Database = {
           day_of_week?: number
           end_time?: string
           id?: number
-          role?: string
+          max_staff?: number
+          min_staff?: number
+          role?: Database["public"]["Enums"]["staff_role"]
           start_time?: string
         }
         Relationships: [
@@ -280,7 +286,24 @@ export type Database = {
       [_ in never]: never
     }
     Enums: {
-      [_ in never]: never
+      staff_role:
+        | "Barista"
+        | "Floor"
+        | "Waiter"
+        | "Waitress"
+        | "Team Leader"
+        | "Shift Leader"
+        | "Assistant Manager"
+        | "General Manager"
+        | "Operation Manager"
+        | "Duty Manager"
+        | "Food Runner"
+        | "Cleaner"
+        | "Kitchen Porter"
+        | "Head Chef"
+        | "Sous Chef"
+        | "Commie Chef"
+        | "Cook"
     }
     CompositeTypes: {
       [_ in never]: never
