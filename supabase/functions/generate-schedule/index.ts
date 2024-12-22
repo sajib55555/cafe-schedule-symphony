@@ -38,15 +38,22 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Fetch staff and rules
-    const { data: staff } = await supabase
+    const { data: staff, error: staffError } = await supabase
       .from('staff')
       .select('*')
       .eq('company_id', companyId)
 
-    const { data: rules } = await supabase
+    if (staffError) throw staffError;
+
+    const { data: rules, error: rulesError } = await supabase
       .from('schedule_rules')
       .select('*')
       .eq('company_id', companyId)
+
+    if (rulesError) throw rulesError;
+
+    console.log('Staff data:', staff);
+    console.log('Rules data:', rules);
 
     // Use OpenAI to generate the schedule
     const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
@@ -61,20 +68,8 @@ serve(async (req) => {
           {
             role: "system",
             content: `You are a scheduling assistant that creates optimal weekly schedules for a café. 
-            You need to follow these rules:
-            1. Staff can only work on days they are available
-            2. Follow the schedule rules for minimum and maximum staff per role
-            3. Try to distribute hours fairly among staff members
-            4. Ensure all required shifts are covered
-            5. Return the schedule in a structured JSON format`
-          },
-          {
-            role: "user",
-            content: `Create a weekly schedule starting from ${weekStart} with these parameters:
-            Staff: ${JSON.stringify(staff)}
-            Schedule Rules: ${JSON.stringify(rules)}
-            
-            Return the schedule as a JSON object with this structure:
+            You must return ONLY a valid JSON object with no additional text or markdown formatting.
+            The response must follow this exact structure:
             {
               "weekStart": "YYYY-MM-DD",
               "shifts": {
@@ -87,6 +82,14 @@ serve(async (req) => {
                 }
               }
             }`
+          },
+          {
+            role: "user",
+            content: `Create a weekly schedule starting from ${weekStart} with these parameters:
+            Staff: ${JSON.stringify(staff)}
+            Schedule Rules: ${JSON.stringify(rules)}
+            
+            Remember to return ONLY the JSON object with no additional text or formatting.`
           }
         ],
         temperature: 0.7,
@@ -97,10 +100,21 @@ serve(async (req) => {
     const aiResponse = await openAIResponse.json();
     console.log('AI Response:', aiResponse);
     
-    // Parse the response content as JSON
+    if (!aiResponse.choices?.[0]?.message?.content) {
+      throw new Error('Invalid AI response format');
+    }
+
     let schedule;
     try {
-      schedule = JSON.parse(aiResponse.choices[0].message.content);
+      const content = aiResponse.choices[0].message.content.trim();
+      // Remove any markdown formatting if present
+      const jsonContent = content.replace(/```json\n?|\n?```/g, '');
+      schedule = JSON.parse(jsonContent);
+      
+      // Validate schedule structure
+      if (!schedule.weekStart || !schedule.shifts) {
+        throw new Error('Invalid schedule structure');
+      }
     } catch (error) {
       console.error('Error parsing AI response:', error);
       console.log('Raw AI response content:', aiResponse.choices[0].message.content);
@@ -112,7 +126,7 @@ serve(async (req) => {
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     )
   } catch (error) {
-    console.error('Error:', error)
+    console.error('Error:', error);
     return new Response(
       JSON.stringify({ error: error.message }),
       { 
