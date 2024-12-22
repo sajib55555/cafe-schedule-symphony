@@ -95,7 +95,17 @@ serve(async (req) => {
     });
 
     const aiResponse = await openAIResponse.json();
-    const schedule = JSON.parse(aiResponse.choices[0].message.content);
+    console.log('AI Response:', aiResponse);
+    
+    // Parse the response content as JSON
+    let schedule;
+    try {
+      schedule = JSON.parse(aiResponse.choices[0].message.content);
+    } catch (error) {
+      console.error('Error parsing AI response:', error);
+      console.log('Raw AI response content:', aiResponse.choices[0].message.content);
+      throw new Error('Failed to parse AI generated schedule');
+    }
 
     return new Response(
       JSON.stringify(schedule),
