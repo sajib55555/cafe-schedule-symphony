@@ -52,13 +52,15 @@ export const useAISchedule = (
         throw new Error('Invalid AI schedule format');
       }
 
-      // Format the shifts data to match the expected structure
-      const formattedShifts = {};
       const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
-      formattedShifts[weekStartStr] = aiSchedule.shifts;
-
-      // Update the shifts state with the formatted AI-generated schedule
-      setShifts(formattedShifts);
+      
+      // Update the shifts state with the AI-generated schedule
+      setShifts((prev: any) => {
+        const newState = { ...prev };
+        newState[weekStartStr] = aiSchedule.shifts;
+        console.log('New shifts state:', newState);
+        return newState;
+      });
 
       toast({
         title: "Success",
