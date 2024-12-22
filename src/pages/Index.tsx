@@ -2,7 +2,7 @@ import { EmployeeList } from "@/components/EmployeeList";
 import { WeeklySchedule } from "@/components/WeeklySchedule";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { DollarSign, Rocket } from "lucide-react";
+import { ChartBar, DollarSign, Rocket } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/Layout";
 import { UserProfile } from "@/components/profile/UserProfile";
@@ -28,13 +28,14 @@ const Index = () => {
             <p className="text-gray-600">Easily manage your staff schedule</p>
             <div className="absolute top-0 right-0 flex gap-2">
               <Button 
-                variant="outline" 
-                size="sm" 
+                variant="secondary"
+                size="lg"
                 onClick={handleWagesAnalysis}
-                className="flex items-center gap-2"
+                className="flex items-center gap-2 shadow-lg hover:shadow-xl transition-all duration-300 bg-gradient-to-r from-secondary to-secondary/90"
               >
-                <DollarSign className="h-4 w-4" />
-                Wages Analysis
+                <DollarSign className="h-5 w-5" />
+                <ChartBar className="h-5 w-5" />
+                <span className="font-semibold">Wages Analysis</span>
               </Button>
               {!hasAccess && (
                 <Button 
