@@ -70,6 +70,20 @@ export function ScheduleRulesForm() {
         return;
       }
 
+      // Check if a rule for this role and day already exists
+      const existingRule = rules.find(r => 
+        r.role === ROLES[0] && r.day_of_week === 1
+      );
+
+      if (existingRule) {
+        toast({
+          title: "Error",
+          description: "A rule for this role and day already exists",
+          variant: "destructive",
+        });
+        return;
+      }
+
       const newRule = {
         company_id: profile.company_id,
         role: ROLES[0],
@@ -86,7 +100,18 @@ export function ScheduleRulesForm() {
         .select()
         .single();
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") {
+          toast({
+            title: "Error",
+            description: "A rule for this role and day already exists",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
+
       setRules([...rules, data]);
       toast({
         title: "Success",
@@ -111,12 +136,40 @@ export function ScheduleRulesForm() {
         updatedRule.max_staff = value;
       }
 
+      // Check for duplicate rule if changing role or day
+      if (field === "role" || field === "day_of_week") {
+        const existingRule = rules.find(r => 
+          r.id !== updatedRule.id && 
+          r.role === updatedRule.role && 
+          r.day_of_week === updatedRule.day_of_week
+        );
+
+        if (existingRule) {
+          toast({
+            title: "Error",
+            description: "A rule for this role and day already exists",
+            variant: "destructive",
+          });
+          return;
+        }
+      }
+
       const { error } = await supabase
         .from("schedule_rules")
         .update(updatedRule)
         .eq("id", updatedRule.id);
 
-      if (error) throw error;
+      if (error) {
+        if (error.code === "23505") {
+          toast({
+            title: "Error",
+            description: "A rule for this role and day already exists",
+            variant: "destructive",
+          });
+          return;
+        }
+        throw error;
+      }
 
       const newRules = [...rules];
       newRules[index] = updatedRule;
