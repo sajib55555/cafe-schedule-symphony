@@ -55,78 +55,47 @@ serve(async (req) => {
     console.log('Staff data:', staff);
     console.log('Rules data:', rules);
 
-    // Use OpenAI to generate the schedule
-    const openAIResponse = await fetch('https://api.openai.com/v1/chat/completions', {
-      method: 'POST',
-      headers: {
-        'Authorization': `Bearer ${Deno.env.get('OPENAI_API_KEY')}`,
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({
-        model: "gpt-4o",
-        messages: [
-          {
-            role: "system",
-            content: `You are a scheduling assistant that creates optimal weekly schedules for a café. 
-            Return ONLY a valid JSON object with this exact structure, no additional text:
-            {
-              "weekStart": "${weekStart}",
-              "shifts": {
-                "staffName": {
-                  "YYYY-MM-DD": {
-                    "startTime": "HH:MM",
-                    "endTime": "HH:MM",
-                    "role": "role"
-                  }
-                }
-              }
-            }`
-          },
-          {
-            role: "user",
-            content: `Create a weekly schedule starting from ${weekStart}.
-            Staff: ${JSON.stringify(staff)}
-            Schedule Rules: ${JSON.stringify(rules)}
-            
-            Important: Return ONLY the JSON object with no additional text.`
-          }
-        ],
-        temperature: 0.7,
-        max_tokens: 2000,
-      }),
+    // Generate a basic schedule based on staff and rules
+    const shifts: { [key: string]: any } = {};
+    
+    // For each staff member
+    staff.forEach((employee: Staff) => {
+      shifts[employee.name] = {};
+      
+      // For each day of the week (0-6, where 0 is Monday)
+      for (let day = 0; day < 7; day++) {
+        const date = new Date(weekStart);
+        date.setDate(date.getDate() + day);
+        const dateStr = date.toISOString().split('T')[0];
+        
+        // Find applicable rules for this day and staff role
+        const dayRules = rules.filter((rule: ScheduleRule) => 
+          rule.day_of_week === day && rule.role === employee.role
+        );
+        
+        if (dayRules.length > 0) {
+          // Use the first applicable rule
+          const rule = dayRules[0];
+          shifts[employee.name][dateStr] = {
+            startTime: rule.start_time.slice(0, 5), // Format: HH:mm
+            endTime: rule.end_time.slice(0, 5),     // Format: HH:mm
+            role: employee.role
+          };
+        }
+      }
     });
 
-    const aiResponse = await openAIResponse.json();
-    console.log('AI Response:', aiResponse);
-    
-    if (!aiResponse.choices?.[0]?.message?.content) {
-      throw new Error('Invalid AI response format');
-    }
+    const schedule = {
+      weekStart,
+      shifts
+    };
 
-    let schedule;
-    try {
-      const content = aiResponse.choices[0].message.content.trim();
-      // Remove any markdown formatting if present
-      const jsonContent = content.replace(/```json\n?|\n?```/g, '');
-      schedule = JSON.parse(jsonContent);
-      
-      // Validate schedule structure
-      if (!schedule.weekStart || !schedule.shifts) {
-        throw new Error('Invalid schedule structure');
-      }
+    console.log('Generated schedule:', schedule);
 
-      // Log the final schedule before returning
-      console.log('Final schedule to be returned:', schedule);
-      
-      return new Response(
-        JSON.stringify(schedule),
-        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-      );
-    } catch (error) {
-      console.error('Error parsing AI response:', error);
-      console.log('Raw AI response content:', aiResponse.choices[0].message.content);
-      throw new Error('Failed to parse AI generated schedule');
-    }
+    return new Response(
+      JSON.stringify(schedule),
+      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+    );
   } catch (error) {
     console.error('Error:', error);
     return new Response(
