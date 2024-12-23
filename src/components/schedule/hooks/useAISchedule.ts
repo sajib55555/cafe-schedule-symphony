@@ -3,10 +3,11 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { format } from "date-fns";
 import { useAuth } from '@/contexts/AuthContext';
+import { StaffShifts } from '../types/shift.types';
 
 export const useAISchedule = (
   selectedWeekStart: Date,
-  setShifts: React.Dispatch<React.SetStateAction<any>>,
+  setShifts: React.Dispatch<React.SetStateAction<{ [weekStart: string]: StaffShifts }>>,
   handleSaveSchedule: () => Promise<void>
 ) => {
   const [isGeneratingAISchedule, setIsGeneratingAISchedule] = useState(false);
@@ -55,11 +56,11 @@ export const useAISchedule = (
       const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
       
       // Update the shifts state with the AI-generated schedule
-      setShifts((prev: any) => {
-        const newState = { ...prev };
-        newState[weekStartStr] = aiSchedule.shifts;
-        console.log('New shifts state:', newState);
-        return newState;
+      setShifts(prevShifts => {
+        const newShifts = { ...prevShifts };
+        newShifts[weekStartStr] = aiSchedule.shifts;
+        console.log('New shifts state:', newShifts);
+        return newShifts;
       });
 
       toast({

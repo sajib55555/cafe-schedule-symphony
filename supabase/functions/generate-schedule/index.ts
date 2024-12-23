@@ -68,10 +68,9 @@ serve(async (req) => {
           {
             role: "system",
             content: `You are a scheduling assistant that creates optimal weekly schedules for a café. 
-            You must return ONLY a valid JSON object with no additional text or markdown formatting.
-            The response must follow this exact structure:
+            Return ONLY a valid JSON object with this exact structure, no additional text:
             {
-              "weekStart": "YYYY-MM-DD",
+              "weekStart": "${weekStart}",
               "shifts": {
                 "staffName": {
                   "YYYY-MM-DD": {
@@ -85,11 +84,11 @@ serve(async (req) => {
           },
           {
             role: "user",
-            content: `Create a weekly schedule starting from ${weekStart} with these parameters:
+            content: `Create a weekly schedule starting from ${weekStart}.
             Staff: ${JSON.stringify(staff)}
             Schedule Rules: ${JSON.stringify(rules)}
             
-            Remember to return ONLY the JSON object with no additional text or formatting.`
+            Important: Return ONLY the JSON object with no additional text.`
           }
         ],
         temperature: 0.7,
@@ -115,16 +114,19 @@ serve(async (req) => {
       if (!schedule.weekStart || !schedule.shifts) {
         throw new Error('Invalid schedule structure');
       }
+
+      // Log the final schedule before returning
+      console.log('Final schedule to be returned:', schedule);
+      
+      return new Response(
+        JSON.stringify(schedule),
+        { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
+      );
     } catch (error) {
       console.error('Error parsing AI response:', error);
       console.log('Raw AI response content:', aiResponse.choices[0].message.content);
       throw new Error('Failed to parse AI generated schedule');
     }
-
-    return new Response(
-      JSON.stringify(schedule),
-      { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
-    )
   } catch (error) {
     console.error('Error:', error);
     return new Response(
@@ -133,6 +135,6 @@ serve(async (req) => {
         status: 500,
         headers: { ...corsHeaders, 'Content-Type': 'application/json' } 
       },
-    )
+    );
   }
-})
+});
