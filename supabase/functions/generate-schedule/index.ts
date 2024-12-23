@@ -24,6 +24,16 @@ interface ScheduleRule {
   max_staff: number;
 }
 
+const dayMapping: { [key: number]: string } = {
+  0: 'Sunday',
+  1: 'Monday',
+  2: 'Tuesday',
+  3: 'Wednesday',
+  4: 'Thursday',
+  5: 'Friday',
+  6: 'Saturday'
+};
+
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -56,33 +66,45 @@ serve(async (req) => {
     console.log('Staff data:', staff);
     console.log('Rules data:', rules);
 
-    // Generate schedule based on staff and rules
+    // Initialize shifts object
     const shifts: { [key: string]: any } = {};
     
-    staff.forEach((employee: Staff) => {
-      shifts[employee.name] = {};
+    // Process each day of the week
+    for (let day = 0; day < 7; day++) {
+      const date = new Date(weekStart);
+      date.setDate(date.getDate() + day);
+      const dateStr = date.toISOString().split('T')[0];
+      const dayName = dayMapping[date.getDay()];
       
-      // For each day of the week
-      for (let day = 0; day < 7; day++) {
-        const date = new Date(weekStart);
-        date.setDate(date.getDate() + day);
-        const dateStr = date.toISOString().split('T')[0];
+      // Get rules for this day
+      const dayRules = rules.filter((rule: ScheduleRule) => rule.day_of_week === date.getDay());
+      
+      // Process each rule
+      dayRules.forEach((rule: ScheduleRule) => {
+        // Get available staff for this role and day
+        const availableStaff = staff.filter((employee: Staff) => {
+          return employee.role === rule.role && 
+                 employee.availability && 
+                 employee.availability.includes(dayName);
+        });
         
-        // Find applicable rules for this day and staff role
-        const dayRules = rules.filter((rule: ScheduleRule) => 
-          rule.day_of_week === day && rule.role === employee.role
-        );
+        // Randomly select staff up to max_staff limit
+        const selectedStaff = shuffleArray(availableStaff).slice(0, rule.max_staff);
         
-        if (dayRules.length > 0) {
-          const rule = dayRules[0];
+        // Assign shifts to selected staff
+        selectedStaff.forEach((employee: Staff) => {
+          if (!shifts[employee.name]) {
+            shifts[employee.name] = {};
+          }
+          
           shifts[employee.name][dateStr] = {
             startTime: rule.start_time.substring(0, 5),
             endTime: rule.end_time.substring(0, 5),
             role: employee.role
           };
-        }
-      }
-    });
+        });
+      });
+    }
 
     const schedule = {
       weekStart,
@@ -106,3 +128,13 @@ serve(async (req) => {
     );
   }
 });
+
+// Helper function to shuffle array
+function shuffleArray<T>(array: T[]): T[] {
+  const newArray = [...array];
+  for (let i = newArray.length - 1; i > 0; i--) {
+    const j = Math.floor(Math.random() * (i + 1));
+    [newArray[i], newArray[j]] = [newArray[j], newArray[i]];
+  }
+  return newArray;
+}

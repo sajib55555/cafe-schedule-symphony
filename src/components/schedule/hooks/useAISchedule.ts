@@ -56,20 +56,18 @@ export const useAISchedule = (
       const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
       
       // Update the shifts state with the AI-generated schedule
-      setShifts(prevShifts => {
-        const newShifts = { ...prevShifts };
-        newShifts[weekStartStr] = aiSchedule.shifts;
-        console.log('New shifts state:', newShifts);
-        return newShifts;
-      });
+      setShifts(prevShifts => ({
+        ...prevShifts,
+        [weekStartStr]: aiSchedule.shifts
+      }));
+
+      // Save the generated schedule
+      await handleSaveSchedule();
 
       toast({
         title: "Success",
         description: "AI schedule generated successfully!",
       });
-
-      // Save the generated schedule
-      await handleSaveSchedule();
     } catch (error) {
       console.error('Error generating AI schedule:', error);
       toast({
