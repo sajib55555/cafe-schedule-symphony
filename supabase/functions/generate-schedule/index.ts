@@ -31,6 +31,7 @@ serve(async (req) => {
 
   try {
     const { weekStart, companyId } = await req.json()
+    console.log('Received request for weekStart:', weekStart, 'companyId:', companyId);
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -55,14 +56,13 @@ serve(async (req) => {
     console.log('Staff data:', staff);
     console.log('Rules data:', rules);
 
-    // Generate a basic schedule based on staff and rules
+    // Generate schedule based on staff and rules
     const shifts: { [key: string]: any } = {};
     
-    // For each staff member
     staff.forEach((employee: Staff) => {
       shifts[employee.name] = {};
       
-      // For each day of the week (0-6, where 0 is Monday)
+      // For each day of the week
       for (let day = 0; day < 7; day++) {
         const date = new Date(weekStart);
         date.setDate(date.getDate() + day);
@@ -74,11 +74,10 @@ serve(async (req) => {
         );
         
         if (dayRules.length > 0) {
-          // Use the first applicable rule
           const rule = dayRules[0];
           shifts[employee.name][dateStr] = {
-            startTime: rule.start_time.slice(0, 5), // Format: HH:mm
-            endTime: rule.end_time.slice(0, 5),     // Format: HH:mm
+            startTime: rule.start_time.substring(0, 5),
+            endTime: rule.end_time.substring(0, 5),
             role: employee.role
           };
         }
@@ -90,7 +89,7 @@ serve(async (req) => {
       shifts
     };
 
-    console.log('Generated schedule:', schedule);
+    console.log('Generated schedule:', JSON.stringify(schedule, null, 2));
 
     return new Response(
       JSON.stringify(schedule),
