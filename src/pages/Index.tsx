@@ -5,6 +5,7 @@ import { useNavigate } from "react-router-dom";
 import { ChartBar, DollarSign, Rocket, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/Layout";
+import { AIScheduleHistory } from "@/components/schedule/AIScheduleHistory";
 
 const Index = () => {
   const navigate = useNavigate();
@@ -60,6 +61,7 @@ const Index = () => {
                   Upgrade Now
                 </Button>
               )}
+              <AIScheduleHistory />
             </div>
           </header>
           

@@ -9,6 +9,38 @@ export type Json =
 export type Database = {
   public: {
     Tables: {
+      ai_schedules: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: number
+          schedule_data: Json
+          week_start: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: number
+          schedule_data: Json
+          week_start: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: number
+          schedule_data?: Json
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "ai_schedules_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       companies: {
         Row: {
           address: string | null
