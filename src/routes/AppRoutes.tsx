@@ -6,15 +6,18 @@ import Settings from "@/pages/Settings";
 import Subscription from "@/pages/Subscription";
 import UpgradePage from "@/pages/UpgradePage";
 import WagesAnalysis from "@/pages/WagesAnalysis";
+import { useAuth } from "@/contexts/AuthContext";
 
 export const AppRoutes = () => {
+  const { session, hasAccess = true, trialEnded = false } = useAuth();
+
   return (
     <Routes>
       <Route path="/auth" element={<Auth />} />
       <Route
         path="/"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Index />
           </ProtectedRoute>
         }
@@ -22,7 +25,7 @@ export const AppRoutes = () => {
       <Route
         path="/settings"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Settings />
           </ProtectedRoute>
         }
@@ -30,7 +33,7 @@ export const AppRoutes = () => {
       <Route
         path="/subscription"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Subscription />
           </ProtectedRoute>
         }
@@ -38,7 +41,7 @@ export const AppRoutes = () => {
       <Route
         path="/upgrade"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <UpgradePage />
           </ProtectedRoute>
         }
@@ -46,7 +49,7 @@ export const AppRoutes = () => {
       <Route
         path="/wages"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <WagesAnalysis />
           </ProtectedRoute>
         }

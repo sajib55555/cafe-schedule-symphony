@@ -4,7 +4,7 @@ import { AuthProvider } from "@/contexts/AuthContext";
 import { StaffProvider } from "@/contexts/StaffContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { Toaster } from "@/components/ui/toaster";
-import { Sonner } from "@/components/ui/sonner";
+import { Sonner } from "sonner";
 
 interface AppProvidersProps {
   children: React.ReactNode;
