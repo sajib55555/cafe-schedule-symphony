@@ -1,9 +1,7 @@
 import { useState } from 'react';
-import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
-import { format } from "date-fns";
-import { useAuth } from '@/contexts/AuthContext';
-import { StaffShifts } from '../types/shift.types';
+import { format } from 'date-fns';
+import { StaffShifts } from '../types';
 
 export const useAISchedule = (
   selectedWeekStart: Date,
@@ -11,27 +9,18 @@ export const useAISchedule = (
   handleSaveSchedule: () => Promise<void>
 ) => {
   const [isGeneratingAISchedule, setIsGeneratingAISchedule] = useState(false);
-  const { toast } = useToast();
-  const { session } = useAuth();
 
   const handleGenerateAISchedule = async () => {
+    setIsGeneratingAISchedule(true);
     try {
-      setIsGeneratingAISchedule(true);
-
       // Get company_id from user profile
       const { data: profile } = await supabase
         .from('profiles')
         .select('company_id')
-        .eq('id', session?.user?.id)
         .single();
 
       if (!profile?.company_id) {
-        toast({
-          title: "Error",
-          description: "Company information not found",
-          variant: "destructive"
-        });
-        return;
+        throw new Error('Company information not found');
       }
 
       // Call the AI schedule generation function
@@ -43,10 +32,6 @@ export const useAISchedule = (
       });
 
       if (error) throw error;
-
-      if (!data || !data.shifts) {
-        throw new Error('Invalid AI schedule format');
-      }
 
       console.log('AI Generated Schedule:', data);
       
@@ -64,18 +49,9 @@ export const useAISchedule = (
 
       // Save the generated schedule
       await handleSaveSchedule();
-
-      toast({
-        title: "Success",
-        description: "AI schedule generated successfully!",
-      });
     } catch (error) {
       console.error('Error generating AI schedule:', error);
-      toast({
-        title: "Error",
-        description: "Failed to generate AI schedule. Please try again.",
-        variant: "destructive"
-      });
+      throw error;
     } finally {
       setIsGeneratingAISchedule(false);
     }
