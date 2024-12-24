@@ -80,7 +80,7 @@ serve(async (req) => {
       const dayRules = rules.filter((rule: ScheduleRule) => rule.day_of_week === date.getDay());
       
       // Process each rule
-      dayRules.forEach((rule: ScheduleRule) => {
+      for (const rule of dayRules) {
         // Get available staff for this role and day
         const availableStaff = staff.filter((employee: Staff) => {
           return employee.role === rule.role && 
@@ -88,33 +88,30 @@ serve(async (req) => {
                  employee.availability.includes(dayName);
         });
         
-        // Randomly select staff up to max_staff limit
-        const selectedStaff = shuffleArray(availableStaff).slice(0, rule.max_staff);
-        
-        // Assign shifts to selected staff
-        selectedStaff.forEach((employee: Staff) => {
-          if (!shifts[employee.name]) {
-            shifts[employee.name] = {};
-          }
+        if (availableStaff.length > 0) {
+          // Randomly select staff up to max_staff limit
+          const selectedStaff = shuffleArray(availableStaff).slice(0, rule.max_staff);
           
-          shifts[employee.name][dateStr] = {
-            startTime: rule.start_time.substring(0, 5),
-            endTime: rule.end_time.substring(0, 5),
-            role: employee.role
-          };
-        });
-      });
+          // Assign shifts to selected staff
+          selectedStaff.forEach((employee: Staff) => {
+            if (!shifts[employee.name]) {
+              shifts[employee.name] = {};
+            }
+            
+            shifts[employee.name][dateStr] = {
+              startTime: rule.start_time.substring(0, 5),
+              endTime: rule.end_time.substring(0, 5),
+              role: rule.role
+            };
+          });
+        }
+      }
     }
 
-    const schedule = {
-      weekStart,
-      shifts
-    };
-
-    console.log('Generated schedule:', JSON.stringify(schedule, null, 2));
+    console.log('Generated schedule:', shifts);
 
     return new Response(
-      JSON.stringify(schedule),
+      JSON.stringify({ shifts }),
       { headers: { ...corsHeaders, 'Content-Type': 'application/json' } },
     );
   } catch (error) {

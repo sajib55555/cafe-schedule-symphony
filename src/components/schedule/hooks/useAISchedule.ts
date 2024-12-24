@@ -35,30 +35,27 @@ export const useAISchedule = (
       }
 
       // Call the AI schedule generation function
-      const response = await supabase.functions.invoke('generate-schedule', {
+      const { data, error } = await supabase.functions.invoke('generate-schedule', {
         body: {
           weekStart: format(selectedWeekStart, 'yyyy-MM-dd'),
           companyId: profile.company_id
         }
       });
 
-      if (response.error) {
-        throw new Error(response.error.message);
-      }
+      if (error) throw error;
 
-      const aiSchedule = response.data;
-      console.log('AI Generated Schedule:', aiSchedule);
-      
-      if (!aiSchedule || !aiSchedule.shifts) {
+      if (!data || !data.shifts) {
         throw new Error('Invalid AI schedule format');
       }
 
+      console.log('AI Generated Schedule:', data);
+      
       const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
       
       // Update the shifts state with the AI-generated schedule
       setShifts(prevShifts => ({
         ...prevShifts,
-        [weekStartStr]: aiSchedule.shifts
+        [weekStartStr]: data.shifts
       }));
 
       // Save the generated schedule
