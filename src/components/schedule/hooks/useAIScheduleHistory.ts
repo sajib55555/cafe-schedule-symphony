@@ -29,7 +29,16 @@ export const useAIScheduleHistory = () => {
 
         if (error) throw error;
 
-        setSchedules(data || []);
+        // Ensure the data matches our AISchedule type
+        const typedSchedules: AISchedule[] = data.map(schedule => ({
+          id: schedule.id,
+          company_id: schedule.company_id,
+          week_start: schedule.week_start,
+          schedule_data: schedule.schedule_data as AISchedule['schedule_data'],
+          created_at: schedule.created_at
+        }));
+
+        setSchedules(typedSchedules);
       } catch (error) {
         console.error('Error loading AI schedules:', error);
         toast({

@@ -47,6 +47,19 @@ export const useAISchedule = (
 
       const aiSchedule = response.data;
       
+      // Save the AI-generated schedule to the database
+      const { error: insertError } = await supabase
+        .from('ai_schedules')
+        .insert({
+          company_id: profile.company_id,
+          week_start: format(selectedWeekStart, 'yyyy-MM-dd'),
+          schedule_data: aiSchedule.shifts
+        });
+
+      if (insertError) {
+        throw new Error(insertError.message);
+      }
+
       // Update the shifts state with the AI-generated schedule
       setShifts(prev => ({
         ...prev,
