@@ -1,5 +1,7 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { getSessionStatus, checkTrialStatus } from "@/utils/auth/sessionUtils";
+import { useProfile } from "@/hooks/useProfile";
 
 interface AuthContextType {
   loading: boolean;
@@ -15,12 +17,28 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [hasAccess, setHasAccess] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [trialEnded, setTrialEnded] = useState(false);
+  const { fetchProfile } = useProfile();
+
+  const checkAccessStatus = async (currentSession: any) => {
+    try {
+      if (currentSession?.user) {
+        const profile = await fetchProfile(currentSession.user.id);
+        
+        if (profile) {
+          const { hasAccess: newHasAccess, trialEnded: newTrialEnded } = checkTrialStatus(profile);
+          setHasAccess(newHasAccess);
+          setTrialEnded(newTrialEnded);
+        }
+      }
+    } catch (error) {
+      console.error('Error checking access status:', error);
+    }
+  };
 
   useEffect(() => {
     const initializeAuth = async () => {
       try {
-        const { data: { session: currentSession } } = await supabase.auth.getSession();
-        console.log('Initial session check:', currentSession);
+        const currentSession = await getSessionStatus();
         setSession(currentSession);
         
         if (currentSession) {
@@ -49,38 +67,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
     return () => subscription.unsubscribe();
   }, []);
-
-  const checkAccessStatus = async (currentSession: any) => {
-    try {
-      if (currentSession?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('trial_start, trial_end, subscription_status')
-          .eq('id', currentSession.user.id)
-          .single();
-
-        if (profile) {
-          const now = new Date();
-          const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
-          
-          const hasActiveSubscription = profile.subscription_status === 'active';
-          const hasActiveTrial = trialEnd ? now <= trialEnd : false;
-          
-          console.log('Access status check:', {
-            trialEnd,
-            now,
-            hasActiveSubscription,
-            hasActiveTrial
-          });
-          
-          setHasAccess(hasActiveSubscription || hasActiveTrial);
-          setTrialEnded(!hasActiveSubscription && trialEnd && now > trialEnd);
-        }
-      }
-    } catch (error) {
-      console.error('Error checking access status:', error);
-    }
-  };
 
   return (
     <AuthContext.Provider value={{ loading, hasAccess, session, trialEnded }}>
