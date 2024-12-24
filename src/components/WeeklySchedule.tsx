@@ -7,8 +7,10 @@ import { useSchedule } from './schedule/useSchedule';
 import { useShiftActions } from './schedule/useShiftActions';
 import { useAISchedule } from './schedule/hooks/useAISchedule';
 import { ScheduleActions } from './schedule/ScheduleActions';
+import { useToast } from "@/components/ui/use-toast";
 
 export function WeeklySchedule() {
+  const { toast } = useToast();
   const scheduleRef = useRef<HTMLDivElement>(null);
   const { staff, setStaff } = useStaff();
   const [selectedWeekStart, setSelectedWeekStart] = useState(startOfWeek(new Date(), { weekStartsOn: 1 }));
@@ -58,6 +60,23 @@ export function WeeklySchedule() {
     };
   });
 
+  const handleAIGenerate = async () => {
+    try {
+      await handleGenerateAISchedule();
+      toast({
+        title: "Success",
+        description: "AI Schedule generated successfully",
+      });
+    } catch (error) {
+      console.error('Error generating AI schedule:', error);
+      toast({
+        title: "Error",
+        description: "Failed to generate AI schedule. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <div className="space-y-4">
       <div className="flex justify-between items-center">
@@ -68,7 +87,7 @@ export function WeeklySchedule() {
           onPdfGenerating={setIsPdfGenerating}
         />
         <ScheduleActions
-          handleGenerateAISchedule={handleGenerateAISchedule}
+          handleGenerateAISchedule={handleAIGenerate}
           handleSaveSchedule={handleSaveSchedule}
           isGeneratingAISchedule={isGeneratingAISchedule}
           isSaving={isSaving}

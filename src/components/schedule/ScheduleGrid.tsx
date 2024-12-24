@@ -62,13 +62,13 @@ export function ScheduleGrid({
           {days.map((day) => {
             const shift = currentWeekShifts[person.name]?.[day.fullDate];
             return (
-              <div key={`${person.name}-${day.fullDate}`} className="border-t border-l p-2 min-h-[100px]">
+              <div key={`${person.name}-${day.fullDate}`} className="border-t border-l p-2 min-h-[100px] relative">
                 {shift ? (
-                  <div className="bg-primary text-white p-2 rounded-md text-sm space-y-2">
-                    <div>{shift.startTime} - {shift.endTime}</div>
-                    <div>{shift.role}</div>
+                  <div className="bg-primary/90 text-white p-2 rounded-md text-sm space-y-2 hover:bg-primary transition-colors">
+                    <div className="font-medium">{shift.startTime} - {shift.endTime}</div>
+                    <div className="text-white/90">{shift.role}</div>
                     {!isPdfGenerating && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-2 mt-2">
                         <Dialog>
                           <DialogTrigger asChild>
                             <Button 
@@ -112,10 +112,15 @@ export function ScheduleGrid({
                       <DialogTrigger asChild>
                         <Button 
                           variant="ghost" 
-                          className="w-full h-full"
+                          className="absolute inset-0 w-full h-full hover:bg-gray-50 transition-colors"
                           onClick={() => {
                             setSelectedStaff(person.name);
                             setSelectedDate(day.fullDate);
+                            setNewShift({
+                              startTime: '09:00',
+                              endTime: '17:00',
+                              role: 'Barista'
+                            });
                           }}
                         >
                           + Add Shift
