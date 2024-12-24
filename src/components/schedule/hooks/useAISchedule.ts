@@ -53,10 +53,14 @@ export const useAISchedule = (
       const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
       
       // Update the shifts state with the AI-generated schedule
-      setShifts(prevShifts => ({
-        ...prevShifts,
-        [weekStartStr]: data.shifts
-      }));
+      setShifts(prevShifts => {
+        const newShifts = {
+          ...prevShifts,
+          [weekStartStr]: data.shifts
+        };
+        console.log('Updated shifts state:', newShifts);
+        return newShifts;
+      });
 
       // Save the generated schedule
       await handleSaveSchedule();
