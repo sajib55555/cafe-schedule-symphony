@@ -29,11 +29,16 @@ export const AIScheduleTable = ({ schedules, onLoadSchedule }: AIScheduleTablePr
 
   const handleLoadSchedule = (schedule: AISchedule) => {
     try {
-      onLoadSchedule(schedule.schedule_data);
-      toast({
-        title: "Success",
-        description: "Schedule loaded successfully!",
-      });
+      // Ensure schedule_data is properly typed before passing it
+      if (schedule.schedule_data) {
+        onLoadSchedule(schedule.schedule_data);
+        toast({
+          title: "Success",
+          description: "Schedule loaded successfully!",
+        });
+      } else {
+        throw new Error('Invalid schedule data');
+      }
     } catch (error) {
       console.error('Error loading schedule:', error);
       toast({
