@@ -43,7 +43,6 @@ export const ProtectedRoute = ({
     return <Navigate to="/upgrade" replace />;
   }
 
-  console.log('All checks passed, rendering layout with children');
   // If all checks pass, render the layout with children
   return <Layout>{children}</Layout>;
 };
