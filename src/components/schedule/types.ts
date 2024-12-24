@@ -1,7 +1,7 @@
 export interface Shift {
   startTime: string;
   endTime: string;
-  role: string;
+  role: 'Barista' | 'Floor';
 }
 
 export interface StaffShifts {
@@ -13,5 +13,5 @@ export interface StaffShifts {
 export interface ShiftFormData {
   startTime: string;
   endTime: string;
-  role: string;
+  role: 'Barista' | 'Floor';
 }

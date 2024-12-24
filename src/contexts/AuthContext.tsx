@@ -1,7 +1,5 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
-import { getSessionStatus, checkTrialStatus } from "@/utils/auth/sessionUtils";
-import { useProfile } from "@/hooks/useProfile";
 
 interface AuthContextType {
   loading: boolean;
@@ -17,23 +15,57 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [hasAccess, setHasAccess] = useState(false);
   const [session, setSession] = useState<any>(null);
   const [trialEnded, setTrialEnded] = useState(false);
-  const { fetchProfile } = useProfile();
 
-  const checkAccessStatus = async (currentSession: any) => {
-    if (!currentSession?.user) {
-      setLoading(false);
-      return;
-    }
+  useEffect(() => {
+    checkSession();
+    checkAccessStatus();
     
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+      setSession(session);
+      if (session) {
+        checkAccessStatus();
+      } else {
+        setHasAccess(false);
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
+  }, []);
+
+  const checkSession = async () => {
+    const { data: { session } } = await supabase.auth.getSession();
+    setSession(session);
+  };
+
+  const checkAccessStatus = async () => {
     try {
-      const profile = await fetchProfile(currentSession.user.id);
-      console.log('Profile fetched:', profile);
+      const { data: { session } } = await supabase.auth.getSession();
       
-      if (profile) {
-        const { hasAccess: newHasAccess, trialEnded: newTrialEnded } = checkTrialStatus(profile);
-        setHasAccess(newHasAccess);
-        setTrialEnded(newTrialEnded);
-        console.log('Access status updated:', { newHasAccess, newTrialEnded });
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('trial_start, trial_end, subscription_status')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile) {
+          const now = new Date();
+          const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
+          
+          const hasActiveSubscription = profile.subscription_status === 'active';
+          const hasActiveTrial = trialEnd ? now <= trialEnd : false;
+          
+          console.log('Trial end:', trialEnd);
+          console.log('Current time:', now);
+          console.log('Has active subscription:', hasActiveSubscription);
+          console.log('Has active trial:', hasActiveTrial);
+          console.log('Trial comparison result:', trialEnd ? now <= trialEnd : false);
+          
+          setHasAccess(hasActiveSubscription || hasActiveTrial);
+          setTrialEnded(!hasActiveSubscription && trialEnd && now > trialEnd);
+        }
       }
     } catch (error) {
       console.error('Error checking access status:', error);
@@ -41,54 +73,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       setLoading(false);
     }
   };
-
-  useEffect(() => {
-    let mounted = true;
-
-    const initializeAuth = async () => {
-      try {
-        const currentSession = await getSessionStatus();
-        console.log('Current session:', currentSession);
-        
-        if (!mounted) return;
-        
-        if (currentSession) {
-          setSession(currentSession);
-          await checkAccessStatus(currentSession);
-        } else {
-          setLoading(false);
-        }
-      } catch (error) {
-        console.error('Error initializing auth:', error);
-        if (mounted) {
-          setLoading(false);
-        }
-      }
-    };
-
-    initializeAuth();
-
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
-      console.log('Auth state changed:', event, newSession);
-      
-      if (!mounted) return;
-      
-      if (newSession) {
-        setSession(newSession);
-        await checkAccessStatus(newSession);
-      } else {
-        setSession(null);
-        setHasAccess(false);
-        setTrialEnded(false);
-        setLoading(false);
-      }
-    });
-
-    return () => {
-      mounted = false;
-      subscription.unsubscribe();
-    };
-  }, []);
 
   return (
     <AuthContext.Provider value={{ loading, hasAccess, session, trialEnded }}>

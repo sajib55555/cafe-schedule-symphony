@@ -1,9 +1,10 @@
+import React from 'react';
 import { Button } from "@/components/ui/button";
-import { Wand2, Save } from "lucide-react";
+import { Save, Wand2 } from "lucide-react";
 
 interface ScheduleActionsProps {
-  handleGenerateAISchedule: () => void;
-  handleSaveSchedule: () => void;
+  handleGenerateAISchedule: () => Promise<void>;
+  handleSaveSchedule: () => Promise<void>;
   isGeneratingAISchedule: boolean;
   isSaving: boolean;
 }
@@ -15,22 +16,21 @@ export function ScheduleActions({
   isSaving
 }: ScheduleActionsProps) {
   return (
-    <div className="flex items-center gap-4">
-      <Button 
+    <div className="flex gap-2">
+      <Button
         onClick={handleGenerateAISchedule}
         disabled={isGeneratingAISchedule}
         variant="secondary"
         className="flex items-center gap-2"
       >
         <Wand2 className="w-4 h-4" />
-        {isGeneratingAISchedule ? 'Generating...' : 'AI Magic Rota Maker'}
+        {isGeneratingAISchedule ? 'Generating...' : '1 Click AI Magic Rota Maker'}
       </Button>
       <Button 
         onClick={handleSaveSchedule} 
         disabled={isSaving}
-        className="flex items-center gap-2"
       >
-        <Save className="w-4 h-4" />
+        <Save className="w-4 h-4 mr-2" />
         {isSaving ? 'Saving...' : 'Save Schedule'}
       </Button>
     </div>
