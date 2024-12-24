@@ -3,6 +3,7 @@ import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
 import { AISchedule } from '../types/aiSchedule.types';
+import { StaffShifts } from '../types';
 
 export const useAIScheduleHistory = () => {
   const [schedules, setSchedules] = useState<AISchedule[]>([]);
@@ -34,7 +35,7 @@ export const useAIScheduleHistory = () => {
           id: schedule.id,
           company_id: schedule.company_id,
           week_start: schedule.week_start,
-          schedule_data: schedule.schedule_data as AISchedule['schedule_data'],
+          schedule_data: schedule.schedule_data as StaffShifts,
           created_at: schedule.created_at
         }));
 
