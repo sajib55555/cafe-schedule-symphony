@@ -17,11 +17,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [trialEnded, setTrialEnded] = useState(false);
 
   useEffect(() => {
-    // Check initial session
-    checkSession();
-    checkAccessStatus();
+    const initializeAuth = async () => {
+      try {
+        await checkSession();
+        await checkAccessStatus();
+      } catch (error) {
+        console.error('Error initializing auth:', error);
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    initializeAuth();
     
-    // Subscribe to auth changes
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed:', event, session);
       setSession(session);
@@ -30,6 +38,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       } else {
         setHasAccess(false);
       }
+      setLoading(false);
     });
 
     return () => {
@@ -78,10 +87,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.error('Error checking access status:', error);
-    } finally {
-      setLoading(false);
     }
   };
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FDF6E3] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <AuthContext.Provider value={{ loading, hasAccess, session, trialEnded }}>

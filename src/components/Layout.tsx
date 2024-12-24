@@ -8,22 +8,29 @@ import { TrialBanner } from "./layout/TrialBanner";
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkTrialStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('trial_end')
-          .eq('id', session.user.id)
-          .single();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile } = await supabase
+            .from('profiles')
+            .select('trial_end')
+            .eq('id', session.user.id)
+            .single();
 
-        if (profile?.trial_end) {
-          const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
-          setTrialDaysLeft(Math.max(0, daysLeft));
-          console.log('Trial days left:', daysLeft);
+          if (profile?.trial_end) {
+            const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
+            setTrialDaysLeft(Math.max(0, daysLeft));
+            console.log('Trial days left:', daysLeft);
+          }
         }
+      } catch (error) {
+        console.error('Error checking trial status:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -31,16 +38,25 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
     const {
       data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed in Layout:', event, session);
       if (!session) {
         navigate("/auth");
       } else {
-        checkTrialStatus();
+        await checkTrialStatus();
       }
     });
 
     return () => subscription.unsubscribe();
   }, [navigate]);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FDF6E3] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FDF6E3] flex flex-col">
