@@ -36,37 +36,50 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   };
 
   useEffect(() => {
+    let mounted = true;
+
     const initializeAuth = async () => {
       try {
         const currentSession = await getSessionStatus();
         console.log('Current session:', currentSession);
-        setSession(currentSession);
         
-        if (currentSession) {
-          await checkAccessStatus(currentSession);
+        if (mounted) {
+          setSession(currentSession);
+          
+          if (currentSession) {
+            await checkAccessStatus(currentSession);
+          }
+          setLoading(false);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-      } finally {
-        setLoading(false);
+        if (mounted) {
+          setLoading(false);
+        }
       }
     };
 
     initializeAuth();
-    
+
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log('Auth state changed:', event, newSession);
-      setSession(newSession);
       
-      if (newSession) {
-        await checkAccessStatus(newSession);
-      } else {
-        setHasAccess(false);
+      if (mounted) {
+        setSession(newSession);
+        
+        if (newSession) {
+          await checkAccessStatus(newSession);
+        } else {
+          setHasAccess(false);
+        }
+        setLoading(false);
       }
-      setLoading(false);
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      mounted = false;
+      subscription.unsubscribe();
+    };
   }, []);
 
   return (
