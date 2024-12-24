@@ -8,7 +8,6 @@ import { TrialBanner } from "./layout/TrialBanner";
 export function Layout({ children }: { children: React.ReactNode }) {
   const navigate = useNavigate();
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
-  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkTrialStatus = async () => {
@@ -29,8 +28,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Error checking trial status:', error);
-      } finally {
-        setIsLoading(false);
       }
     };
 
@@ -49,14 +46,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
     return () => subscription.unsubscribe();
   }, [navigate]);
-
-  if (isLoading) {
-    return (
-      <div className="min-h-screen bg-[#FDF6E3] flex items-center justify-center">
-        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
-      </div>
-    );
-  }
 
   return (
     <div className="min-h-screen bg-[#FDF6E3] flex flex-col">

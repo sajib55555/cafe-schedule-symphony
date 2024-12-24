@@ -1,5 +1,6 @@
 import { Navigate } from "react-router-dom";
 import { Layout } from "../Layout";
+import { useAuth } from "@/contexts/AuthContext";
 
 interface ProtectedRouteProps {
   session: any;
@@ -10,10 +11,20 @@ interface ProtectedRouteProps {
 
 export const ProtectedRoute = ({
   session,
-  hasAccess,
-  trialEnded,
+  hasAccess = true,
+  trialEnded = false,
   children,
 }: ProtectedRouteProps) => {
+  const { loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FDF6E3] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
+
   // If there's no session, redirect to auth
   if (!session) {
     console.log('No session, redirecting to auth');

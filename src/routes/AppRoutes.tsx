@@ -1,7 +1,6 @@
 import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Auth from "@/pages/Auth";
-import Index from "@/pages/Index";
 import Settings from "@/pages/Settings";
 import Subscription from "@/pages/Subscription";
 import UpgradePage from "@/pages/UpgradePage";
@@ -10,7 +9,15 @@ import { useAuth } from "@/contexts/AuthContext";
 import Dashboard from "@/pages/Dashboard";
 
 export const AppRoutes = () => {
-  const { session, hasAccess = true, trialEnded = false } = useAuth();
+  const { session, hasAccess, trialEnded, loading } = useAuth();
+
+  if (loading) {
+    return (
+      <div className="min-h-screen bg-[#FDF6E3] flex items-center justify-center">
+        <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary"></div>
+      </div>
+    );
+  }
 
   return (
     <Routes>
