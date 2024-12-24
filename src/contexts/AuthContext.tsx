@@ -39,6 +39,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const initializeAuth = async () => {
       try {
         const currentSession = await getSessionStatus();
+        console.log('Current session:', currentSession);
         setSession(currentSession);
         
         if (currentSession) {
