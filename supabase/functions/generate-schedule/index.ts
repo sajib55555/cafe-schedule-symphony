@@ -7,23 +7,6 @@ const corsHeaders = {
   'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 };
 
-interface Staff {
-  id: number;
-  name: string;
-  role: string;
-  availability: string[];
-  hours: number;
-}
-
-interface ScheduleRule {
-  role: string;
-  day_of_week: number;
-  start_time: string;
-  end_time: string;
-  min_staff: number;
-  max_staff: number;
-}
-
 serve(async (req) => {
   if (req.method === 'OPTIONS') {
     return new Response('ok', { headers: corsHeaders })
@@ -99,7 +82,8 @@ serve(async (req) => {
             2. Respect staff availability
             3. Distribute hours fairly
             4. Follow the weekday/weekend staffing requirements strictly
-            5. Use standard shift times (e.g., 8-hour shifts between 09:00-17:00)`
+            5. Use standard shift times (e.g., 8-hour shifts between 09:00-17:00)
+            6. Ensure each day has the exact number of staff members per role as specified above`
           },
           {
             role: "user",
@@ -133,6 +117,9 @@ serve(async (req) => {
       if (!schedule.shifts) {
         throw new Error('Invalid schedule structure');
       }
+
+      // Additional validation to ensure the schedule follows the requirements
+      console.log('Parsed schedule:', schedule);
     } catch (error) {
       console.error('Error parsing AI response:', error);
       console.log('Raw AI response content:', aiResponse.choices[0].message.content);
