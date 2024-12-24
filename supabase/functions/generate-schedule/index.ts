@@ -41,30 +41,31 @@ serve(async (req) => {
 
   try {
     const { weekStart, companyId } = await req.json()
-    console.log('Received request for weekStart:', weekStart, 'companyId:', companyId);
+    console.log('Generating schedule for week starting:', weekStart, 'companyId:', companyId);
 
-    // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
     const supabaseKey = Deno.env.get('SUPABASE_ANON_KEY')!
     const supabase = createClient(supabaseUrl, supabaseKey)
 
     // Fetch staff and rules
-    const { data: staff, error: staffError } = await supabase
+    const { data: staffData, error: staffError } = await supabase
       .from('staff')
       .select('*')
-      .eq('company_id', companyId)
+      .eq('company_id', companyId);
 
     if (staffError) throw staffError;
+    const staff = staffData || [];
 
-    const { data: rules, error: rulesError } = await supabase
+    const { data: rulesData, error: rulesError } = await supabase
       .from('schedule_rules')
       .select('*')
-      .eq('company_id', companyId)
+      .eq('company_id', companyId);
 
     if (rulesError) throw rulesError;
+    const rules = rulesData || [];
 
-    console.log('Staff data:', staff);
-    console.log('Rules data:', rules);
+    console.log('Staff count:', staff.length);
+    console.log('Rules count:', rules.length);
 
     // Initialize shifts object
     const shifts: { [key: string]: any } = {};
@@ -89,8 +90,13 @@ serve(async (req) => {
         });
         
         if (availableStaff.length > 0) {
-          // Randomly select staff up to max_staff limit
-          const selectedStaff = shuffleArray(availableStaff).slice(0, rule.max_staff);
+          // Randomly select staff up to max_staff limit but at least min_staff
+          const numStaffNeeded = Math.min(
+            Math.max(rule.min_staff, 1),
+            Math.min(rule.max_staff, availableStaff.length)
+          );
+          
+          const selectedStaff = shuffleArray(availableStaff).slice(0, numStaffNeeded);
           
           // Assign shifts to selected staff
           selectedStaff.forEach((employee: Staff) => {
@@ -108,7 +114,7 @@ serve(async (req) => {
       }
     }
 
-    console.log('Generated schedule:', shifts);
+    console.log('Generated shifts:', shifts);
 
     return new Response(
       JSON.stringify({ shifts }),
