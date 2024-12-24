@@ -29,8 +29,8 @@ export const useAIScheduleHistory = () => {
 
         if (error) throw error;
 
-        // Ensure the data matches our AISchedule type
-        const typedSchedules: AISchedule[] = data.map(schedule => ({
+        // Cast the schedule_data to StaffShifts type
+        const typedSchedules: AISchedule[] = (data || []).map(schedule => ({
           id: schedule.id,
           company_id: schedule.company_id,
           week_start: schedule.week_start,

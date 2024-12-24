@@ -47,7 +47,7 @@ export const useAISchedule = (
 
       const aiSchedule = response.data;
       
-      // Save the AI-generated schedule to the database
+      // Save the AI-generated schedule to the database with the correct data structure
       const { error: insertError } = await supabase
         .from('ai_schedules')
         .insert({
