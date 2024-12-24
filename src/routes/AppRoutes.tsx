@@ -10,7 +10,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import Dashboard from "@/pages/Dashboard";
 
 export const AppRoutes = () => {
-  const { session, hasAccess, trialEnded } = useAuth();
+  const { session, hasAccess = true, trialEnded = false } = useAuth();
 
   return (
     <Routes>
