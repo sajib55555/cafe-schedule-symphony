@@ -17,13 +17,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [trialEnded, setTrialEnded] = useState(false);
 
   useEffect(() => {
+    // Check initial session
     checkSession();
     checkAccessStatus();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    // Subscribe to auth changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event, session);
       setSession(session);
       if (session) {
-        checkAccessStatus();
+        await checkAccessStatus();
       } else {
         setHasAccess(false);
       }
@@ -35,8 +38,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const checkSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setSession(session);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      console.log('Current session:', session);
+      setSession(session);
+    } catch (error) {
+      console.error('Error checking session:', error);
+    }
   };
 
   const checkAccessStatus = async () => {
@@ -57,11 +65,12 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const hasActiveSubscription = profile.subscription_status === 'active';
           const hasActiveTrial = trialEnd ? now <= trialEnd : false;
           
-          console.log('Trial end:', trialEnd);
-          console.log('Current time:', now);
-          console.log('Has active subscription:', hasActiveSubscription);
-          console.log('Has active trial:', hasActiveTrial);
-          console.log('Trial comparison result:', trialEnd ? now <= trialEnd : false);
+          console.log('Access status check:', {
+            trialEnd,
+            now,
+            hasActiveSubscription,
+            hasActiveTrial
+          });
           
           setHasAccess(hasActiveSubscription || hasActiveTrial);
           setTrialEnded(!hasActiveSubscription && trialEnd && now > trialEnd);

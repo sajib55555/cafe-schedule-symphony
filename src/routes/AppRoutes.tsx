@@ -1,4 +1,4 @@
-import { Routes, Route } from "react-router-dom";
+import { Routes, Route, Navigate } from "react-router-dom";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Auth from "@/pages/Auth";
 import Index from "@/pages/Index";
@@ -14,12 +14,14 @@ export const AppRoutes = () => {
 
   return (
     <Routes>
-      <Route path="/auth" element={<Auth />} />
+      <Route path="/auth" element={
+        session ? <Navigate to="/dashboard" replace /> : <Auth />
+      } />
       <Route
         path="/"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <Index />
+            <Navigate to="/dashboard" replace />
           </ProtectedRoute>
         }
       />

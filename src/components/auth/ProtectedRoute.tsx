@@ -14,17 +14,21 @@ export const ProtectedRoute = ({
   trialEnded,
   children,
 }: ProtectedRouteProps) => {
+  // If there's no session, redirect to auth
   if (!session) {
     return <Navigate to="/auth" replace />;
   }
 
+  // If trial has ended, redirect to upgrade
   if (trialEnded) {
     return <Navigate to="/upgrade" replace />;
   }
 
+  // If no access, redirect to upgrade
   if (!hasAccess) {
     return <Navigate to="/upgrade" replace />;
   }
 
+  // If all checks pass, render the layout with children
   return <Layout>{children}</Layout>;
 };
