@@ -20,17 +20,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { fetchProfile } = useProfile();
 
   const checkAccessStatus = async (currentSession: any) => {
+    if (!currentSession?.user) return;
+    
     try {
-      if (currentSession?.user) {
-        const profile = await fetchProfile(currentSession.user.id);
-        console.log('Profile fetched:', profile);
-        
-        if (profile) {
-          const { hasAccess: newHasAccess, trialEnded: newTrialEnded } = checkTrialStatus(profile);
-          setHasAccess(newHasAccess);
-          setTrialEnded(newTrialEnded);
-          console.log('Access status updated:', { newHasAccess, newTrialEnded });
-        }
+      const profile = await fetchProfile(currentSession.user.id);
+      console.log('Profile fetched:', profile);
+      
+      if (profile) {
+        const { hasAccess: newHasAccess, trialEnded: newTrialEnded } = checkTrialStatus(profile);
+        setHasAccess(newHasAccess);
+        setTrialEnded(newTrialEnded);
+        console.log('Access status updated:', { newHasAccess, newTrialEnded });
       }
     } catch (error) {
       console.error('Error checking access status:', error);
@@ -47,9 +47,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         
         if (!mounted) return;
         
-        setSession(currentSession);
-        
         if (currentSession) {
+          setSession(currentSession);
           await checkAccessStatus(currentSession);
         }
       } catch (error) {
@@ -68,11 +67,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       
       if (!mounted) return;
       
-      setSession(newSession);
-      
       if (newSession) {
+        setSession(newSession);
         await checkAccessStatus(newSession);
       } else {
+        setSession(null);
         setHasAccess(false);
         setTrialEnded(false);
       }

@@ -40,9 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
     checkTrialStatus();
 
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed in Layout:', event, session);
       if (!mounted) return;
       
