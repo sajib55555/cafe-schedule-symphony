@@ -20,7 +20,10 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const { fetchProfile } = useProfile();
 
   const checkAccessStatus = async (currentSession: any) => {
-    if (!currentSession?.user) return;
+    if (!currentSession?.user) {
+      setLoading(false);
+      return;
+    }
     
     try {
       const profile = await fetchProfile(currentSession.user.id);
@@ -34,6 +37,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.error('Error checking access status:', error);
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -50,10 +55,11 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         if (currentSession) {
           setSession(currentSession);
           await checkAccessStatus(currentSession);
+        } else {
+          setLoading(false);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
-      } finally {
         if (mounted) {
           setLoading(false);
         }
@@ -74,9 +80,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         setSession(null);
         setHasAccess(false);
         setTrialEnded(false);
+        setLoading(false);
       }
-      
-      setLoading(false);
     });
 
     return () => {
