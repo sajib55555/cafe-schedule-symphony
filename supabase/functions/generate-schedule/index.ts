@@ -83,7 +83,6 @@ serve(async (req) => {
             You must return ONLY a valid JSON object with no additional text or markdown formatting.
             The response must follow this exact structure:
             {
-              "weekStart": "YYYY-MM-DD",
               "shifts": {
                 "staffName": {
                   "YYYY-MM-DD": {
@@ -100,7 +99,7 @@ serve(async (req) => {
             2. Respect staff availability
             3. Distribute hours fairly
             4. Follow the weekday/weekend staffing requirements strictly
-            5. Use standard shift times (e.g., 8-hour shifts)`
+            5. Use standard shift times (e.g., 8-hour shifts between 09:00-17:00)`
           },
           {
             role: "user",
@@ -131,7 +130,7 @@ serve(async (req) => {
       schedule = JSON.parse(jsonContent);
       
       // Validate schedule structure
-      if (!schedule.weekStart || !schedule.shifts) {
+      if (!schedule.shifts) {
         throw new Error('Invalid schedule structure');
       }
     } catch (error) {
