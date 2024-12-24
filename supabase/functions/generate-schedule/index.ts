@@ -68,6 +68,18 @@ serve(async (req) => {
           {
             role: "system",
             content: `You are a scheduling assistant that creates optimal weekly schedules for a café. 
+            Follow these specific staffing requirements:
+            
+            Monday to Friday:
+            - 1 Floor Staff
+            - 1 Barista
+            - 1 Waiter
+
+            Saturday and Sunday:
+            - 2 Floor Staff
+            - 1 Barista
+            - 2 Waiters
+
             You must return ONLY a valid JSON object with no additional text or markdown formatting.
             The response must follow this exact structure:
             {
@@ -81,7 +93,14 @@ serve(async (req) => {
                   }
                 }
               }
-            }`
+            }
+
+            Make sure to:
+            1. Assign roles based on staff members' primary roles
+            2. Respect staff availability
+            3. Distribute hours fairly
+            4. Follow the weekday/weekend staffing requirements strictly
+            5. Use standard shift times (e.g., 8-hour shifts)`
           },
           {
             role: "user",

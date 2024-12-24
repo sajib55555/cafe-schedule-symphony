@@ -2,7 +2,7 @@ import { useState, useEffect } from 'react';
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { AISchedule } from '../types/aiSchedule.types';
+import { AISchedule } from '../types';
 import { StaffShifts } from '../types';
 
 export const useAIScheduleHistory = () => {
@@ -30,7 +30,6 @@ export const useAIScheduleHistory = () => {
 
         if (error) throw error;
 
-        // Properly cast the schedule_data to StaffShifts type
         const typedSchedules: AISchedule[] = (data || []).map(schedule => ({
           id: schedule.id,
           company_id: schedule.company_id,
