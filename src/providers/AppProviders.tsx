@@ -3,8 +3,8 @@ import { queryClient } from "@/lib/react-query";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { StaffProvider } from "@/contexts/StaffContext";
 import { TooltipProvider } from "@/components/ui/tooltip";
-import { Toaster } from "@/components/ui/toaster";
-import { Sonner } from "sonner";
+import { Toaster as UIToaster } from "@/components/ui/toaster";
+import { Toaster } from "sonner";
 
 interface AppProvidersProps {
   children: React.ReactNode;
@@ -16,8 +16,8 @@ export const AppProviders = ({ children }: AppProvidersProps) => {
       <AuthProvider>
         <StaffProvider>
           <TooltipProvider>
+            <UIToaster />
             <Toaster />
-            <Sonner />
             {children}
           </TooltipProvider>
         </StaffProvider>
