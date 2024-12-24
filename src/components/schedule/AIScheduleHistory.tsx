@@ -20,15 +20,13 @@ import {
   SheetTrigger,
 } from "@/components/ui/sheet";
 import { Button } from "@/components/ui/button";
+import { AISchedule } from './types';
 
-interface AISchedule {
-  id: number;
-  week_start: string;
-  schedule_data: any;
-  created_at: string;
+interface AIScheduleHistoryProps {
+  onLoadSchedule: (scheduleData: any) => void;
 }
 
-export const AIScheduleHistory = () => {
+export const AIScheduleHistory = ({ onLoadSchedule }: AIScheduleHistoryProps) => {
   const [schedules, setSchedules] = useState<AISchedule[]>([]);
   const [loading, setLoading] = useState(true);
   const { session } = useAuth();
@@ -73,6 +71,23 @@ export const AIScheduleHistory = () => {
     return format(new Date(date), 'PPP');
   };
 
+  const handleLoadSchedule = (schedule: AISchedule) => {
+    try {
+      onLoadSchedule(schedule.schedule_data);
+      toast({
+        title: "Success",
+        description: "Schedule loaded successfully!",
+      });
+    } catch (error) {
+      console.error('Error loading schedule:', error);
+      toast({
+        title: "Error",
+        description: "Failed to load schedule",
+        variant: "destructive"
+      });
+    }
+  };
+
   return (
     <Sheet>
       <SheetTrigger asChild>
@@ -111,14 +126,7 @@ export const AIScheduleHistory = () => {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => {
-                          // Load this schedule into the current view
-                          // This will be implemented in the next iteration
-                          toast({
-                            title: "Coming Soon",
-                            description: "This feature will be available soon!",
-                          });
-                        }}
+                        onClick={() => handleLoadSchedule(schedule)}
                       >
                         Load Schedule
                       </Button>
