@@ -7,6 +7,7 @@ import Subscription from "@/pages/Subscription";
 import UpgradePage from "@/pages/UpgradePage";
 import WagesAnalysis from "@/pages/WagesAnalysis";
 import { useAuth } from "@/contexts/AuthContext";
+import Dashboard from "@/pages/Dashboard";
 
 export const AppRoutes = () => {
   const { session, hasAccess = true, trialEnded = false } = useAuth();
@@ -19,6 +20,14 @@ export const AppRoutes = () => {
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Index />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <Dashboard />
           </ProtectedRoute>
         }
       />
