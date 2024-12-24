@@ -16,18 +16,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const checkTrialStatus = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user && mounted) {
-          const { data: profile } = await supabase
-            .from('profiles')
-            .select('trial_end')
-            .eq('id', session.user.id)
-            .single();
+        if (!session?.user || !mounted) return;
 
-          if (profile?.trial_end && mounted) {
-            const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
-            setTrialDaysLeft(Math.max(0, daysLeft));
-            console.log('Trial days left:', daysLeft);
-          }
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('trial_end')
+          .eq('id', session.user.id)
+          .single();
+
+        if (profile?.trial_end && mounted) {
+          const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
+          setTrialDaysLeft(Math.max(0, daysLeft));
+          console.log('Trial days left:', daysLeft);
         }
       } catch (error) {
         console.error('Error checking trial status:', error);
@@ -44,9 +44,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
       data: { subscription },
     } = supabase.auth.onAuthStateChange(async (event, session) => {
       console.log('Auth state changed in Layout:', event, session);
-      if (!session && mounted) {
+      if (!mounted) return;
+      
+      if (!session) {
         navigate("/auth");
-      } else if (mounted) {
+      } else {
         await checkTrialStatus();
       }
     });

@@ -23,11 +23,13 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     try {
       if (currentSession?.user) {
         const profile = await fetchProfile(currentSession.user.id);
+        console.log('Profile fetched:', profile);
         
         if (profile) {
           const { hasAccess: newHasAccess, trialEnded: newTrialEnded } = checkTrialStatus(profile);
           setHasAccess(newHasAccess);
           setTrialEnded(newTrialEnded);
+          console.log('Access status updated:', { newHasAccess, newTrialEnded });
         }
       }
     } catch (error) {
@@ -43,16 +45,16 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const currentSession = await getSessionStatus();
         console.log('Current session:', currentSession);
         
-        if (mounted) {
-          setSession(currentSession);
-          
-          if (currentSession) {
-            await checkAccessStatus(currentSession);
-          }
-          setLoading(false);
+        if (!mounted) return;
+        
+        setSession(currentSession);
+        
+        if (currentSession) {
+          await checkAccessStatus(currentSession);
         }
       } catch (error) {
         console.error('Error initializing auth:', error);
+      } finally {
         if (mounted) {
           setLoading(false);
         }
@@ -64,16 +66,18 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
     const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
       console.log('Auth state changed:', event, newSession);
       
-      if (mounted) {
-        setSession(newSession);
-        
-        if (newSession) {
-          await checkAccessStatus(newSession);
-        } else {
-          setHasAccess(false);
-        }
-        setLoading(false);
+      if (!mounted) return;
+      
+      setSession(newSession);
+      
+      if (newSession) {
+        await checkAccessStatus(newSession);
+      } else {
+        setHasAccess(false);
+        setTrialEnded(false);
       }
+      
+      setLoading(false);
     });
 
     return () => {
