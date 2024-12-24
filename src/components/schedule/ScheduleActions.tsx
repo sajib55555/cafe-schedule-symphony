@@ -29,8 +29,9 @@ export function ScheduleActions({
       <Button 
         onClick={handleSaveSchedule} 
         disabled={isSaving}
+        className="flex items-center gap-2"
       >
-        <Save className="w-4 h-4 mr-2" />
+        <Save className="w-4 h-4" />
         {isSaving ? 'Saving...' : 'Save Schedule'}
       </Button>
     </div>
