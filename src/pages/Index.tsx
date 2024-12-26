@@ -2,7 +2,7 @@ import { EmployeeList } from "@/components/EmployeeList";
 import { WeeklySchedule } from "@/components/WeeklySchedule";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
-import { ChartBar, DollarSign, Rocket, Settings } from "lucide-react";
+import { ChartBar, DollarSign, Settings } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { Layout } from "@/components/Layout";
 
@@ -12,10 +12,6 @@ const Index = () => {
 
   const handleWagesAnalysis = () => {
     navigate("/wages");
-  };
-
-  const handleUpgrade = () => {
-    navigate("/upgrade");
   };
 
   const handleSettings = () => {
@@ -29,7 +25,7 @@ const Index = () => {
           <header className="text-center mb-12 relative">
             <h1 className="text-4xl font-bold text-secondary mb-2">Café Schedule Manager</h1>
             <p className="text-gray-600">Easily manage your staff schedule</p>
-            <div className="absolute top-0 right-0 flex flex-col gap-2">
+            <div className="absolute top-0 right-0 flex gap-3">
               <Button 
                 variant="secondary"
                 size="lg"
@@ -49,17 +45,6 @@ const Index = () => {
                 <Settings className="h-5 w-5 text-secondary" />
                 <span className="font-medium text-secondary">Settings & Profile</span>
               </Button>
-              {!hasAccess && (
-                <Button 
-                  variant="default" 
-                  size="sm" 
-                  onClick={handleUpgrade}
-                  className="flex items-center gap-2"
-                >
-                  <Rocket className="h-4 w-4" />
-                  Upgrade Now
-                </Button>
-              )}
             </div>
           </header>
           

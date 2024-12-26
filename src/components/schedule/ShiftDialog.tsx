@@ -8,6 +8,7 @@ import {
   DialogTitle,
   DialogDescription,
 } from "@/components/ui/dialog";
+import { ROLES } from "@/components/staff/constants";
 
 interface ShiftDialogProps {
   selectedStaff: string;
@@ -15,12 +16,12 @@ interface ShiftDialogProps {
   newShift: {
     startTime: string;
     endTime: string;
-    role: 'Barista' | 'Floor';
+    role: string;
   };
   setNewShift: React.Dispatch<React.SetStateAction<{
     startTime: string;
     endTime: string;
-    role: 'Barista' | 'Floor';
+    role: string;
   }>>;
   handleAddShift: () => void;
   mode: 'add' | 'edit';
@@ -68,11 +69,14 @@ export function ShiftDialog({
             value={newShift.role}
             onChange={(e) => setNewShift(prev => ({ 
               ...prev, 
-              role: e.target.value as 'Barista' | 'Floor'
+              role: e.target.value
             }))}
           >
-            <option value="Barista">Barista</option>
-            <option value="Floor">Floor</option>
+            {ROLES.map((role) => (
+              <option key={role} value={role}>
+                {role}
+              </option>
+            ))}
           </select>
         </div>
         <Button className="w-full" onClick={handleAddShift}>
