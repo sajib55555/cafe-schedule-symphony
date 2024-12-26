@@ -29,11 +29,9 @@ const AppRoutes = () => {
       <Route
         path="/dashboard"
         element={
-          session ? (
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Index />
-          ) : (
-            <Navigate to="/" replace />
-          )
+          </ProtectedRoute>
         }
       />
       <Route
@@ -71,11 +69,9 @@ const AppRoutes = () => {
       <Route
         path="/settings"
         element={
-          session ? (
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Settings />
-          ) : (
-            <Navigate to="/" replace />
-          )
+          </ProtectedRoute>
         }
       />
       <Route path="*" element={<Navigate to="/" replace />} />

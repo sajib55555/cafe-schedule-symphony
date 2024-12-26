@@ -61,7 +61,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log('Current time:', now);
           console.log('Has active subscription:', hasActiveSubscription);
           console.log('Has active trial:', hasActiveTrial);
-          console.log('Trial comparison result:', trialEnd ? now <= trialEnd : false);
           
           setHasAccess(hasActiveSubscription || hasActiveTrial);
           setTrialEnded(!hasActiveSubscription && trialEnd && now > trialEnd);

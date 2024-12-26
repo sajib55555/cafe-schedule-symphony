@@ -15,14 +15,10 @@ export const ProtectedRoute = ({
   children,
 }: ProtectedRouteProps) => {
   if (!session) {
-    return <Navigate to="/auth" replace />;
+    return <Navigate to="/" replace />;
   }
 
-  if (trialEnded) {
-    return <Navigate to="/upgrade" replace />;
-  }
-
-  if (!hasAccess) {
+  if (trialEnded && !hasAccess) {
     return <Navigate to="/upgrade" replace />;
   }
 
