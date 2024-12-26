@@ -1,13 +1,16 @@
-import { ScheduleRulesForm } from "@/components/settings/schedule/ScheduleRulesForm";
 import { UserProfile } from "@/components/profile/UserProfile";
 import { Layout } from "@/components/Layout";
 import { Separator } from "@/components/ui/separator";
 import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { ChartBar, DollarSign, Home } from "lucide-react";
+import { AddStaffForm } from "@/components/AddStaffForm";
+import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
+import { useState } from "react";
 
 const Settings = () => {
   const navigate = useNavigate();
+  const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
 
   const handleNavigateToDashboard = () => {
     navigate("/");
@@ -44,6 +47,7 @@ const Settings = () => {
             </Button>
           </div>
         </div>
+        
         <div className="space-y-8">
           <section>
             <h2 className="text-2xl font-semibold mb-4">Profile Settings</h2>
@@ -53,8 +57,20 @@ const Settings = () => {
           <Separator className="my-8" />
           
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Schedule Rules</h2>
-            <ScheduleRulesForm />
+            <div className="flex justify-between items-center mb-4">
+              <h2 className="text-2xl font-semibold">Staff Management</h2>
+              <Dialog open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
+                <DialogTrigger asChild>
+                  <Button>Add Staff Member</Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Add New Staff Member</DialogTitle>
+                  </DialogHeader>
+                  <AddStaffForm onClose={() => setIsAddStaffOpen(false)} />
+                </DialogContent>
+              </Dialog>
+            </div>
           </section>
         </div>
       </div>
