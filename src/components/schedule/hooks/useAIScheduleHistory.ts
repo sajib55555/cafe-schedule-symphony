@@ -34,7 +34,7 @@ export const useAIScheduleHistory = () => {
           id: schedule.id,
           company_id: schedule.company_id,
           week_start: schedule.week_start,
-          schedule_data: schedule.schedule_data as StaffShifts,
+          schedule_data: schedule.schedule_data as unknown as StaffShifts,
           created_at: schedule.created_at
         }));
 
