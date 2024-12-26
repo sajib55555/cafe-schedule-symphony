@@ -5,9 +5,7 @@ import { ScheduleHeader } from './schedule/ScheduleHeader';
 import { ScheduleGrid } from './schedule/ScheduleGrid';
 import { useSchedule } from './schedule/useSchedule';
 import { useShiftActions } from './schedule/useShiftActions';
-import { useAISchedule } from './schedule/hooks/useAISchedule';
 import { ScheduleActions } from './schedule/ScheduleActions';
-import { AIScheduleHistory } from './schedule/AIScheduleHistory';
 
 export function WeeklySchedule() {
   const scheduleRef = useRef<HTMLDivElement>(null);
@@ -40,22 +38,10 @@ export function WeeklySchedule() {
     handleDeleteShift
   } = useShiftActions(shifts, setShifts, selectedWeekStart, staff, setStaff);
 
-  const {
-    isGeneratingAISchedule,
-    handleGenerateAISchedule
-  } = useAISchedule(selectedWeekStart, setShifts, handleSaveSchedule);
-
   const navigateWeek = (direction: 'prev' | 'next') => {
     setSelectedWeekStart(current => 
       direction === 'prev' ? subWeeks(current, 1) : addWeeks(current, 1)
     );
-  };
-
-  const handleLoadSchedule = (scheduleData: any) => {
-    setShifts(prev => ({
-      ...prev,
-      [format(selectedWeekStart, 'yyyy-MM-dd')]: scheduleData
-    }));
   };
 
   const days = Array.from({ length: 7 }, (_, index) => {
@@ -75,15 +61,10 @@ export function WeeklySchedule() {
           scheduleRef={scheduleRef}
           onPdfGenerating={setIsPdfGenerating}
         />
-        <div className="flex gap-2">
-          <AIScheduleHistory onLoadSchedule={handleLoadSchedule} />
-          <ScheduleActions
-            handleGenerateAISchedule={handleGenerateAISchedule}
-            handleSaveSchedule={handleSaveSchedule}
-            isGeneratingAISchedule={isGeneratingAISchedule}
-            isSaving={isSaving}
-          />
-        </div>
+        <ScheduleActions
+          handleSaveSchedule={handleSaveSchedule}
+          isSaving={isSaving}
+        />
       </div>
       <div ref={scheduleRef} className="border rounded-lg overflow-hidden">
         <ScheduleGrid
