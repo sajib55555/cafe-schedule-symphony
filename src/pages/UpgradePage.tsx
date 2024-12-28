@@ -1,11 +1,27 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useNavigate } from "react-router-dom";
 
 const UpgradePage = () => {
   const { toast } = useToast();
+  const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+
+  useEffect(() => {
+    // Check URL parameters for successful payment
+    const urlParams = new URLSearchParams(window.location.search);
+    const paymentStatus = urlParams.get('payment_status');
+    
+    if (paymentStatus === 'success') {
+      toast({
+        title: "Subscription Activated",
+        description: "Thank you for upgrading! You now have full access.",
+      });
+      navigate('/dashboard');
+    }
+  }, [navigate, toast]);
 
   const handleUpgrade = async () => {
     try {
@@ -24,7 +40,7 @@ const UpgradePage = () => {
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
           priceId: 'price_1QVwDpFk4w8hjVcVL872Hll8',
-          successUrl: `${window.location.origin}/`,
+          successUrl: `${window.location.origin}/upgrade?payment_status=success`,
           cancelUrl: `${window.location.origin}/upgrade`,
         },
       });
