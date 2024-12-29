@@ -26,7 +26,7 @@ export function TrialBanner({ daysLeft }: TrialBannerProps) {
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
-          priceId: 'price_1QbARcFk4w8hjVcVkbSZ2lKZ',
+          priceId: 'price_1QbAZfFk4w8hjVcVH2I32wCm',
           successUrl: `${window.location.origin}/dashboard`,
           cancelUrl: `${window.location.origin}/upgrade`,
         },
