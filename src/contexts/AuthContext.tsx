@@ -54,15 +54,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           const now = new Date();
           const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
           
+          // Check if user has an active subscription
           const hasActiveSubscription = profile.subscription_status === 'active';
+          // Check if trial is still active
           const hasActiveTrial = trialEnd ? now <= trialEnd : false;
           
           console.log('Trial end:', trialEnd);
           console.log('Current time:', now);
           console.log('Has active subscription:', hasActiveSubscription);
           console.log('Has active trial:', hasActiveTrial);
+          console.log('Subscription status:', profile.subscription_status);
           
+          // Grant access if either subscription is active OR trial is active
           setHasAccess(hasActiveSubscription || hasActiveTrial);
+          // Set trial ended only if there's no active subscription AND trial has ended
           setTrialEnded(!hasActiveSubscription && trialEnd && now > trialEnd);
         }
       }
