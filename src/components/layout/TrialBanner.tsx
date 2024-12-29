@@ -2,6 +2,7 @@ import { Button } from "@/components/ui/button";
 import { useNavigate } from "react-router-dom";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { useEffect, useState } from "react";
 
 interface TrialBannerProps {
   daysLeft: number;
@@ -10,6 +11,29 @@ interface TrialBannerProps {
 export function TrialBanner({ daysLeft }: TrialBannerProps) {
   const navigate = useNavigate();
   const { toast } = useToast();
+  const [isSubscribed, setIsSubscribed] = useState(false);
+
+  useEffect(() => {
+    const checkSubscriptionStatus = async () => {
+      const { data: { session } } = await supabase.auth.getSession();
+      if (session?.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('subscription_status')
+          .eq('id', session.user.id)
+          .single();
+
+        setIsSubscribed(profile?.subscription_status === 'active');
+      }
+    };
+
+    checkSubscriptionStatus();
+  }, []);
+
+  // Don't render anything if user is subscribed
+  if (isSubscribed) {
+    return null;
+  }
 
   const handleUpgrade = async () => {
     try {
