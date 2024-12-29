@@ -10,17 +10,58 @@ const UpgradePage = () => {
   const [loading, setLoading] = useState(false);
 
   useEffect(() => {
-    // Check URL parameters for successful payment
-    const urlParams = new URLSearchParams(window.location.search);
-    const paymentStatus = urlParams.get('payment_status');
-    
-    if (paymentStatus === 'success') {
-      toast({
-        title: "Subscription Activated",
-        description: "Thank you for upgrading! You now have full access.",
-      });
-      navigate('/dashboard');
-    }
+    const handlePaymentSuccess = async () => {
+      const urlParams = new URLSearchParams(window.location.search);
+      const paymentStatus = urlParams.get('payment_status');
+      
+      if (paymentStatus === 'success') {
+        try {
+          const { data: { session } } = await supabase.auth.getSession();
+          
+          if (!session) {
+            console.error('No session found after payment success');
+            return;
+          }
+
+          // Update the profile subscription status
+          const { error: updateError } = await supabase
+            .from('profiles')
+            .update({
+              subscription_status: 'active',
+            })
+            .eq('id', session.user.id);
+
+          if (updateError) {
+            console.error('Error updating subscription status:', updateError);
+            toast({
+              title: "Error",
+              description: "There was a problem activating your subscription. Please contact support.",
+              variant: "destructive",
+            });
+            return;
+          }
+
+          toast({
+            title: "Subscription Activated",
+            description: "Thank you for upgrading! You now have full access.",
+          });
+          
+          // Add a small delay to ensure the toast is visible
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true });
+          }, 1000);
+        } catch (error) {
+          console.error('Error handling payment success:', error);
+          toast({
+            title: "Error",
+            description: "There was a problem processing your payment. Please contact support.",
+            variant: "destructive",
+          });
+        }
+      }
+    };
+
+    handlePaymentSuccess();
   }, [navigate, toast]);
 
   const handleUpgrade = async () => {
