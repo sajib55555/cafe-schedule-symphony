@@ -52,7 +52,6 @@ serve(async (req) => {
 
     console.log('Creating checkout session for user:', user.email);
     console.log('Using price ID:', priceId);
-    console.log('Stripe mode:', process.env.NODE_ENV === 'development' ? 'test' : 'live');
     
     const session = await stripe.checkout.sessions.create({
       customer: customerId,
