@@ -8,7 +8,7 @@ const Index = () => {
 
   return (
     <Layout>
-      <div className="min-h-screen bg-[#FDF6E3] p-6">
+      <div className="p-6">
         <div className="max-w-7xl mx-auto space-y-8">
           <div className="grid md:grid-cols-[300px,1fr] gap-8">
             <aside>
