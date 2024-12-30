@@ -20,12 +20,23 @@ const AppRoutes = () => {
   const { loading, hasAccess, session, trialEnded } = useAuth();
 
   if (loading) {
-    return <div>Loading...</div>;
+    return <div className="flex items-center justify-center min-h-screen">
+      <div className="text-lg">Loading...</div>
+    </div>;
   }
 
   return (
     <Routes>
-      <Route path="/" element={<Auth />} />
+      <Route 
+        path="/" 
+        element={
+          session ? (
+            <Navigate to="/dashboard" replace />
+          ) : (
+            <Auth />
+          )
+        } 
+      />
       <Route
         path="/dashboard"
         element={
@@ -74,7 +85,12 @@ const AppRoutes = () => {
           </ProtectedRoute>
         }
       />
-      <Route path="*" element={<Navigate to="/" replace />} />
+      <Route 
+        path="*" 
+        element={
+          <Navigate to={session ? "/dashboard" : "/"} replace />
+        } 
+      />
     </Routes>
   );
 };
@@ -84,7 +100,7 @@ const App = () => {
     <QueryClientProvider client={queryClient}>
       <TooltipProvider>
         <AuthProvider>
-          <BrowserRouter basename="/">
+          <BrowserRouter>
             <StaffProvider>
               <Toaster />
               <Sonner />
