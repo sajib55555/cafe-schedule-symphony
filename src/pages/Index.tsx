@@ -22,9 +22,7 @@ const Index = () => {
     <Layout>
       <div className="min-h-screen bg-[#FDF6E3] p-6">
         <div className="max-w-7xl mx-auto space-y-8">
-          <header className="text-center mb-12 relative">
-            <h1 className="text-4xl font-bold text-secondary mb-2">Café Schedule Manager</h1>
-            <p className="text-gray-600">Easily manage your staff schedule</p>
+          <div className="text-center mb-12 relative">
             <div className="absolute top-0 right-0 flex gap-3">
               <Button 
                 variant="secondary"
@@ -46,7 +44,7 @@ const Index = () => {
                 <span className="font-medium text-secondary">Settings & Profile</span>
               </Button>
             </div>
-          </header>
+          </div>
           
           <div className="grid md:grid-cols-[300px,1fr] gap-8">
             <aside>
