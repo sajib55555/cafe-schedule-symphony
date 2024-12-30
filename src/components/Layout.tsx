@@ -23,7 +23,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
         if (profile) {
           setIsSubscribed(profile.subscription_status === 'active');
           
-          // Only set trial days if not subscribed
           if (!isSubscribed && profile.trial_end) {
             const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
             setTrialDaysLeft(Math.max(0, daysLeft));
@@ -49,16 +48,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#FDF6E3]">
-      <div className="flex flex-col">
-        <Header />
-        {!isSubscribed && trialDaysLeft !== null && trialDaysLeft >= 0 && (
-          <div className="bg-white border-b px-4 py-2">
-            <div className="max-w-7xl mx-auto">
-              <TrialBanner daysLeft={trialDaysLeft} />
-            </div>
+      <Header />
+      {!isSubscribed && trialDaysLeft !== null && trialDaysLeft >= 0 && (
+        <div className="bg-white border-b px-4 py-2">
+          <div className="max-w-7xl mx-auto">
+            <TrialBanner daysLeft={trialDaysLeft} />
           </div>
-        )}
-      </div>
+        </div>
+      )}
       {children}
     </div>
   );
