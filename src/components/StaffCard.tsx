@@ -2,6 +2,9 @@ import { Button } from "@/components/ui/button";
 import { Card } from "@/components/ui/card";
 import { useStaff } from '@/contexts/StaffContext';
 import { useToast } from "@/components/ui/use-toast";
+import { useEffect, useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
+import { useAuth } from "@/contexts/AuthContext";
 
 export function StaffCard({ employee, onEdit }: { 
   employee: any;
@@ -9,6 +12,26 @@ export function StaffCard({ employee, onEdit }: {
 }) {
   const { setStaff } = useStaff();
   const { toast } = useToast();
+  const { session } = useAuth();
+  const [currencySymbol, setCurrencySymbol] = useState("$");
+
+  useEffect(() => {
+    const fetchCurrencySymbol = async () => {
+      if (session?.user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('currency_symbol')
+          .eq('id', session.user.id)
+          .single();
+
+        if (!error && data) {
+          setCurrencySymbol(data.currency_symbol);
+        }
+      }
+    };
+
+    fetchCurrencySymbol();
+  }, [session]);
 
   const handleDelete = () => {
     setStaff(prev => prev.filter(emp => emp.id !== employee.id));
@@ -36,10 +59,10 @@ export function StaffCard({ employee, onEdit }: {
               Monthly Hours: {employee.hours} hrs
             </p>
             <p className="text-sm text-gray-600">
-              Hourly Pay: ${employee.hourly_pay}/hr
+              Hourly Pay: {currencySymbol}{employee.hourly_pay}/hr
             </p>
             <p className="text-sm font-semibold text-primary mt-1">
-              Monthly Wages: ${calculateMonthlyWages()}
+              Monthly Wages: {currencySymbol}{calculateMonthlyWages()}
             </p>
           </div>
           <div className="space-y-2">
