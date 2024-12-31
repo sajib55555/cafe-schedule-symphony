@@ -1,112 +1,102 @@
-import { serve } from "https://deno.land/std@0.190.0/http/server.ts";
-import { createClient } from "https://esm.sh/@supabase/supabase-js@2";
-
-const RESEND_API_KEY = Deno.env.get("RESEND_API_KEY");
-const SUPABASE_URL = Deno.env.get("SUPABASE_URL");
-const SUPABASE_SERVICE_ROLE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY");
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+import { Resend } from 'https://esm.sh/resend@1.1.0'
 
 const corsHeaders = {
-  "Access-Control-Allow-Origin": "*",
-  "Access-Control-Allow-Headers":
-    "authorization, x-client-info, apikey, content-type",
-};
-
-interface SupportRequest {
-  reason: string;
-  message: string;
-  userId: string;
+  'Access-Control-Allow-Origin': '*',
+  'Access-Control-Allow-Headers': 'authorization, x-client-info, apikey, content-type',
 }
 
-const handler = async (req: Request): Promise<Response> => {
-  if (req.method === "OPTIONS") {
-    return new Response(null, { headers: corsHeaders });
+interface SupportRequest {
+  reason: string
+  description: string
+  userId: string
+}
+
+Deno.serve(async (req) => {
+  // Handle CORS preflight requests
+  if (req.method === 'OPTIONS') {
+    return new Response('ok', { headers: corsHeaders })
   }
 
   try {
-    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
-      throw new Error("Missing Supabase configuration");
+    const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
+
+    // Initialize Supabase client
+    const supabaseUrl = Deno.env.get('SUPABASE_URL')
+    const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
+
+    if (!supabaseUrl || !supabaseKey) {
+      throw new Error('Missing Supabase environment variables')
     }
 
-    if (!RESEND_API_KEY) {
-      throw new Error("Missing RESEND_API_KEY");
+    const supabase = createClient(supabaseUrl, supabaseKey, {
+      auth: {
+        autoRefreshToken: false,
+        persistSession: false,
+      },
+    })
+
+    // Get request body
+    const { reason, description, userId }: SupportRequest = await req.json()
+
+    if (!reason || !description || !userId) {
+      throw new Error('Missing required fields')
     }
 
-    const supabaseAdmin = createClient(
-      SUPABASE_URL,
-      SUPABASE_SERVICE_ROLE_KEY
-    );
+    console.log('Processing support request:', { reason, userId })
 
-    // Parse and validate request body
-    const requestBody = await req.json();
-    console.log("Received request body:", requestBody);
-
-    const { reason, message, userId } = requestBody as SupportRequest;
-    
-    if (!reason || !message || !userId) {
-      throw new Error("Missing required fields in request body");
-    }
-
-    // Get user details from the database
-    const { data: userProfile, error: profileError } = await supabaseAdmin
+    // Get user profile
+    const { data: userProfile, error: profileError } = await supabase
       .from('profiles')
-      .select('email, full_name')
+      .select('*')
       .eq('id', userId)
-      .single();
+      .single()
 
     if (profileError || !userProfile) {
-      console.error("Error fetching user profile:", profileError);
-      throw new Error("User not found");
+      console.error('Error fetching user profile:', profileError)
+      throw new Error('Failed to fetch user profile')
     }
 
-    console.log("User profile found:", userProfile);
-
+    // Construct email HTML
     const emailHtml = `
-      <h2>New Support Request</h2>
+      <h2>Support Request</h2>
       <p><strong>From:</strong> ${userProfile.full_name} (${userProfile.email})</p>
       <p><strong>Reason:</strong> ${reason}</p>
-      <p><strong>Message:</strong></p>
-      <p>${message}</p>
-    `;
+      <p><strong>Description:</strong></p>
+      <p>${description}</p>
+    `
 
-    console.log("Attempting to send email with Resend...");
-    
-    const res = await fetch("https://api.resend.com/emails", {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${RESEND_API_KEY}`,
-      },
-      body: JSON.stringify({
-        from: "Cafe Schedule Manager <onboarding@resend.dev>",
-        to: ["sajibulislam55@gmail.com"], // Using the verified email address
-        subject: `Support Request: ${reason}`,
-        html: emailHtml,
-        reply_to: userProfile.email,
-      }),
-    });
+    // Send email using Resend
+    const { data: emailResponse, error: emailError } = await resend.emails.send({
+      from: "Cafe Schedule Manager <onboarding@resend.dev>",
+      to: ["sajibulislam55@gmail.com"], // Using the verified email address
+      subject: `Support Request: ${reason}`,
+      html: emailHtml,
+      reply_to: userProfile.email,
+    })
 
-    const responseData = await res.text();
-    console.log("Resend API response:", responseData);
-
-    if (!res.ok) {
-      console.error("Resend API error:", responseData);
-      throw new Error(`Failed to send email: ${responseData}`);
+    if (emailError) {
+      console.error('Resend API Error:', emailError)
+      throw new Error(`Failed to send email: ${JSON.stringify(emailError)}`)
     }
 
-    return new Response(JSON.stringify({ success: true }), {
-      headers: { ...corsHeaders, "Content-Type": "application/json" },
-      status: 200,
-    });
+    console.log('Email sent successfully:', emailResponse)
+
+    return new Response(
+      JSON.stringify({ message: 'Support request sent successfully' }),
+      {
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
+        status: 200,
+      }
+    )
   } catch (error) {
-    console.error("Error in send-support-email function:", error);
+    console.error('Error processing support request:', error)
     return new Response(
       JSON.stringify({ error: error.message }),
       {
-        headers: { ...corsHeaders, "Content-Type": "application/json" },
+        headers: { ...corsHeaders, 'Content-Type': 'application/json' },
         status: 400,
       }
-    );
+    )
   }
-};
-
-serve(handler);
+})
