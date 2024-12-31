@@ -23,9 +23,17 @@ const handler = async (req: Request): Promise<Response> => {
   }
 
   try {
+    if (!SUPABASE_URL || !SUPABASE_SERVICE_ROLE_KEY) {
+      throw new Error("Missing Supabase configuration");
+    }
+
+    if (!RESEND_API_KEY) {
+      throw new Error("Missing RESEND_API_KEY");
+    }
+
     const supabaseAdmin = createClient(
-      SUPABASE_URL!,
-      SUPABASE_SERVICE_ROLE_KEY!
+      SUPABASE_URL,
+      SUPABASE_SERVICE_ROLE_KEY
     );
 
     const { reason, message, userId } = await req.json() as SupportRequest;
@@ -42,6 +50,8 @@ const handler = async (req: Request): Promise<Response> => {
       throw new Error("User not found");
     }
 
+    console.log("User profile found:", userProfile);
+
     const emailHtml = `
       <h2>New Support Request</h2>
       <p><strong>From:</strong> ${userProfile.full_name} (${userProfile.email})</p>
@@ -49,10 +59,6 @@ const handler = async (req: Request): Promise<Response> => {
       <p><strong>Message:</strong></p>
       <p>${message}</p>
     `;
-
-    if (!RESEND_API_KEY) {
-      throw new Error("Missing RESEND_API_KEY");
-    }
 
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
@@ -69,9 +75,11 @@ const handler = async (req: Request): Promise<Response> => {
       }),
     });
 
+    const responseData = await res.text();
+    console.log("Resend API response:", responseData);
+
     if (!res.ok) {
-      const errorData = await res.text();
-      console.error("Resend API error:", errorData);
+      console.error("Resend API error:", responseData);
       throw new Error("Failed to send email");
     }
 
