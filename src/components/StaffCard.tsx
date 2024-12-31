@@ -33,12 +33,28 @@ export function StaffCard({ employee, onEdit }: {
     fetchCurrencySymbol();
   }, [session]);
 
-  const handleDelete = () => {
-    setStaff(prev => prev.filter(emp => emp.id !== employee.id));
-    toast({
-      title: "Success",
-      description: "Staff member deleted successfully",
-    });
+  const handleDelete = async () => {
+    try {
+      const { error } = await supabase
+        .from('staff')
+        .delete()
+        .eq('id', employee.id);
+
+      if (error) throw error;
+
+      setStaff(prev => prev.filter(emp => emp.id !== employee.id));
+      toast({
+        title: "Success",
+        description: "Staff member deleted successfully",
+      });
+    } catch (error) {
+      console.error('Error deleting staff member:', error);
+      toast({
+        title: "Error",
+        description: "Failed to delete staff member. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const calculateMonthlyWages = () => {

@@ -60,7 +60,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         .from('staff')
         .insert([{
           name: newEmployee.name,
-          role: roleString, // Use role (singular) instead of roles
+          role: roleString,
           email: newEmployee.email,
           phone: newEmployee.phone,
           availability: newEmployee.availability,
