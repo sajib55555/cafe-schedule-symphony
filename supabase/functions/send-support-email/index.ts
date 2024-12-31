@@ -36,7 +36,15 @@ const handler = async (req: Request): Promise<Response> => {
       SUPABASE_SERVICE_ROLE_KEY
     );
 
-    const { reason, message, userId } = await req.json() as SupportRequest;
+    // Parse and validate request body
+    const requestBody = await req.json();
+    console.log("Received request body:", requestBody);
+
+    const { reason, message, userId } = requestBody as SupportRequest;
+    
+    if (!reason || !message || !userId) {
+      throw new Error("Missing required fields in request body");
+    }
 
     // Get user details from the database
     const { data: userProfile, error: profileError } = await supabaseAdmin
@@ -60,6 +68,8 @@ const handler = async (req: Request): Promise<Response> => {
       <p>${message}</p>
     `;
 
+    console.log("Attempting to send email with Resend...");
+    
     const res = await fetch("https://api.resend.com/emails", {
       method: "POST",
       headers: {
@@ -67,7 +77,7 @@ const handler = async (req: Request): Promise<Response> => {
         Authorization: `Bearer ${RESEND_API_KEY}`,
       },
       body: JSON.stringify({
-        from: "Cafe Schedule Manager <support@your-domain.com>",
+        from: "Cafe Schedule Manager <onboarding@resend.dev>",
         to: ["support@your-domain.com"],
         subject: `Support Request: ${reason}`,
         html: emailHtml,
@@ -80,7 +90,7 @@ const handler = async (req: Request): Promise<Response> => {
 
     if (!res.ok) {
       console.error("Resend API error:", responseData);
-      throw new Error("Failed to send email");
+      throw new Error(`Failed to send email: ${responseData}`);
     }
 
     return new Response(JSON.stringify({ success: true }), {
