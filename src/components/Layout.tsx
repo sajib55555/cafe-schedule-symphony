@@ -56,7 +56,9 @@ export function Layout({ children }: { children: React.ReactNode }) {
           </div>
         </div>
       )}
-      {children}
+      <div className="pt-4">
+        {children}
+      </div>
     </div>
   );
 }
