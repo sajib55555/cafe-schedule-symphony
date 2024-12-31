@@ -78,7 +78,7 @@ const handler = async (req: Request): Promise<Response> => {
       },
       body: JSON.stringify({
         from: "Cafe Schedule Manager <onboarding@resend.dev>",
-        to: ["support@your-domain.com"],
+        to: ["sajibulislam55@gmail.com"], // Using the verified email address
         subject: `Support Request: ${reason}`,
         html: emailHtml,
         reply_to: userProfile.email,
