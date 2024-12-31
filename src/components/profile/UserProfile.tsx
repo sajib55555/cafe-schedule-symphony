@@ -5,7 +5,6 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { EditProfileForm } from "./EditProfileForm";
-import { DeleteAccountButton } from "./DeleteAccountButton";
 import { Pencil, User, Building2, Phone, Briefcase } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
@@ -47,7 +46,7 @@ export function UserProfile() {
 
   if (loading) {
     return (
-      <Card className="w-full max-w-2xl mx-auto">
+      <Card className="w-full">
         <CardContent className="p-6">
           <div className="space-y-4 animate-pulse">
             <div className="h-4 bg-gray-200 rounded w-1/4"></div>
@@ -60,7 +59,7 @@ export function UserProfile() {
   }
 
   return (
-    <Card className="w-full max-w-2xl mx-auto">
+    <Card className="w-full">
       <CardHeader className="space-y-1">
         <CardTitle className="text-2xl font-bold">Profile Settings</CardTitle>
       </CardHeader>
@@ -112,17 +111,14 @@ export function UserProfile() {
 
             <Separator className="my-6" />
 
-            <div className="space-y-2">
-              <Button
-                onClick={() => setIsEditing(true)}
-                className="w-full"
-                variant="outline"
-              >
-                <Pencil className="mr-2 h-4 w-4" />
-                Edit Profile
-              </Button>
-              <DeleteAccountButton />
-            </div>
+            <Button
+              onClick={() => setIsEditing(true)}
+              className="w-full"
+              variant="outline"
+            >
+              <Pencil className="mr-2 h-4 w-4" />
+              Edit Profile
+            </Button>
           </div>
         )}
       </CardContent>
