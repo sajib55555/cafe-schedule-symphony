@@ -3,12 +3,13 @@ import { Button } from "@/components/ui/button";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
 import { useNavigate } from "react-router-dom";
-import { Layout } from "@/components/Layout";
+import { LogOut } from "lucide-react";
 
 const UpgradePage = () => {
   const { toast } = useToast();
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
+  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     const handlePaymentSuccess = async () => {
@@ -65,6 +66,33 @@ const UpgradePage = () => {
     handlePaymentSuccess();
   }, [navigate, toast]);
 
+  const handleSignOut = async () => {
+    if (isSigningOut) return;
+    
+    setIsSigningOut(true);
+    try {
+      const { error } = await supabase.auth.signOut();
+      if (error) throw error;
+
+      toast({
+        title: "Success",
+        description: "You have been signed out successfully.",
+        variant: "default",
+      });
+
+      navigate("/auth");
+    } catch (error: any) {
+      console.error("Sign out error:", error);
+      toast({
+        title: "Error",
+        description: error.message || "An error occurred while signing out.",
+        variant: "destructive",
+      });
+    } finally {
+      setIsSigningOut(false);
+    }
+  };
+
   const handleUpgrade = async () => {
     try {
       setLoading(true);
@@ -104,7 +132,22 @@ const UpgradePage = () => {
   };
 
   return (
-    <Layout>
+    <div className="min-h-screen bg-background">
+      <div className="w-full bg-white shadow-sm px-4 py-3 mb-8">
+        <div className="max-w-4xl mx-auto flex justify-between items-center">
+          <h1 className="text-xl font-semibold text-secondary">Upgrade Plan</h1>
+          <Button 
+            variant="outline" 
+            onClick={handleSignOut}
+            disabled={isSigningOut}
+            className="flex items-center gap-2"
+          >
+            <LogOut className="h-4 w-4" />
+            <span>{isSigningOut ? 'Signing out...' : 'Sign Out'}</span>
+          </Button>
+        </div>
+      </div>
+
       <div className="max-w-4xl mx-auto px-4">
         <div className="text-center mb-12">
           <h2 className="text-4xl font-bold mb-4">Upgrade Your Plan</h2>
@@ -150,7 +193,7 @@ const UpgradePage = () => {
           </Button>
         </div>
       </div>
-    </Layout>
+    </div>
   );
 };
 

@@ -1,7 +1,7 @@
+import { UserProfile } from "@/components/profile/UserProfile";
+import { ContactForm } from "@/components/contact/ContactForm";
 import { Layout } from "@/components/Layout";
-import { EditProfileForm } from "@/components/profile/EditProfileForm";
-import { ScheduleRulesForm } from "@/components/settings/ScheduleRulesForm";
-import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
+import { Separator } from "@/components/ui/separator";
 
 const Settings = () => {
   return (
@@ -10,23 +10,20 @@ const Settings = () => {
         <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
           <section>
             <h2 className="text-2xl font-semibold mb-4">Profile Settings</h2>
-            <div className="bg-white shadow rounded-lg p-6">
-              <EditProfileForm />
-            </div>
+            <UserProfile />
           </section>
-
+          
           <section>
-            <h2 className="text-2xl font-semibold mb-4">Schedule Rules</h2>
-            <div className="bg-white shadow rounded-lg p-6">
-              <ScheduleRulesForm />
-            </div>
+            <h2 className="text-2xl font-semibold mb-4">Contact Support</h2>
+            <ContactForm />
           </section>
         </div>
-
+          
+        <Separator className="my-8" />
+        
         <section>
-          <h2 className="text-2xl font-semibold text-red-600 mb-4">Danger Zone</h2>
-          <div className="bg-white shadow rounded-lg p-6">
-            <DeleteAccountButton />
+          <div className="flex justify-between items-center mb-4">
+            <h2 className="text-2xl font-semibold">Staff Management</h2>
           </div>
         </section>
       </div>
