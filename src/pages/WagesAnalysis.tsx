@@ -4,7 +4,6 @@ import { WagesStats } from "@/components/wages/WagesStats";
 import { WagesChart } from "@/components/wages/WagesChart";
 import { AIAdvice } from "@/components/wages/AIAdvice";
 import { CurrencySelector } from "@/components/wages/CurrencySelector";
-import { WagesHeader } from "@/components/wages/WagesHeader";
 import { useWageData } from "@/hooks/useWageData";
 import { useStaff } from "@/contexts/StaffContext";
 
@@ -20,8 +19,6 @@ const WagesAnalysis = () => {
   return (
     <Layout>
       <div className="container mx-auto py-8">
-        <WagesHeader />
-        
         <div className="grid gap-8 md:grid-cols-2">
           <div className="space-y-8">
             <CurrencySelector />
