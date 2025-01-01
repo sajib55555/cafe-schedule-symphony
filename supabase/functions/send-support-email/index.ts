@@ -19,6 +19,7 @@ Deno.serve(async (req) => {
   }
 
   try {
+    console.log('Processing support request...')
     const resend = new Resend(Deno.env.get('RESEND_API_KEY'))
 
     // Initialize Supabase client
@@ -26,6 +27,7 @@ Deno.serve(async (req) => {
     const supabaseKey = Deno.env.get('SUPABASE_SERVICE_ROLE_KEY')
 
     if (!supabaseUrl || !supabaseKey) {
+      console.error('Missing Supabase environment variables')
       throw new Error('Missing Supabase environment variables')
     }
 
@@ -37,13 +39,17 @@ Deno.serve(async (req) => {
     })
 
     // Get request body
-    const { reason, description, userId }: SupportRequest = await req.json()
+    const requestBody = await req.json()
+    console.log('Request body:', requestBody)
+
+    const { reason, description, userId }: SupportRequest = requestBody
 
     if (!reason || !description || !userId) {
+      console.error('Missing required fields:', { reason, description, userId })
       throw new Error('Missing required fields')
     }
 
-    console.log('Processing support request:', { reason, userId })
+    console.log('Fetching user profile for ID:', userId)
 
     // Get user profile
     const { data: userProfile, error: profileError } = await supabase
@@ -57,6 +63,8 @@ Deno.serve(async (req) => {
       throw new Error('Failed to fetch user profile')
     }
 
+    console.log('User profile found:', userProfile)
+
     // Construct email HTML
     const emailHtml = `
       <h2>Support Request</h2>
@@ -65,6 +73,8 @@ Deno.serve(async (req) => {
       <p><strong>Description:</strong></p>
       <p>${description}</p>
     `
+
+    console.log('Sending email via Resend...')
 
     // Send email using Resend
     const { data: emailResponse, error: emailError } = await resend.emails.send({
