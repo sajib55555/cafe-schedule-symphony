@@ -18,14 +18,6 @@ const Settings = () => {
             <ContactForm />
           </section>
         </div>
-          
-        <Separator className="my-8" />
-        
-        <section>
-          <div className="flex justify-between items-center mb-4">
-            <h2 className="text-2xl font-semibold">Staff Management</h2>
-          </div>
-        </section>
       </div>
     </Layout>
   );
