@@ -1,5 +1,5 @@
 import { Layout } from "@/components/Layout";
-import { EditProfileForm } from "@/components/profile/EditProfileForm";
+import { UserProfile } from "@/components/profile/UserProfile";
 import { ScheduleRulesForm } from "@/components/settings/ScheduleRulesForm";
 import { DeleteAccountButton } from "@/components/profile/DeleteAccountButton";
 
@@ -11,7 +11,7 @@ const Settings = () => {
           <section>
             <h2 className="text-2xl font-semibold mb-4">Profile Settings</h2>
             <div className="bg-white shadow rounded-lg p-6">
-              <EditProfileForm />
+              <UserProfile />
             </div>
           </section>
 
