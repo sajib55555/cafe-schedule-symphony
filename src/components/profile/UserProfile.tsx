@@ -5,7 +5,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { EditProfileForm } from "./EditProfileForm";
-import { Pencil, User, Building2, Phone, Briefcase, Mail } from "lucide-react";
+import { Pencil, User, Building2, Phone, Briefcase } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
 
 export function UserProfile() {
@@ -81,14 +81,6 @@ export function UserProfile() {
                 <div className="space-y-1">
                   <p className="text-sm font-medium text-muted-foreground">Full Name</p>
                   <p className="text-lg font-medium">{profile?.full_name || "Not set"}</p>
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-4">
-                <Mail className="h-5 w-5 text-muted-foreground" />
-                <div className="space-y-1">
-                  <p className="text-sm font-medium text-muted-foreground">Email</p>
-                  <p className="text-lg font-medium">{profile?.email || session?.user?.email || "Not set"}</p>
                 </div>
               </div>
               

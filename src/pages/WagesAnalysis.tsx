@@ -3,6 +3,7 @@ import { WageBudgetForm } from "@/components/wages/WageBudgetForm";
 import { WagesStats } from "@/components/wages/WagesStats";
 import { WagesChart } from "@/components/wages/WagesChart";
 import { AIAdvice } from "@/components/wages/AIAdvice";
+import { CurrencySelector } from "@/components/wages/CurrencySelector";
 import { useWageData } from "@/hooks/useWageData";
 import { useStaff } from "@/contexts/StaffContext";
 
@@ -20,6 +21,7 @@ const WagesAnalysis = () => {
       <div className="container mx-auto py-8">
         <div className="grid gap-8 md:grid-cols-2">
           <div className="space-y-8">
+            <CurrencySelector />
             <WageBudgetForm 
               currentBudget={monthlyBudget} 
               onUpdate={setMonthlyBudget} 
