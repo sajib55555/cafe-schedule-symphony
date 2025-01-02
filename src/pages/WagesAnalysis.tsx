@@ -1,57 +1,52 @@
 import { Layout } from "@/components/Layout";
-import { WagesHeader } from "@/components/wages/WagesHeader";
+import { WageBudgetForm } from "@/components/wages/WageBudgetForm";
 import { WagesStats } from "@/components/wages/WagesStats";
 import { WagesChart } from "@/components/wages/WagesChart";
-import { WageBudgetForm } from "@/components/wages/WageBudgetForm";
 import { AIAdvice } from "@/components/wages/AIAdvice";
+import { CurrencySelector } from "@/components/wages/CurrencySelector";
+import { WagesHeader } from "@/components/wages/WagesHeader";
 import { useWageData } from "@/hooks/useWageData";
-import { Loader2 } from "lucide-react";
+import { useStaff } from "@/contexts/StaffContext";
 
 const WagesAnalysis = () => {
-  const { monthlyBudget, setMonthlyBudget, currentCost, yearlyPrediction, isLoading } = useWageData();
+  const { monthlyBudget, setMonthlyBudget, currentCost, yearlyPrediction } = useWageData();
+  const { staff } = useStaff();
 
-  if (isLoading) {
-    return (
-      <Layout>
-        <div className="flex items-center justify-center min-h-screen">
-          <Loader2 className="h-8 w-8 animate-spin" />
-        </div>
-      </Layout>
-    );
-  }
-
-  // Ensure we have default values to satisfy TypeScript
-  const safeMonthlyBudget = monthlyBudget ?? 0;
-  const safeCurrentCost = currentCost ?? 0;
-  const safeYearlyPrediction = yearlyPrediction ?? 0;
+  // Calculate total monthly wages
+  const totalMonthlyWages = staff.reduce((total, employee) => {
+    return total + (employee.hours * (employee.hourly_pay || 0));
+  }, 0);
 
   return (
     <Layout>
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+      <div className="container mx-auto py-8">
         <WagesHeader />
-        <div className="mt-8">
-          <WagesStats 
-            monthlyBudget={safeMonthlyBudget}
-            currentCost={safeCurrentCost}
-            yearlyPrediction={safeYearlyPrediction}
-          />
-        </div>
-        <div className="mt-8">
-          <WagesChart 
-            monthlyBudget={safeMonthlyBudget}
-            currentCost={safeCurrentCost}
-          />
-        </div>
-        <div className="mt-8 grid grid-cols-1 md:grid-cols-2 gap-8">
-          <WageBudgetForm 
-            currentBudget={safeMonthlyBudget}
-            onUpdate={setMonthlyBudget}
-          />
-          <AIAdvice 
-            monthlyBudget={safeMonthlyBudget}
-            currentCost={safeCurrentCost}
-            yearlyPrediction={safeYearlyPrediction}
-          />
+        
+        <div className="grid gap-8 md:grid-cols-2">
+          <div className="space-y-8">
+            <CurrencySelector />
+            <WageBudgetForm 
+              currentBudget={monthlyBudget} 
+              onUpdate={setMonthlyBudget} 
+            />
+            <WagesStats 
+              monthlyBudget={monthlyBudget}
+              currentCost={totalMonthlyWages}
+              yearlyPrediction={totalMonthlyWages * 12}
+            />
+          </div>
+          
+          <div className="space-y-8">
+            <WagesChart 
+              monthlyBudget={monthlyBudget}
+              currentCost={totalMonthlyWages}
+            />
+            <AIAdvice 
+              monthlyBudget={monthlyBudget}
+              currentCost={totalMonthlyWages}
+              yearlyPrediction={totalMonthlyWages * 12}
+            />
+          </div>
         </div>
       </div>
     </Layout>
