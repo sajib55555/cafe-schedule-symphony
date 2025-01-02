@@ -7,13 +7,18 @@ export const useWageData = () => {
   const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
   const [currentCost, setCurrentCost] = useState<number>(0);
   const [yearlyPrediction, setYearlyPrediction] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
   const { session } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     const loadWageData = async () => {
+      setIsLoading(true);
       try {
-        if (!session?.user?.id) return;
+        if (!session?.user?.id) {
+          setIsLoading(false);
+          return;
+        }
 
         const { data: profile } = await supabase
           .from('profiles')
@@ -22,14 +27,12 @@ export const useWageData = () => {
           .maybeSingle();
 
         if (profile?.company_id) {
-          // Use maybeSingle() instead of single() to handle no data case
           const { data: budget } = await supabase
             .from('wage_budgets')
             .select('monthly_budget')
             .eq('company_id', profile.company_id)
             .maybeSingle();
 
-          // Set budget to 0 if no data exists
           setMonthlyBudget(budget?.monthly_budget || 0);
 
           const { data: staff } = await supabase
@@ -51,6 +54,8 @@ export const useWageData = () => {
           description: "Failed to load wage data",
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -63,6 +68,7 @@ export const useWageData = () => {
     monthlyBudget,
     setMonthlyBudget,
     currentCost,
-    yearlyPrediction
+    yearlyPrediction,
+    isLoading
   };
 };
