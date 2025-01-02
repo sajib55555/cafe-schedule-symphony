@@ -13,10 +13,16 @@ interface WageBudgetFormProps {
 }
 
 export const WageBudgetForm = ({ currentBudget, onUpdate }: WageBudgetFormProps) => {
-  const [budget, setBudget] = useState(currentBudget.toString());
+  const [budget, setBudget] = useState(currentBudget?.toString() || "0");
   const [hasCompany, setHasCompany] = useState(true);
   const { session } = useAuth();
   const { toast } = useToast();
+
+  useEffect(() => {
+    if (currentBudget !== undefined) {
+      setBudget(currentBudget.toString());
+    }
+  }, [currentBudget]);
 
   useEffect(() => {
     const checkCompany = async () => {
