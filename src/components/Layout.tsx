@@ -87,33 +87,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
   return (
     <div className="min-h-screen bg-[#FDF6E3]">
-      <div className="bg-white shadow-sm">
-        <Button 
-          variant="secondary"
-          onClick={handleWagesAnalysis}
-          className="flex items-center gap-2"
-        >
-          <DollarSign className="h-4 w-4" />
-          <span>Wages Analysis</span>
-        </Button>
-        <Button 
-          variant="outline"
-          onClick={handleSettings}
-          className="flex items-center gap-2"
-        >
-          <Settings className="h-4 w-4" />
-          <span>Settings</span>
-        </Button>
-        <Button 
-          variant="outline" 
-          onClick={handleSignOut} 
-          disabled={isSigningOut}
-          className="flex items-center gap-2"
-        >
-          <LogOut className="h-4 w-4" />
-          <span>{isSigningOut ? 'Signing out...' : 'Sign Out'}</span>
-        </Button>
-      </div>
       {!isSubscribed && trialDaysLeft !== null && trialDaysLeft >= 0 && (
         <div className="bg-white border-b px-4 py-2">
           <div className="max-w-7xl mx-auto">
