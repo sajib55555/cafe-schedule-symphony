@@ -1,8 +1,9 @@
-import { format } from "date-fns";
+import { format, startOfMonth, endOfMonth, parseISO, differenceInHours } from "date-fns";
 import { useToast } from "@/components/ui/use-toast";
 import { Staff } from '@/contexts/StaffContext';
 import { calculateHours, calculateTotalHours } from './utils/timeCalculations';
 import { updateStaffHours } from './services/staffService';
+import { supabase } from "@/integrations/supabase/client";
 
 export const useShiftActions = (
   shifts: any,
@@ -12,6 +13,65 @@ export const useShiftActions = (
   setStaff: React.Dispatch<React.SetStateAction<Staff[]>>
 ) => {
   const { toast } = useToast();
+
+  const updateMonthlyWages = async (
+    staffId: number, 
+    companyId: string, 
+    monthStart: Date,
+    monthEnd: Date
+  ) => {
+    try {
+      // Calculate total hours and wages for the month
+      const { data: monthShifts, error: shiftsError } = await supabase
+        .from('shifts')
+        .select('*')
+        .eq('staff_id', staffId)
+        .gte('start_time', format(monthStart, "yyyy-MM-dd'T'HH:mm:ssXXX"))
+        .lte('end_time', format(monthEnd, "yyyy-MM-dd'T'HH:mm:ssXXX"));
+
+      if (shiftsError) throw shiftsError;
+
+      const totalHours = monthShifts?.reduce((acc, shift) => {
+        return acc + differenceInHours(parseISO(shift.end_time), parseISO(shift.start_time));
+      }, 0) || 0;
+
+      const staffMember = staff.find(s => s.id === staffId);
+      const totalWages = totalHours * (staffMember?.hourly_pay || 0);
+
+      // Update or insert monthly wages record
+      const { data: existing } = await supabase
+        .from('monthly_wages')
+        .select('id')
+        .eq('staff_id', staffId)
+        .eq('month_start', format(monthStart, 'yyyy-MM-dd'))
+        .eq('month_end', format(monthEnd, 'yyyy-MM-dd'))
+        .single();
+
+      if (existing) {
+        await supabase
+          .from('monthly_wages')
+          .update({
+            total_hours: totalHours,
+            total_wages: totalWages,
+            updated_at: new Date().toISOString()
+          })
+          .eq('id', existing.id);
+      } else {
+        await supabase
+          .from('monthly_wages')
+          .insert({
+            staff_id: staffId,
+            company_id: companyId,
+            month_start: format(monthStart, 'yyyy-MM-dd'),
+            month_end: format(monthEnd, 'yyyy-MM-dd'),
+            total_hours: totalHours,
+            total_wages: totalWages
+          });
+      }
+    } catch (error) {
+      console.error('Error updating monthly wages:', error);
+    }
+  };
 
   const handleAddShift = async (selectedStaff: string, selectedDate: string, newShift: any) => {
     if (!selectedStaff || !selectedDate) return;
@@ -42,6 +102,15 @@ export const useShiftActions = (
         });
 
         await updateStaffHours(staffMember.id, newTotalHours);
+
+        // Update monthly wages
+        const shiftDate = new Date(selectedDate);
+        await updateMonthlyWages(
+          staffMember.id,
+          staffMember.company_id!,
+          startOfMonth(shiftDate),
+          endOfMonth(shiftDate)
+        );
 
         setStaff(prev => prev.map(person => {
           if (person.id === staffMember.id) {
@@ -94,6 +163,15 @@ export const useShiftActions = (
 
         await updateStaffHours(staffMember.id, newTotalHours);
 
+        // Update monthly wages
+        const shiftDate = new Date(selectedDate);
+        await updateMonthlyWages(
+          staffMember.id,
+          staffMember.company_id!,
+          startOfMonth(shiftDate),
+          endOfMonth(shiftDate)
+        );
+
         setStaff(prev => prev.map(person => {
           if (person.id === staffMember.id) {
             return { ...person, hours: newTotalHours };
@@ -120,7 +198,6 @@ export const useShiftActions = (
     const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
     
     try {
-      // First update the shifts state
       const updatedShifts = { ...shifts };
       if (updatedShifts[weekStartStr]?.[staffName]) {
         const staffShifts = { ...updatedShifts[weekStartStr][staffName] };
@@ -135,22 +212,24 @@ export const useShiftActions = (
 
       setShifts(updatedShifts);
 
-      // Find the staff member and update their hours
       const staffMember = staff.find(person => person.name === staffName);
       if (staffMember) {
-        // Calculate new total hours after deletion
         const newTotalHours = calculateTotalHours(staffName, weekStartStr, updatedShifts[weekStartStr] || {});
 
-        // Update staff hours in the database
         await updateStaffHours(staffMember.id, newTotalHours);
 
-        // Update staff state with new hours
+        // Update monthly wages
+        const shiftDate = new Date(date);
+        await updateMonthlyWages(
+          staffMember.id,
+          staffMember.company_id!,
+          startOfMonth(shiftDate),
+          endOfMonth(shiftDate)
+        );
+
         setStaff(prev => prev.map(person => {
           if (person.id === staffMember.id) {
-            return {
-              ...person,
-              hours: newTotalHours
-            };
+            return { ...person, hours: newTotalHours };
           }
           return person;
         }));

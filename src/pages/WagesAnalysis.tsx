@@ -5,17 +5,13 @@ import { WagesChart } from "@/components/wages/WagesChart";
 import { AIAdvice } from "@/components/wages/AIAdvice";
 import { CurrencySelector } from "@/components/wages/CurrencySelector";
 import { WagesHeader } from "@/components/wages/WagesHeader";
+import { StaffWagesTable } from "@/components/wages/StaffWagesTable";
 import { useWageData } from "@/hooks/useWageData";
 import { useStaff } from "@/contexts/StaffContext";
 
 const WagesAnalysis = () => {
   const { monthlyBudget, setMonthlyBudget, currentCost, yearlyPrediction } = useWageData();
   const { staff } = useStaff();
-
-  // Calculate total monthly wages
-  const totalMonthlyWages = staff.reduce((total, employee) => {
-    return total + (employee.hours * (employee.hourly_pay || 0));
-  }, 0);
 
   return (
     <Layout>
@@ -31,22 +27,26 @@ const WagesAnalysis = () => {
             />
             <WagesStats 
               monthlyBudget={monthlyBudget}
-              currentCost={totalMonthlyWages}
-              yearlyPrediction={totalMonthlyWages * 12}
+              currentCost={currentCost}
+              yearlyPrediction={yearlyPrediction}
             />
           </div>
           
           <div className="space-y-8">
             <WagesChart 
               monthlyBudget={monthlyBudget}
-              currentCost={totalMonthlyWages}
+              currentCost={currentCost}
             />
             <AIAdvice 
               monthlyBudget={monthlyBudget}
-              currentCost={totalMonthlyWages}
-              yearlyPrediction={totalMonthlyWages * 12}
+              currentCost={currentCost}
+              yearlyPrediction={yearlyPrediction}
             />
           </div>
+        </div>
+
+        <div className="mt-8">
+          <StaffWagesTable staff={staff} />
         </div>
       </div>
     </Layout>

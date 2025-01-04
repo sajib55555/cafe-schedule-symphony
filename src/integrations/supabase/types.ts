@@ -77,6 +77,57 @@ export type Database = {
         }
         Relationships: []
       }
+      monthly_wages: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          id: number
+          month_end: string
+          month_start: string
+          staff_id: number | null
+          total_hours: number | null
+          total_wages: number | null
+          updated_at: string
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          id?: number
+          month_end: string
+          month_start: string
+          staff_id?: number | null
+          total_hours?: number | null
+          total_wages?: number | null
+          updated_at?: string
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          id?: number
+          month_end?: string
+          month_start?: string
+          staff_id?: number | null
+          total_hours?: number | null
+          total_wages?: number | null
+          updated_at?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "monthly_wages_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "monthly_wages_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       profiles: {
         Row: {
           company_id: string | null
