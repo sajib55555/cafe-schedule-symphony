@@ -7,6 +7,7 @@ export const calculateMonthlyWages = async (
   monthStart: Date,
   monthEnd: Date
 ) => {
+  // Fetch all shifts for the staff member within the month
   const { data: monthShifts, error: shiftsError } = await supabase
     .from('shifts')
     .select('*')
@@ -16,6 +17,7 @@ export const calculateMonthlyWages = async (
 
   if (shiftsError) throw shiftsError;
 
+  // Calculate total hours from all shifts
   const totalHours = monthShifts?.reduce((acc, shift) => {
     return acc + differenceInHours(parseISO(shift.end_time), parseISO(shift.start_time));
   }, 0) || 0;
