@@ -5,6 +5,7 @@ import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Staff } from "@/contexts/StaffContext";
+import { calculateMonthlyWages, updateMonthlyWagesRecord } from "../schedule/utils/wageCalculations";
 
 interface MonthlyWage {
   staff_id: number;
@@ -27,7 +28,7 @@ export function StaffWagesTable({ staff }: { staff: Staff[] }) {
           .from('profiles')
           .select('currency_symbol')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (!error && data) {
           setCurrencySymbol(data.currency_symbol);
@@ -39,31 +40,47 @@ export function StaffWagesTable({ staff }: { staff: Staff[] }) {
   }, [session]);
 
   useEffect(() => {
-    const fetchMonthlyWages = async () => {
+    const calculateWages = async () => {
       if (!session?.user) return;
 
       const { data: profile } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (!profile?.company_id) return;
 
-      const { data: wages, error } = await supabase
-        .from('monthly_wages')
-        .select('*')
-        .eq('company_id', profile.company_id)
-        .gte('month_start', format(monthStart, 'yyyy-MM-dd'))
-        .lte('month_end', format(monthEnd, 'yyyy-MM-dd'));
+      const wagesPromises = staff.map(async (member) => {
+        const totalHours = await calculateMonthlyWages(
+          member.id,
+          profile.company_id,
+          monthStart,
+          monthEnd
+        );
 
-      if (!error && wages) {
-        setMonthlyWages(wages);
-      }
+        await updateMonthlyWagesRecord(
+          member.id,
+          profile.company_id,
+          monthStart,
+          monthEnd,
+          totalHours,
+          member.hourly_pay
+        );
+
+        return {
+          staff_id: member.id,
+          total_hours: totalHours,
+          total_wages: totalHours * member.hourly_pay
+        };
+      });
+
+      const wages = await Promise.all(wagesPromises);
+      setMonthlyWages(wages);
     };
 
-    fetchMonthlyWages();
-  }, [session, monthStart, monthEnd]);
+    calculateWages();
+  }, [session, staff, monthStart, monthEnd]);
 
   return (
     <Card>

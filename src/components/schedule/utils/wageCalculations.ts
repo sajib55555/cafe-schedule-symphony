@@ -15,11 +15,17 @@ export const calculateMonthlyWages = async (
     .gte('start_time', format(monthStart, "yyyy-MM-dd'T'HH:mm:ssXXX"))
     .lte('end_time', format(monthEnd, "yyyy-MM-dd'T'HH:mm:ssXXX"));
 
-  if (shiftsError) throw shiftsError;
+  if (shiftsError) {
+    console.error('Error fetching shifts:', shiftsError);
+    throw shiftsError;
+  }
 
   // Calculate total hours from all shifts
   const totalHours = monthShifts?.reduce((acc, shift) => {
-    return acc + differenceInHours(parseISO(shift.end_time), parseISO(shift.start_time));
+    const startTime = parseISO(shift.start_time);
+    const endTime = parseISO(shift.end_time);
+    const hours = differenceInHours(endTime, startTime);
+    return acc + hours;
   }, 0) || 0;
 
   return totalHours;
@@ -41,7 +47,7 @@ export const updateMonthlyWagesRecord = async (
     .eq('staff_id', staffId)
     .eq('month_start', format(monthStart, 'yyyy-MM-dd'))
     .eq('month_end', format(monthEnd, 'yyyy-MM-dd'))
-    .maybeSingle(); // Changed from single() to maybeSingle()
+    .maybeSingle();
 
   if (existing) {
     await supabase
