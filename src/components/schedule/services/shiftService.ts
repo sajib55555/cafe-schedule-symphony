@@ -1,33 +1,86 @@
 import { supabase } from '@/integrations/supabase/client';
-import { ensureStaffExists, getCompanyIdForUser } from './shift.service';
+import { Staff } from '@/contexts/StaffContext';
+import { format } from "date-fns";
 
-export const saveSchedule = async (schedule: any, userId: string) => {
-  try {
-    const companyId = await getCompanyIdForUser(userId);
-    
-    // Process each staff member's shifts
-    for (const [staffName, shifts] of Object.entries(schedule)) {
-      const staffId = await ensureStaffExists(staffName, companyId);
-      
-      // Process shifts for this staff member
-      for (const [date, shiftData] of Object.entries(shifts as any)) {
-        const { startTime, endTime, role } = shiftData as any;
-        
-        // Save shift to database
-        const { error: shiftError } = await supabase
-          .from('shifts')
-          .insert([{
-            staff_id: staffId,
-            start_time: `${date} ${startTime}`,
-            end_time: `${date} ${endTime}`,
-            role: role
-          }]);
-          
-        if (shiftError) throw shiftError;
+export const addShift = async (
+  selectedStaff: string,
+  selectedDate: string,
+  newShift: any,
+  weekStartStr: string,
+  shifts: any,
+  staff: Staff[],
+  setShifts: any,
+  setStaff: any
+) => {
+  const staffMember = staff.find(s => s.name === selectedStaff);
+  if (!staffMember) return null;
+
+  const updatedShifts = {
+    ...shifts,
+    [weekStartStr]: {
+      ...shifts[weekStartStr] || {},
+      [selectedStaff]: {
+        ...shifts[weekStartStr]?.[selectedStaff] || {},
+        [selectedDate]: newShift
       }
     }
-  } catch (error) {
-    console.error('Error saving schedule:', error);
-    throw error;
+  };
+
+  setShifts(updatedShifts);
+  return staffMember;
+};
+
+export const editShift = async (
+  selectedStaff: string,
+  selectedDate: string,
+  newShift: any,
+  weekStartStr: string,
+  shifts: any,
+  staff: Staff[],
+  setShifts: any,
+  setStaff: any
+) => {
+  const staffMember = staff.find(s => s.name === selectedStaff);
+  if (!staffMember) return null;
+
+  const updatedShifts = {
+    ...shifts,
+    [weekStartStr]: {
+      ...shifts[weekStartStr],
+      [selectedStaff]: {
+        ...shifts[weekStartStr][selectedStaff],
+        [selectedDate]: newShift
+      }
+    }
+  };
+
+  setShifts(updatedShifts);
+  return staffMember;
+};
+
+export const deleteShift = async (
+  staffName: string,
+  date: string,
+  weekStartStr: string,
+  shifts: any,
+  staff: Staff[],
+  setShifts: any,
+  setStaff: any
+) => {
+  const staffMember = staff.find(s => s.name === staffName);
+  if (!staffMember) return null;
+
+  const updatedShifts = {
+    ...shifts,
+    [weekStartStr]: {
+      ...shifts[weekStartStr]
+    }
+  };
+
+  if (updatedShifts[weekStartStr][staffName]) {
+    delete updatedShifts[weekStartStr][staffName][date];
   }
+
+  setShifts(updatedShifts);
+  return staffMember;
 };

@@ -74,7 +74,7 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
     const currentWeekShifts = shifts[weekStartStr] || {};
     
     try {
-      await ensureStaffExists(Object.keys(currentWeekShifts));
+      await ensureStaffExists(Object.keys(currentWeekShifts)[0]);
       const updatedStaff = await getUpdatedStaff();
       
       const startOfWeekDate = new Date(weekStartStr);
