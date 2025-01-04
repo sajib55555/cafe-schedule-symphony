@@ -1,18 +1,12 @@
 import { useEffect, useState } from "react";
-import { useNavigate } from "react-router-dom";
 import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays } from "date-fns";
-import { Button } from "./ui/button";
 import { TrialBanner } from "./layout/TrialBanner";
-import { DollarSign, Settings, LogOut } from "lucide-react";
-import { useToast } from "@/hooks/use-toast";
+import { NavigationBar } from "./layout/NavigationBar";
 
 export function Layout({ children }: { children: React.ReactNode }) {
-  const navigate = useNavigate();
-  const { toast } = useToast();
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
-  const [isSigningOut, setIsSigningOut] = useState(false);
 
   useEffect(() => {
     const checkTrialStatus = async () => {
@@ -36,57 +30,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
     };
 
     checkTrialStatus();
-
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange((event, session) => {
-      if (!session) {
-        navigate("/auth");
-      } else {
-        checkTrialStatus();
-      }
-    });
-
-    return () => subscription.unsubscribe();
-  }, [navigate, isSubscribed]);
-
-  const handleSignOut = async () => {
-    if (isSigningOut) return;
-    
-    setIsSigningOut(true);
-    try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
-
-      toast({
-        title: "Success",
-        description: "You have been signed out successfully.",
-        variant: "default",
-      });
-
-      navigate("/auth");
-    } catch (error: any) {
-      console.error("Sign out error:", error);
-      toast({
-        title: "Error",
-        description: error.message || "An error occurred while signing out.",
-        variant: "destructive",
-      });
-    } finally {
-      setIsSigningOut(false);
-    }
-  };
-
-  const handleWagesAnalysis = () => {
-    navigate("/wages");
-  };
-
-  const handleSettings = () => {
-    navigate("/settings");
-  };
+  }, [isSubscribed]);
 
   return (
     <div className="min-h-screen bg-[#FDF6E3]">
+      <NavigationBar />
       {!isSubscribed && trialDaysLeft !== null && trialDaysLeft >= 0 && (
         <div className="bg-white border-b px-4 py-2">
           <div className="max-w-7xl mx-auto">
