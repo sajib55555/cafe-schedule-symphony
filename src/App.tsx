@@ -13,6 +13,7 @@ import UpgradePage from "./pages/UpgradePage";
 import Auth from "./pages/Auth";
 import WagesAnalysis from "./pages/WagesAnalysis";
 import Settings from "./pages/Settings";
+import LandingPage from "./pages/LandingPage";
 
 const queryClient = new QueryClient();
 
@@ -27,16 +28,18 @@ const AppRoutes = () => {
 
   return (
     <Routes>
+      <Route path="/landing" element={<LandingPage />} />
       <Route 
         path="/" 
         element={
           session ? (
             <Navigate to="/dashboard" replace />
           ) : (
-            <Auth />
+            <Navigate to="/landing" replace />
           )
         } 
       />
+      <Route path="/auth" element={<Auth />} />
       <Route
         path="/dashboard"
         element={
