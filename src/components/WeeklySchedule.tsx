@@ -6,6 +6,7 @@ import { ScheduleGrid } from './schedule/ScheduleGrid';
 import { useSchedule } from './schedule/useSchedule';
 import { useShiftActions } from './schedule/useShiftActions';
 import { ScheduleActions } from './schedule/ScheduleActions';
+import { useIsMobile } from '@/hooks/use-mobile';
 
 export function WeeklySchedule() {
   const scheduleRef = useRef<HTMLDivElement>(null);
@@ -52,14 +53,17 @@ export function WeeklySchedule() {
     };
   });
 
+  const isMobile = useIsMobile();
+
   return (
-    <div className="space-y-4">
-      <div className="flex justify-between items-center">
+    <div className="space-y-2 max-w-full overflow-x-auto">
+      <div className={`flex ${isMobile ? 'flex-col space-y-2' : 'justify-between'} items-center`}>
         <ScheduleHeader
           selectedWeekStart={selectedWeekStart}
           navigateWeek={navigateWeek}
           scheduleRef={scheduleRef}
           onPdfGenerating={setIsPdfGenerating}
+          isMobile={isMobile}
         />
         <ScheduleActions
           handleSaveSchedule={handleSaveSchedule}
@@ -81,6 +85,7 @@ export function WeeklySchedule() {
           handleEditShift={() => handleEditShift(selectedStaff, selectedDate, newShift)}
           handleDeleteShift={handleDeleteShift}
           isPdfGenerating={isPdfGenerating}
+          isMobile={isMobile}
         />
       </div>
     </div>

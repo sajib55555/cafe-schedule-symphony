@@ -3,7 +3,8 @@ import { Button } from "@/components/ui/button";
 import { Dialog, DialogTrigger } from "@/components/ui/dialog";
 import { ShiftDialog } from './ShiftDialog';
 import { Staff } from '@/contexts/StaffContext';
-import { Edit2, Trash2 } from 'lucide-react';
+import { Edit2, Trash2, Plus } from 'lucide-react';
+import { format } from 'date-fns';
 
 interface ScheduleGridProps {
   days: Array<{ name: string; fullDate: string }>;
@@ -27,6 +28,7 @@ interface ScheduleGridProps {
   handleEditShift: () => void;
   handleDeleteShift: (staffName: string, date: string) => void;
   isPdfGenerating?: boolean;
+  isMobile?: boolean;
 }
 
 export function ScheduleGrid({
@@ -42,37 +44,132 @@ export function ScheduleGrid({
   handleAddShift,
   handleEditShift,
   handleDeleteShift,
-  isPdfGenerating = false
+  isPdfGenerating = false,
+  isMobile = false
 }: ScheduleGridProps) {
+  if (isMobile) {
+    return (
+      <div className="space-y-4">
+        {days.map((day) => (
+          <div key={day.fullDate} className="border rounded-lg">
+            <div className="bg-secondary text-white p-2 font-semibold">
+              {format(new Date(day.fullDate), 'EEE, MMM d')}
+            </div>
+            {staff.map((person) => {
+              const shift = currentWeekShifts[person.name]?.[day.fullDate];
+              return (
+                <div key={`${person.name}-${day.fullDate}`} className="p-2 border-t">
+                  <div className="flex justify-between items-center">
+                    <div>
+                      <div className="font-medium">{person.name}</div>
+                      <div className="text-sm text-gray-500">{person.hours} hrs</div>
+                    </div>
+                    {shift ? (
+                      <div className="space-y-2">
+                        <div className="text-sm">
+                          <div>{shift.startTime} - {shift.endTime}</div>
+                          <div>{shift.role}</div>
+                        </div>
+                        {!isPdfGenerating && (
+                          <div className="flex gap-2">
+                            <Dialog>
+                              <DialogTrigger asChild>
+                                <Button
+                                  variant="secondary"
+                                  size="sm"
+                                  onClick={() => {
+                                    setSelectedStaff(person.name);
+                                    setSelectedDate(day.fullDate);
+                                    setNewShift(shift);
+                                  }}
+                                >
+                                  <Edit2 className="h-4 w-4" />
+                                </Button>
+                              </DialogTrigger>
+                              <ShiftDialog
+                                selectedStaff={selectedStaff}
+                                selectedDate={selectedDate}
+                                newShift={newShift}
+                                setNewShift={setNewShift}
+                                handleAddShift={handleEditShift}
+                                mode="edit"
+                              />
+                            </Dialog>
+                            <Button
+                              variant="destructive"
+                              size="sm"
+                              onClick={() => handleDeleteShift(person.name, day.fullDate)}
+                            >
+                              <Trash2 className="h-4 w-4" />
+                            </Button>
+                          </div>
+                        )}
+                      </div>
+                    ) : (
+                      !isPdfGenerating && (
+                        <Dialog>
+                          <DialogTrigger asChild>
+                            <Button
+                              variant="ghost"
+                              size="sm"
+                              onClick={() => {
+                                setSelectedStaff(person.name);
+                                setSelectedDate(day.fullDate);
+                              }}
+                            >
+                              <Plus className="h-4 w-4" />
+                            </Button>
+                          </DialogTrigger>
+                          <ShiftDialog
+                            selectedStaff={selectedStaff}
+                            selectedDate={selectedDate}
+                            newShift={newShift}
+                            setNewShift={setNewShift}
+                            handleAddShift={handleAddShift}
+                            mode="add"
+                          />
+                        </Dialog>
+                      )
+                    )}
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        ))}
+      </div>
+    );
+  }
+
   return (
-    <div className="grid grid-cols-[200px,repeat(7,1fr)]">
-      <div className="bg-secondary text-white p-4 font-semibold">Staff</div>
+    <div className="grid grid-cols-[150px,repeat(7,minmax(130px,1fr))]">
+      <div className="bg-secondary text-white p-2 font-semibold">Staff</div>
       {days.map((day) => (
-        <div key={day.fullDate} className="bg-secondary text-white p-4 font-semibold text-center border-l border-white/20">
-          {day.name}
+        <div key={day.fullDate} className="bg-secondary text-white p-2 font-semibold text-center border-l border-white/20">
+          {format(new Date(day.fullDate), 'EEE, MMM d')}
         </div>
       ))}
 
       {staff.map((person) => (
         <React.Fragment key={person.id}>
-          <div className="border-t p-4 bg-gray-50">
+          <div className="border-t p-2 bg-gray-50">
             <div className="font-medium">{person.name}</div>
             <div className="text-sm text-gray-500">{person.hours} hrs</div>
           </div>
           {days.map((day) => {
             const shift = currentWeekShifts[person.name]?.[day.fullDate];
             return (
-              <div key={`${person.name}-${day.fullDate}`} className="border-t border-l p-2 min-h-[100px]">
+              <div key={`${person.name}-${day.fullDate}`} className="border-t border-l p-2 min-h-[80px]">
                 {shift ? (
-                  <div className="bg-primary text-white p-2 rounded-md text-sm space-y-2">
+                  <div className="bg-primary text-white p-2 rounded-md text-sm space-y-1">
                     <div>{shift.startTime} - {shift.endTime}</div>
                     <div>{shift.role}</div>
                     {!isPdfGenerating && (
-                      <div className="flex gap-2">
+                      <div className="flex gap-1">
                         <Dialog>
                           <DialogTrigger asChild>
-                            <Button 
-                              variant="secondary" 
+                            <Button
+                              variant="secondary"
                               size="sm"
                               className="flex-1"
                               onClick={() => {
@@ -81,8 +178,7 @@ export function ScheduleGrid({
                                 setNewShift(shift);
                               }}
                             >
-                              <Edit2 className="h-4 w-4 mr-1" />
-                              Edit
+                              <Edit2 className="h-3 w-3" />
                             </Button>
                           </DialogTrigger>
                           <ShiftDialog
@@ -94,14 +190,13 @@ export function ScheduleGrid({
                             mode="edit"
                           />
                         </Dialog>
-                        <Button 
-                          variant="destructive" 
+                        <Button
+                          variant="destructive"
                           size="sm"
                           className="flex-1"
                           onClick={() => handleDeleteShift(person.name, day.fullDate)}
                         >
-                          <Trash2 className="h-4 w-4 mr-1" />
-                          Delete
+                          <Trash2 className="h-3 w-3" />
                         </Button>
                       </div>
                     )}
@@ -110,15 +205,16 @@ export function ScheduleGrid({
                   !isPdfGenerating && (
                     <Dialog>
                       <DialogTrigger asChild>
-                        <Button 
-                          variant="ghost" 
+                        <Button
+                          variant="ghost"
+                          size="sm"
                           className="w-full h-full"
                           onClick={() => {
                             setSelectedStaff(person.name);
                             setSelectedDate(day.fullDate);
                           }}
                         >
-                          + Add Shift
+                          <Plus className="h-4 w-4" />
                         </Button>
                       </DialogTrigger>
                       <ShiftDialog
