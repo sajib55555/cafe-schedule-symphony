@@ -1,4 +1,4 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 import { startOfMonth, endOfMonth, format, addMonths, subMonths } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
@@ -8,6 +8,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Staff } from "@/contexts/StaffContext";
 import { calculateMonthlyWages, updateMonthlyWagesRecord } from "../schedule/utils/wageCalculations";
+import { WagesPdfExport } from "./WagesPdfExport";
 
 interface MonthlyWage {
   staff_id: number;
@@ -19,6 +20,8 @@ export function StaffWagesTable({ staff }: { staff: Staff[] }) {
   const [monthlyWages, setMonthlyWages] = useState<MonthlyWage[]>([]);
   const [currencySymbol, setCurrencySymbol] = useState("$");
   const [selectedDate, setSelectedDate] = useState(new Date());
+  const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
+  const wagesRef = useRef<HTMLDivElement>(null);
   const { session } = useAuth();
   const monthStart = startOfMonth(selectedDate);
   const monthEnd = endOfMonth(selectedDate);
@@ -101,6 +104,7 @@ export function StaffWagesTable({ staff }: { staff: Staff[] }) {
             variant="outline"
             size="icon"
             onClick={handlePreviousMonth}
+            disabled={isGeneratingPdf}
           >
             <ChevronLeft className="h-4 w-4" />
           </Button>
@@ -111,35 +115,44 @@ export function StaffWagesTable({ staff }: { staff: Staff[] }) {
             variant="outline"
             size="icon"
             onClick={handleNextMonth}
+            disabled={isGeneratingPdf}
           >
             <ChevronRight className="h-4 w-4" />
           </Button>
         </div>
       </CardHeader>
       <CardContent>
-        <Table>
-          <TableHeader>
-            <TableRow>
-              <TableHead>Staff Member</TableHead>
-              <TableHead>Total Hours</TableHead>
-              <TableHead>Hourly Pay</TableHead>
-              <TableHead>Total Wages</TableHead>
-            </TableRow>
-          </TableHeader>
-          <TableBody>
-            {staff.map((member) => {
-              const wage = monthlyWages.find(w => w.staff_id === member.id);
-              return (
-                <TableRow key={member.id}>
-                  <TableCell>{member.name}</TableCell>
-                  <TableCell>{wage?.total_hours || 0}</TableCell>
-                  <TableCell>{currencySymbol}{member.hourly_pay}</TableCell>
-                  <TableCell>{currencySymbol}{wage?.total_wages || 0}</TableCell>
-                </TableRow>
-              );
-            })}
-          </TableBody>
-        </Table>
+        <div className="flex justify-end mb-4">
+          <WagesPdfExport 
+            wagesRef={wagesRef}
+            onPdfGenerating={setIsGeneratingPdf}
+          />
+        </div>
+        <div ref={wagesRef}>
+          <Table>
+            <TableHeader>
+              <TableRow>
+                <TableHead>Staff Member</TableHead>
+                <TableHead>Total Hours</TableHead>
+                <TableHead>Hourly Pay</TableHead>
+                <TableHead>Total Wages</TableHead>
+              </TableRow>
+            </TableHeader>
+            <TableBody>
+              {staff.map((member) => {
+                const wage = monthlyWages.find(w => w.staff_id === member.id);
+                return (
+                  <TableRow key={member.id}>
+                    <TableCell>{member.name}</TableCell>
+                    <TableCell>{wage?.total_hours || 0}</TableCell>
+                    <TableCell>{currencySymbol}{member.hourly_pay}</TableCell>
+                    <TableCell>{currencySymbol}{wage?.total_wages || 0}</TableCell>
+                  </TableRow>
+                );
+              })}
+            </TableBody>
+          </Table>
+        </div>
       </CardContent>
     </Card>
   );
