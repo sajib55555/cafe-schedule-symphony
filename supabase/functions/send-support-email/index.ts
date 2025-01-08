@@ -8,7 +8,7 @@ const corsHeaders = {
 
 interface SupportRequest {
   reason: string
-  description: string
+  message: string
   userId: string
 }
 
@@ -42,10 +42,10 @@ Deno.serve(async (req) => {
     const requestBody = await req.json()
     console.log('Request body:', requestBody)
 
-    const { reason, description, userId }: SupportRequest = requestBody
+    const { reason, message, userId }: SupportRequest = requestBody
 
-    if (!reason || !description || !userId) {
-      console.error('Missing required fields:', { reason, description, userId })
+    if (!reason || !message || !userId) {
+      console.error('Missing required fields:', { reason, message, userId })
       throw new Error('Missing required fields')
     }
 
@@ -70,8 +70,8 @@ Deno.serve(async (req) => {
       <h2>Support Request</h2>
       <p><strong>From:</strong> ${userProfile.full_name} (${userProfile.email})</p>
       <p><strong>Reason:</strong> ${reason}</p>
-      <p><strong>Description:</strong></p>
-      <p>${description}</p>
+      <p><strong>Message:</strong></p>
+      <p>${message}</p>
     `
 
     console.log('Sending email via Resend...')
@@ -79,7 +79,7 @@ Deno.serve(async (req) => {
     // Send email using Resend
     const { data: emailResponse, error: emailError } = await resend.emails.send({
       from: "Cafe Schedule Manager <onboarding@resend.dev>",
-      to: ["sajibulislam55@gmail.com"], // Using the verified email address
+      to: ["sajibulislam55@gmail.com"],
       subject: `Support Request: ${reason}`,
       html: emailHtml,
       reply_to: userProfile.email,

@@ -46,15 +46,22 @@ export const ContactForm = () => {
     try {
       const { data: { session } } = await supabase.auth.getSession();
       
+      if (!session?.user?.id) {
+        throw new Error("User not authenticated");
+      }
+
       const { error } = await supabase.functions.invoke('send-support-email', {
         body: {
           reason: values.reason,
           message: values.message,
-          userId: session?.user?.id,
+          userId: session.user.id,
         },
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Support email error:', error);
+        throw error;
+      }
 
       toast({
         title: "Message sent successfully",
