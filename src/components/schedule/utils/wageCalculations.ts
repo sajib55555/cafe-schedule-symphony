@@ -41,16 +41,23 @@ export const updateMonthlyWagesRecord = async (
 ) => {
   const totalWages = totalHours * hourlyPay;
 
-  const { data: existing } = await supabase
+  // First check if a record already exists
+  const { data: existing, error: fetchError } = await supabase
     .from('monthly_wages')
     .select('id')
     .eq('staff_id', staffId)
+    .eq('company_id', companyId)  // Added company_id to the query
     .eq('month_start', format(monthStart, 'yyyy-MM-dd'))
     .eq('month_end', format(monthEnd, 'yyyy-MM-dd'))
     .maybeSingle();
 
+  if (fetchError) {
+    console.error('Error fetching existing record:', fetchError);
+    throw fetchError;
+  }
+
   if (existing) {
-    await supabase
+    const { error: updateError } = await supabase
       .from('monthly_wages')
       .update({
         total_hours: totalHours,
@@ -58,16 +65,26 @@ export const updateMonthlyWagesRecord = async (
         updated_at: new Date().toISOString()
       })
       .eq('id', existing.id);
+
+    if (updateError) {
+      console.error('Error updating monthly wages:', updateError);
+      throw updateError;
+    }
   } else {
-    await supabase
+    const { error: insertError } = await supabase
       .from('monthly_wages')
       .insert({
         staff_id: staffId,
-        company_id: companyId,
+        company_id: companyId,  // Ensure company_id is included in insert
         month_start: format(monthStart, 'yyyy-MM-dd'),
         month_end: format(monthEnd, 'yyyy-MM-dd'),
         total_hours: totalHours,
         total_wages: totalWages
       });
+
+    if (insertError) {
+      console.error('Error inserting monthly wages:', insertError);
+      throw insertError;
+    }
   }
 };
