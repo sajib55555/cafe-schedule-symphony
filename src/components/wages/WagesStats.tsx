@@ -1,4 +1,4 @@
-import { useState, Dispatch, SetStateAction } from "react";
+import { useState, useEffect, Dispatch, SetStateAction } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -24,7 +24,7 @@ export const WagesStats = ({
   const { session } = useAuth();
 
   // Fetch currency symbol
-  useState(() => {
+  useEffect(() => {
     const fetchCurrencySymbol = async () => {
       if (session?.user) {
         const { data } = await supabase
