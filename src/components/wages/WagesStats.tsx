@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, Dispatch, SetStateAction } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { AlertCircle, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
@@ -12,11 +12,18 @@ interface WagesStatsProps {
   monthlyBudget: number;
   currentCost: number;
   yearlyPrediction: number;
+  selectedMonth: Date;
+  onMonthChange: Dispatch<SetStateAction<Date>>;
 }
 
-export const WagesStats = ({ monthlyBudget, currentCost, yearlyPrediction }: WagesStatsProps) => {
+export const WagesStats = ({ 
+  monthlyBudget, 
+  currentCost, 
+  yearlyPrediction,
+  selectedMonth,
+  onMonthChange 
+}: WagesStatsProps) => {
   const [currencySymbol, setCurrencySymbol] = useState("$");
-  const [selectedMonth, setSelectedMonth] = useState(new Date());
   const { session } = useAuth();
   const isOverBudget = currentCost > monthlyBudget;
 
@@ -47,11 +54,11 @@ export const WagesStats = ({ monthlyBudget, currentCost, yearlyPrediction }: Wag
   };
 
   const handlePreviousMonth = () => {
-    setSelectedMonth(prevDate => subMonths(prevDate, 1));
+    onMonthChange(prevDate => subMonths(prevDate, 1));
   };
 
   const handleNextMonth = () => {
-    setSelectedMonth(prevDate => addMonths(prevDate, 1));
+    onMonthChange(prevDate => addMonths(prevDate, 1));
   };
 
   return (
