@@ -35,11 +35,17 @@ const AppRoutes = () => {
           session ? (
             <Navigate to="/dashboard" replace />
           ) : (
-            <Navigate to="/landing" replace />
+            <Navigate to="/auth" replace />
           )
         } 
       />
-      <Route path="/auth" element={<Auth />} />
+      <Route path="/auth" element={
+        session ? (
+          <Navigate to="/dashboard" replace />
+        ) : (
+          <Auth />
+        )
+      } />
       <Route
         path="/dashboard"
         element={
@@ -62,7 +68,7 @@ const AppRoutes = () => {
           session ? (
             <Subscription />
           ) : (
-            <Navigate to="/" replace />
+            <Navigate to="/auth" replace />
           )
         } 
       />
@@ -76,7 +82,7 @@ const AppRoutes = () => {
               <UpgradePage />
             )
           ) : (
-            <Navigate to="/" replace />
+            <Navigate to="/auth" replace />
           )
         } 
       />
@@ -91,7 +97,7 @@ const AppRoutes = () => {
       <Route 
         path="*" 
         element={
-          <Navigate to={session ? "/dashboard" : "/"} replace />
+          <Navigate to={session ? "/dashboard" : "/auth"} replace />
         } 
       />
     </Routes>
