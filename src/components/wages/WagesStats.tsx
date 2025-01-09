@@ -1,8 +1,11 @@
+import { useState } from "react";
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, TrendingUp } from "lucide-react";
+import { AlertCircle, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useEffect, useState } from "react";
+import { Button } from "@/components/ui/button";
+import { format, addMonths, subMonths } from "date-fns";
+import { useEffect } from "react";
 import { supabase } from "@/integrations/supabase/client";
 
 interface WagesStatsProps {
@@ -13,6 +16,7 @@ interface WagesStatsProps {
 
 export const WagesStats = ({ monthlyBudget, currentCost, yearlyPrediction }: WagesStatsProps) => {
   const [currencySymbol, setCurrencySymbol] = useState("$");
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
   const { session } = useAuth();
   const isOverBudget = currentCost > monthlyBudget;
 
@@ -42,11 +46,38 @@ export const WagesStats = ({ monthlyBudget, currentCost, yearlyPrediction }: Wag
     }).format(amount);
   };
 
+  const handlePreviousMonth = () => {
+    setSelectedMonth(prevDate => subMonths(prevDate, 1));
+  };
+
+  const handleNextMonth = () => {
+    setSelectedMonth(prevDate => addMonths(prevDate, 1));
+  };
+
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
           <CardTitle>Monthly Overview</CardTitle>
+          <div className="flex items-center space-x-4">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handlePreviousMonth}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="font-medium">
+              {format(selectedMonth, 'MMMM yyyy')}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={handleNextMonth}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

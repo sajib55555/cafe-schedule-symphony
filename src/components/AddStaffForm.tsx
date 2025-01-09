@@ -5,7 +5,7 @@ import { Label } from "@/components/ui/label";
 import { useStaff } from '@/contexts/StaffContext';
 import { supabase } from '@/integrations/supabase/client';
 import { useAuth } from '@/contexts/AuthContext';
-import { useToast } from "@/components/ui/use-toast";
+import { useToast } from "@/hooks/use-toast";
 import { RolesSelector } from "./staff/RolesSelector";
 import { AvailabilitySelector } from "./staff/AvailabilitySelector";
 
@@ -53,7 +53,6 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         throw new Error('Could not get company ID');
       }
 
-      // Convert roles array to a comma-separated string for the role column
       const roleString = newEmployee.roles.join(', ');
 
       const { data: insertedStaff, error: insertError } = await supabase
@@ -64,8 +63,8 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           email: newEmployee.email,
           phone: newEmployee.phone,
           availability: newEmployee.availability,
-          hours: newEmployee.hours,
-          hourly_pay: newEmployee.hourly_pay,
+          hours: newEmployee.hours || 0,
+          hourly_pay: newEmployee.hourly_pay || 0,
           company_id: profileData.company_id
         }])
         .select()
@@ -163,8 +162,8 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           type="number"
           min="0"
           step="0.01"
-          value={newEmployee.hourly_pay}
-          onChange={(e) => setNewEmployee({ ...newEmployee, hourly_pay: parseFloat(e.target.value) })}
+          value={newEmployee.hourly_pay || ""}
+          onChange={(e) => setNewEmployee({ ...newEmployee, hourly_pay: parseFloat(e.target.value) || 0 })}
           placeholder="Enter hourly pay rate"
         />
       </div>
