@@ -15,32 +15,26 @@ export function NavigationBar() {
     
     setIsSigningOut(true);
     try {
-      // Attempt to sign out without checking session first
-      const { error } = await supabase.auth.signOut();
+      await supabase.auth.signOut();
       
-      // If there's an error but it's session-related, we can still proceed
-      if (error) {
-        console.error('Sign out error:', error);
-        if (error.message.includes('session') || error.status === 403) {
-          navigate("/auth", { replace: true });
-          return;
-        }
-        throw error;
-      }
-
+      // Always navigate to auth page and show success message
+      navigate("/auth", { replace: true });
+      
       toast({
         title: "Success",
         description: "You have been signed out successfully.",
         variant: "default",
       });
-
-      navigate("/auth", { replace: true });
     } catch (error: any) {
       console.error("Sign out error:", error);
+      
+      // Navigate to auth page even if there's an error
+      navigate("/auth", { replace: true });
+      
       toast({
-        title: "Error",
-        description: "An error occurred while signing out. Please try again.",
-        variant: "destructive",
+        title: "Notice",
+        description: "You have been signed out.",
+        variant: "default",
       });
     } finally {
       setIsSigningOut(false);
