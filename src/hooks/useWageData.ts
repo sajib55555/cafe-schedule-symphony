@@ -8,12 +8,14 @@ export const useWageData = (selectedMonth: Date = new Date()) => {
   const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
   const [currentCost, setCurrentCost] = useState<number>(0);
   const [yearlyPrediction, setYearlyPrediction] = useState<number>(0);
+  const [isLoading, setIsLoading] = useState(true);
   const { session } = useAuth();
   const { toast } = useToast();
 
   useEffect(() => {
     const loadWageData = async () => {
       try {
+        setIsLoading(true);
         if (!session?.user?.id) return;
 
         const { data: profile } = await supabase
@@ -56,6 +58,8 @@ export const useWageData = (selectedMonth: Date = new Date()) => {
           description: "Failed to load wage data",
           variant: "destructive",
         });
+      } finally {
+        setIsLoading(false);
       }
     };
 
@@ -66,6 +70,7 @@ export const useWageData = (selectedMonth: Date = new Date()) => {
     monthlyBudget,
     setMonthlyBudget,
     currentCost,
-    yearlyPrediction
+    yearlyPrediction,
+    isLoading
   };
 };
