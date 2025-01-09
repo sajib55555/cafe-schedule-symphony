@@ -15,10 +15,6 @@ export function NavigationBar() {
     
     setIsSigningOut(true);
     try {
-      // First clear any existing session data
-      await supabase.auth.clearSession();
-      
-      // Then attempt to sign out
       const { error } = await supabase.auth.signOut({
         scope: 'local'  // Use local scope instead of global to avoid session validation
       });
@@ -26,9 +22,8 @@ export function NavigationBar() {
       if (error) {
         // Check for session-related errors
         if (error.message.includes('session') || error.status === 403) {
-          // If it's a session error, just clear the session and proceed with navigation
+          // If it's a session error, just proceed with navigation
           console.log('Session error during sign out:', error);
-          await supabase.auth.clearSession();
         } else {
           throw error;
         }
