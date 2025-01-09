@@ -48,13 +48,13 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       
       if (user) {
         console.log("Signup successful, user:", user);
-        toast.success("Your account has been created with a 2-day trial period.");
+        toast.success("Thank you for signing up! Please check your email to confirm your account.");
         
-        // Add a small delay to ensure the toast is visible and auth state is updated
+        // Redirect to a confirmation page or show a message
         setTimeout(() => {
-          console.log("Redirecting to dashboard...");
-          navigate("/dashboard", { replace: true });
-        }, 1000);
+          onModeChange('signin');
+          toast.info("You can sign in after confirming your email address.");
+        }, 3000);
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
