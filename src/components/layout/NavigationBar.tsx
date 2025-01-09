@@ -15,25 +15,17 @@ export function NavigationBar() {
     
     setIsSigningOut(true);
     try {
-      // First check if we have a valid session
-      const { data: { session } } = await supabase.auth.getSession();
+      // Attempt to sign out without checking session first
+      const { error } = await supabase.auth.signOut();
       
-      if (session) {
-        // If we have a valid session, try to sign out properly
-        const { error } = await supabase.auth.signOut();
-        if (error) {
-          console.error('Sign out error:', error);
-          // If it's a session error, we can still proceed with navigation
-          if (error.message.includes('session') || error.status === 403) {
-            navigate("/auth", { replace: true });
-            return;
-          }
-          throw error;
+      // If there's an error but it's session-related, we can still proceed
+      if (error) {
+        console.error('Sign out error:', error);
+        if (error.message.includes('session') || error.status === 403) {
+          navigate("/auth", { replace: true });
+          return;
         }
-      } else {
-        // If no valid session exists, just navigate to auth
-        navigate("/auth", { replace: true });
-        return;
+        throw error;
       }
 
       toast({
