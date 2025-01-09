@@ -15,8 +15,24 @@ export function NavigationBar() {
     
     setIsSigningOut(true);
     try {
-      const { error } = await supabase.auth.signOut();
-      if (error) throw error;
+      // First clear any existing session data
+      await supabase.auth.clearSession();
+      
+      // Then attempt to sign out
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'  // Use local scope instead of global to avoid session validation
+      });
+      
+      if (error) {
+        // Check for session-related errors
+        if (error.message.includes('session') || error.status === 403) {
+          // If it's a session error, just clear the session and proceed with navigation
+          console.log('Session error during sign out:', error);
+          await supabase.auth.clearSession();
+        } else {
+          throw error;
+        }
+      }
 
       toast({
         title: "Success",
@@ -24,12 +40,13 @@ export function NavigationBar() {
         variant: "default",
       });
 
-      navigate("/auth");
+      // Navigate after successful sign out
+      navigate("/auth", { replace: true });
     } catch (error: any) {
       console.error("Sign out error:", error);
       toast({
         title: "Error",
-        description: error.message || "An error occurred while signing out.",
+        description: "An error occurred while signing out. Please try again.",
         variant: "destructive",
       });
     } finally {
