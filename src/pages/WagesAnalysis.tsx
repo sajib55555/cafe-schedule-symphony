@@ -8,9 +8,11 @@ import { WagesHeader } from "@/components/wages/WagesHeader";
 import { StaffWagesTable } from "@/components/wages/StaffWagesTable";
 import { useWageData } from "@/hooks/useWageData";
 import { useStaff } from "@/contexts/StaffContext";
+import { useState } from "react";
 
 const WagesAnalysis = () => {
-  const { monthlyBudget, setMonthlyBudget, currentCost, yearlyPrediction } = useWageData();
+  const [selectedMonth, setSelectedMonth] = useState(new Date());
+  const { monthlyBudget, setMonthlyBudget, currentCost, yearlyPrediction } = useWageData(selectedMonth);
   const { staff } = useStaff();
 
   return (
@@ -29,6 +31,8 @@ const WagesAnalysis = () => {
               monthlyBudget={monthlyBudget}
               currentCost={currentCost}
               yearlyPrediction={yearlyPrediction}
+              selectedMonth={selectedMonth}
+              onMonthChange={setSelectedMonth}
             />
           </div>
           
@@ -46,7 +50,10 @@ const WagesAnalysis = () => {
         </div>
 
         <div className="mt-8">
-          <StaffWagesTable staff={staff} />
+          <StaffWagesTable 
+            staff={staff} 
+            selectedMonth={selectedMonth}
+          />
         </div>
       </div>
     </Layout>
