@@ -1,7 +1,9 @@
 import { useEffect, useState, useRef } from "react";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import { startOfMonth, endOfMonth, format, addMonths, subMonths } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
+import { Button } from "@/components/ui/button";
+import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Staff } from "@/contexts/StaffContext";
@@ -14,19 +16,23 @@ interface MonthlyWage {
   total_wages: number;
 }
 
-interface StaffWagesTableProps {
-  staff: Staff[];
-  selectedMonth: Date;
-}
-
-export function StaffWagesTable({ staff, selectedMonth }: StaffWagesTableProps) {
+export function StaffWagesTable({ staff }: { staff: Staff[] }) {
   const [monthlyWages, setMonthlyWages] = useState<MonthlyWage[]>([]);
   const [currencySymbol, setCurrencySymbol] = useState("$");
+  const [selectedDate, setSelectedDate] = useState(new Date());
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const wagesRef = useRef<HTMLDivElement>(null);
   const { session } = useAuth();
-  const monthStart = startOfMonth(selectedMonth);
-  const monthEnd = endOfMonth(selectedMonth);
+  const monthStart = startOfMonth(selectedDate);
+  const monthEnd = endOfMonth(selectedDate);
+
+  const handlePreviousMonth = () => {
+    setSelectedDate(prevDate => subMonths(prevDate, 1));
+  };
+
+  const handleNextMonth = () => {
+    setSelectedDate(prevDate => addMonths(prevDate, 1));
+  };
 
   useEffect(() => {
     const fetchCurrencySymbol = async () => {
@@ -94,9 +100,25 @@ export function StaffWagesTable({ staff, selectedMonth }: StaffWagesTableProps) 
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>Staff Monthly Wages</CardTitle>
         <div className="flex items-center space-x-4">
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handlePreviousMonth}
+            disabled={isGeneratingPdf}
+          >
+            <ChevronLeft className="h-4 w-4" />
+          </Button>
           <span className="font-medium">
-            {format(selectedMonth, 'MMMM yyyy')}
+            {format(selectedDate, 'MMMM yyyy')}
           </span>
+          <Button
+            variant="outline"
+            size="icon"
+            onClick={handleNextMonth}
+            disabled={isGeneratingPdf}
+          >
+            <ChevronRight className="h-4 w-4" />
+          </Button>
         </div>
       </CardHeader>
       <CardContent>
