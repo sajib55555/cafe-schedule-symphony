@@ -1,9 +1,11 @@
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
-import { AlertCircle, TrendingUp } from "lucide-react";
+import { AlertCircle, TrendingUp, ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { Button } from "@/components/ui/button";
+import { format } from "date-fns";
 
 interface WagesStatsProps {
   monthlyBudget: number;
@@ -31,7 +33,7 @@ export const WagesStats = ({
           .from('profiles')
           .select('currency_symbol')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (!error && data) {
           setCurrencySymbol(data.currency_symbol);
@@ -53,8 +55,35 @@ export const WagesStats = ({
   return (
     <div className="space-y-4">
       <Card>
-        <CardHeader>
+        <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-2">
           <CardTitle>Monthly Overview</CardTitle>
+          <div className="flex items-center space-x-2">
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                const newDate = new Date(selectedMonth);
+                newDate.setMonth(newDate.getMonth() - 1);
+                onMonthChange(newDate);
+              }}
+            >
+              <ChevronLeft className="h-4 w-4" />
+            </Button>
+            <span className="font-medium min-w-32 text-center">
+              {format(selectedMonth, 'MMMM yyyy')}
+            </span>
+            <Button
+              variant="outline"
+              size="icon"
+              onClick={() => {
+                const newDate = new Date(selectedMonth);
+                newDate.setMonth(newDate.getMonth() + 1);
+                onMonthChange(newDate);
+              }}
+            >
+              <ChevronRight className="h-4 w-4" />
+            </Button>
+          </div>
         </CardHeader>
         <CardContent className="space-y-4">
           <div className="grid grid-cols-2 gap-4">

@@ -34,6 +34,7 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
         if (existingShifts) {
           const formattedShifts: { [weekStart: string]: StaffShifts } = {};
           formattedShifts[weekStartStr] = {};
+          const staffHours: { [key: string]: number } = {};
 
           existingShifts.forEach((shift) => {
             if (!shift.staff?.name) return;
@@ -41,6 +42,14 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
             const shiftDate = format(new Date(shift.start_time), 'yyyy-MM-dd');
             const startTime = format(new Date(shift.start_time), 'HH:mm');
             const endTime = format(new Date(shift.end_time), 'HH:mm');
+
+            // Calculate hours for this shift
+            const start = new Date(`${shiftDate}T${startTime}`);
+            const end = new Date(`${shiftDate}T${endTime}`);
+            const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+
+            // Add hours to staff member's total
+            staffHours[shift.staff.name] = (staffHours[shift.staff.name] || 0) + hours;
 
             if (!formattedShifts[weekStartStr][shift.staff.name]) {
               formattedShifts[weekStartStr][shift.staff.name] = {};
@@ -52,6 +61,12 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
               role: shift.role as 'Barista' | 'Floor'
             };
           });
+
+          // Update staff hours
+          setStaff(prev => prev.map(member => ({
+            ...member,
+            hours: staffHours[member.name] || 0
+          })));
 
           setShifts(formattedShifts);
         }
@@ -66,7 +81,7 @@ export const useSchedule = (selectedWeekStart: Date, staff: Staff[], setStaff: R
     };
 
     loadShifts();
-  }, [selectedWeekStart, toast]);
+  }, [selectedWeekStart, toast, setStaff]);
 
   const handleSaveSchedule = async () => {
     setIsSaving(true);

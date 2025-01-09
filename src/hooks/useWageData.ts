@@ -40,11 +40,10 @@ export const useWageData = (selectedMonth: Date = new Date()) => {
             .from('monthly_wages')
             .select('total_wages')
             .eq('company_id', profile.company_id)
-            .eq('month_start', format(monthStart, 'yyyy-MM-dd'))
-            .eq('month_end', format(monthEnd, 'yyyy-MM-dd'))
-            .maybeSingle();
+            .gte('month_start', format(monthStart, 'yyyy-MM-dd'))
+            .lte('month_end', format(monthEnd, 'yyyy-MM-dd'));
 
-          const totalCost = monthlyWages?.total_wages || 0;
+          const totalCost = monthlyWages?.reduce((sum, record) => sum + (record.total_wages || 0), 0) || 0;
           setCurrentCost(totalCost);
 
           // Calculate yearly prediction based on current month
