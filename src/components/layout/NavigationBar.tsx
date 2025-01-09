@@ -15,7 +15,9 @@ export function NavigationBar() {
     
     setIsSigningOut(true);
     try {
-      await supabase.auth.signOut();
+      await supabase.auth.signOut({
+        scope: 'local'
+      });
       
       // Always navigate to auth page and show success message
       navigate("/auth", { replace: true });
