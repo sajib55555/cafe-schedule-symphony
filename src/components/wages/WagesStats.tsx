@@ -9,9 +9,17 @@ interface WagesStatsProps {
   monthlyBudget: number;
   currentCost: number;
   yearlyPrediction: number;
+  selectedMonth: Date;
+  onMonthChange: (date: Date) => void;
 }
 
-export const WagesStats = ({ monthlyBudget, currentCost, yearlyPrediction }: WagesStatsProps) => {
+export const WagesStats = ({ 
+  monthlyBudget, 
+  currentCost, 
+  yearlyPrediction,
+  selectedMonth,
+  onMonthChange 
+}: WagesStatsProps) => {
   const [currencySymbol, setCurrencySymbol] = useState("$");
   const { session } = useAuth();
   const isOverBudget = currentCost > monthlyBudget;
