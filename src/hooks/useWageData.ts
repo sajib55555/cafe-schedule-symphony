@@ -2,8 +2,9 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 
-export const useWageData = () => {
+export const useWageData = (selectedMonth: Date = new Date()) => {
   const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
   const [currentCost, setCurrentCost] = useState<number>(0);
   const [yearlyPrediction, setYearlyPrediction] = useState<number>(0);
@@ -22,26 +23,31 @@ export const useWageData = () => {
           .maybeSingle();
 
         if (profile?.company_id) {
-          // Use maybeSingle() instead of single() to handle no data case
+          // Get monthly budget
           const { data: budget } = await supabase
             .from('wage_budgets')
             .select('monthly_budget')
             .eq('company_id', profile.company_id)
             .maybeSingle();
 
-          // Set budget to 0 if no data exists
           setMonthlyBudget(budget?.monthly_budget || 0);
 
-          const { data: staff } = await supabase
-            .from('staff')
-            .select('hours, hourly_pay')
-            .eq('company_id', profile.company_id);
+          // Calculate total cost for the selected month
+          const monthStart = startOfMonth(selectedMonth);
+          const monthEnd = endOfMonth(selectedMonth);
 
-          const totalCost = staff?.reduce((acc, curr) => {
-            return acc + (curr.hours || 0) * (curr.hourly_pay || 0);
-          }, 0) || 0;
+          const { data: monthlyWages } = await supabase
+            .from('monthly_wages')
+            .select('total_wages')
+            .eq('company_id', profile.company_id)
+            .eq('month_start', format(monthStart, 'yyyy-MM-dd'))
+            .eq('month_end', format(monthEnd, 'yyyy-MM-dd'))
+            .maybeSingle();
 
+          const totalCost = monthlyWages?.total_wages || 0;
           setCurrentCost(totalCost);
+
+          // Calculate yearly prediction based on current month
           setYearlyPrediction(totalCost * 12);
         }
       } catch (error) {
@@ -54,10 +60,8 @@ export const useWageData = () => {
       }
     };
 
-    if (session?.user) {
-      loadWageData();
-    }
-  }, [session, toast]);
+    loadWageData();
+  }, [session, selectedMonth, toast]);
 
   return {
     monthlyBudget,

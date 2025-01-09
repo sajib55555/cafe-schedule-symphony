@@ -16,23 +16,14 @@ interface MonthlyWage {
   total_wages: number;
 }
 
-export function StaffWagesTable({ staff }: { staff: Staff[] }) {
+export function StaffWagesTable({ staff, selectedMonth }: { staff: Staff[]; selectedMonth: Date }) {
   const [monthlyWages, setMonthlyWages] = useState<MonthlyWage[]>([]);
   const [currencySymbol, setCurrencySymbol] = useState("$");
-  const [selectedDate, setSelectedDate] = useState(new Date());
   const [isGeneratingPdf, setIsGeneratingPdf] = useState(false);
   const wagesRef = useRef<HTMLDivElement>(null);
   const { session } = useAuth();
-  const monthStart = startOfMonth(selectedDate);
-  const monthEnd = endOfMonth(selectedDate);
-
-  const handlePreviousMonth = () => {
-    setSelectedDate(prevDate => subMonths(prevDate, 1));
-  };
-
-  const handleNextMonth = () => {
-    setSelectedDate(prevDate => addMonths(prevDate, 1));
-  };
+  const monthStart = startOfMonth(selectedMonth);
+  const monthEnd = endOfMonth(selectedMonth);
 
   useEffect(() => {
     const fetchCurrencySymbol = async () => {
@@ -100,25 +91,9 @@ export function StaffWagesTable({ staff }: { staff: Staff[] }) {
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>Staff Monthly Wages</CardTitle>
         <div className="flex items-center space-x-4">
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handlePreviousMonth}
-            disabled={isGeneratingPdf}
-          >
-            <ChevronLeft className="h-4 w-4" />
-          </Button>
           <span className="font-medium">
-            {format(selectedDate, 'MMMM yyyy')}
+            {format(selectedMonth, 'MMMM yyyy')}
           </span>
-          <Button
-            variant="outline"
-            size="icon"
-            onClick={handleNextMonth}
-            disabled={isGeneratingPdf}
-          >
-            <ChevronRight className="h-4 w-4" />
-          </Button>
         </div>
       </CardHeader>
       <CardContent>
@@ -144,9 +119,9 @@ export function StaffWagesTable({ staff }: { staff: Staff[] }) {
                 return (
                   <TableRow key={member.id}>
                     <TableCell>{member.name}</TableCell>
-                    <TableCell>{wage?.total_hours || 0}</TableCell>
+                    <TableCell>{wage?.total_hours.toFixed(2) || '0.00'}</TableCell>
                     <TableCell>{currencySymbol}{member.hourly_pay}</TableCell>
-                    <TableCell>{currencySymbol}{wage?.total_wages || 0}</TableCell>
+                    <TableCell>{currencySymbol}{wage?.total_wages.toFixed(2) || '0.00'}</TableCell>
                   </TableRow>
                 );
               })}
