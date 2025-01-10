@@ -57,21 +57,7 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a scheduling assistant that creates optimal weekly schedules for a café. 
-            Follow these specific staffing requirements:
-            
-            Monday to Friday:
-            - 1 Floor Staff
-            - 1 Barista
-            - 1 Waiter
-
-            Saturday and Sunday:
-            - 2 Floor Staff
-            - 1 Barista
-            - 2 Waiters
-
-            You must return ONLY a valid JSON object with no additional text or markdown formatting.
-            The response must follow this exact structure:
+            content: `You are a scheduling assistant. Generate a weekly schedule in JSON format following this exact structure:
             {
               "shifts": {
                 "staffName": {
@@ -82,15 +68,12 @@ serve(async (req) => {
                   }
                 }
               }
-            }`
+            }
+            Do not include any additional text or formatting in your response, only the JSON object.`
           },
           {
             role: "user",
-            content: `Create a weekly schedule starting from ${weekStart} with these parameters:
-            Staff: ${JSON.stringify(staff)}
-            Schedule Rules: ${JSON.stringify(rules)}
-            
-            Remember to return ONLY the JSON object with no additional text or formatting.`
+            content: `Create a weekly schedule starting from ${weekStart} using this staff data: ${JSON.stringify(staff)} and these rules: ${JSON.stringify(rules)}`
           }
         ],
         temperature: 0.7,
@@ -126,13 +109,14 @@ serve(async (req) => {
       }
 
       // Validate each shift
-      Object.entries(schedule.shifts).forEach(([staffName, dates]: [string, any]) => {
-        Object.entries(dates).forEach(([date, shift]: [string, any]) => {
+      for (const [staffName, dates] of Object.entries(schedule.shifts)) {
+        for (const [date, shift] of Object.entries(dates as Record<string, any>)) {
           if (!shift.startTime || !shift.endTime || !shift.role) {
+            console.error('Invalid shift:', { staffName, date, shift });
             throw new Error(`Invalid shift structure for ${staffName} on ${date}`);
           }
-        });
-      });
+        }
+      }
 
       // Save the AI-generated schedule
       const { error: insertError } = await supabase
