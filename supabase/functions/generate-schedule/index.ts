@@ -57,25 +57,22 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a scheduling assistant. You must generate a schedule that follows these rules:
-            1. Each staff member should be assigned appropriate shifts based on their role
-            2. The schedule should be cost-effective and efficient
-            3. Return ONLY a JSON object with this exact structure, no additional text:
-            {
-              "shifts": {
-                "staffName": {
-                  "YYYY-MM-DD": {
-                    "startTime": "HH:MM",
-                    "endTime": "HH:MM",
-                    "role": "role"
-                  }
-                }
-              }
-            }`
+            content: `You are a scheduling assistant. Generate a JSON schedule with this exact structure and nothing else:
+{
+  "shifts": {
+    "staffName": {
+      "YYYY-MM-DD": {
+        "startTime": "HH:MM",
+        "endTime": "HH:MM",
+        "role": "role"
+      }
+    }
+  }
+}`
           },
           {
             role: "user",
-            content: `Generate a weekly schedule starting from ${weekStart}. Here is the staff data: ${JSON.stringify(staff)} and scheduling rules: ${JSON.stringify(rules)}. Remember to return only the JSON object.`
+            content: `Generate a schedule for week starting ${weekStart}. Staff: ${JSON.stringify(staff)}. Rules: ${JSON.stringify(rules)}. Return ONLY the JSON object, no additional text or formatting.`
           }
         ],
         temperature: 0.7,
@@ -89,7 +86,7 @@ serve(async (req) => {
     }
 
     const aiResponse = await openAIResponse.json();
-    console.log('Raw AI Response:', aiResponse);
+    console.log('OpenAI Response:', aiResponse);
     
     if (!aiResponse.choices?.[0]?.message?.content) {
       throw new Error('Invalid AI response format');
@@ -97,12 +94,14 @@ serve(async (req) => {
 
     let schedule;
     try {
-      // Clean the response and parse it
       const content = aiResponse.choices[0].message.content.trim();
       console.log('Raw content:', content);
       
-      // Remove any markdown formatting if present
-      const jsonContent = content.replace(/```json\n?|\n?```/g, '');
+      // Remove any potential markdown or extra formatting
+      const jsonContent = content
+        .replace(/```json\n?|\n?```/g, '')  // Remove markdown code blocks
+        .replace(/^[^{]*({.*})[^}]*$/, '$1'); // Extract just the JSON object
+      
       console.log('Cleaned JSON content:', jsonContent);
       
       schedule = JSON.parse(jsonContent);
@@ -110,7 +109,6 @@ serve(async (req) => {
       
       // Validate schedule structure
       if (!schedule.shifts) {
-        console.error('Invalid schedule structure:', schedule);
         throw new Error('Invalid schedule structure - missing shifts property');
       }
 
@@ -120,6 +118,11 @@ serve(async (req) => {
           if (!shift.startTime || !shift.endTime || !shift.role) {
             console.error('Invalid shift structure:', { staffName, date, shift });
             throw new Error(`Invalid shift structure for ${staffName} on ${date}`);
+          }
+          
+          // Validate time format
+          if (!/^\d{2}:\d{2}$/.test(shift.startTime) || !/^\d{2}:\d{2}$/.test(shift.endTime)) {
+            throw new Error(`Invalid time format for ${staffName} on ${date}`);
           }
         }
       }
