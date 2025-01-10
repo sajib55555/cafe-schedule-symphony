@@ -14,6 +14,7 @@ serve(async (req) => {
 
   try {
     const { weekStart, companyId } = await req.json()
+    console.log('Received request with weekStart:', weekStart, 'companyId:', companyId);
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -26,14 +27,20 @@ serve(async (req) => {
       .select('*')
       .eq('company_id', companyId)
 
-    if (staffError) throw staffError;
+    if (staffError) {
+      console.error('Staff fetch error:', staffError);
+      throw staffError;
+    }
 
     const { data: rules, error: rulesError } = await supabase
       .from('schedule_rules')
       .select('*')
       .eq('company_id', companyId)
 
-    if (rulesError) throw rulesError;
+    if (rulesError) {
+      console.error('Rules fetch error:', rulesError);
+      throw rulesError;
+    }
 
     console.log('Staff data:', staff);
     console.log('Rules data:', rules);
@@ -75,15 +82,7 @@ serve(async (req) => {
                   }
                 }
               }
-            }
-
-            Make sure to:
-            1. Assign roles based on staff members' primary roles
-            2. Respect staff availability
-            3. Distribute hours fairly
-            4. Follow the weekday/weekend staffing requirements strictly
-            5. Use standard shift times (e.g., 8-hour shifts between 09:00-17:00)
-            6. Ensure each day has the exact number of staff members per role as specified above`
+            }`
           },
           {
             role: "user",
@@ -99,8 +98,13 @@ serve(async (req) => {
       }),
     });
 
+    if (!openAIResponse.ok) {
+      console.error('OpenAI API error:', await openAIResponse.text());
+      throw new Error('Failed to get response from OpenAI');
+    }
+
     const aiResponse = await openAIResponse.json();
-    console.log('AI Response:', aiResponse);
+    console.log('Raw AI Response:', aiResponse);
     
     if (!aiResponse.choices?.[0]?.message?.content) {
       throw new Error('Invalid AI response format');
@@ -111,12 +115,24 @@ serve(async (req) => {
       const content = aiResponse.choices[0].message.content.trim();
       // Remove any markdown formatting if present
       const jsonContent = content.replace(/```json\n?|\n?```/g, '');
+      console.log('Cleaned JSON content:', jsonContent);
+      
       schedule = JSON.parse(jsonContent);
       
       // Validate schedule structure
       if (!schedule.shifts) {
-        throw new Error('Invalid schedule structure');
+        console.error('Invalid schedule structure:', schedule);
+        throw new Error('Invalid schedule structure - missing shifts property');
       }
+
+      // Validate each shift
+      Object.entries(schedule.shifts).forEach(([staffName, dates]: [string, any]) => {
+        Object.entries(dates).forEach(([date, shift]: [string, any]) => {
+          if (!shift.startTime || !shift.endTime || !shift.role) {
+            throw new Error(`Invalid shift structure for ${staffName} on ${date}`);
+          }
+        });
+      });
 
       // Save the AI-generated schedule
       const { error: insertError } = await supabase
@@ -127,9 +143,12 @@ serve(async (req) => {
           schedule_data: schedule.shifts
         });
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
+      }
 
-      console.log('Parsed schedule:', schedule);
+      console.log('Successfully parsed and saved schedule:', schedule);
     } catch (error) {
       console.error('Error parsing AI response:', error);
       console.log('Raw AI response content:', aiResponse.choices[0].message.content);
