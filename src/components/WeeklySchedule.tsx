@@ -45,6 +45,14 @@ export function WeeklySchedule() {
     );
   };
 
+  const handleLoadSchedule = (scheduleData: any) => {
+    const weekStartStr = format(selectedWeekStart, 'yyyy-MM-dd');
+    setShifts(prev => ({
+      ...prev,
+      [weekStartStr]: scheduleData
+    }));
+  };
+
   const days = Array.from({ length: 7 }, (_, index) => {
     const date = addDays(selectedWeekStart, index);
     return {
@@ -68,6 +76,7 @@ export function WeeklySchedule() {
         <ScheduleActions
           handleSaveSchedule={handleSaveSchedule}
           isSaving={isSaving}
+          onLoadSchedule={handleLoadSchedule}
         />
       </div>
       <div ref={scheduleRef} className="border rounded-lg overflow-hidden">

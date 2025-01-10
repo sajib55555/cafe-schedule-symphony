@@ -9,11 +9,13 @@ import { supabase } from '@/integrations/supabase/client';
 interface ScheduleActionsProps {
   handleSaveSchedule: () => Promise<void>;
   isSaving: boolean;
+  onLoadSchedule: (scheduleData: any) => void;
 }
 
 export function ScheduleActions({
   handleSaveSchedule,
-  isSaving
+  isSaving,
+  onLoadSchedule
 }: ScheduleActionsProps) {
   const [isGenerating, setIsGenerating] = React.useState(false);
   const { toast } = useToast();
@@ -48,6 +50,11 @@ export function ScheduleActions({
       });
 
       if (error) throw error;
+
+      // Load the generated schedule into the current view
+      if (data?.shifts) {
+        onLoadSchedule(data.shifts);
+      }
 
       toast({
         title: "Success",
@@ -87,7 +94,7 @@ export function ScheduleActions({
         {isGenerating ? 'Generating...' : 'AI Schedule'}
       </Button>
 
-      <AIScheduleHistory onLoadSchedule={() => {}} />
+      <AIScheduleHistory onLoadSchedule={onLoadSchedule} />
     </div>
   );
 }
