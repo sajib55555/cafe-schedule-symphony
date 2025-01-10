@@ -14,7 +14,7 @@ serve(async (req) => {
 
   try {
     const { weekStart, companyId } = await req.json()
-    console.log('Received request with weekStart:', weekStart, 'companyId:', companyId);
+    console.log('Request params:', { weekStart, companyId });
 
     // Create Supabase client
     const supabaseUrl = Deno.env.get('SUPABASE_URL')!
@@ -57,22 +57,23 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `You are a scheduling assistant. Generate a JSON schedule with this exact structure and nothing else:
+            content: `Generate a valid JSON schedule object with this exact structure:
 {
   "shifts": {
     "staffName": {
       "YYYY-MM-DD": {
         "startTime": "HH:MM",
         "endTime": "HH:MM",
-        "role": "role"
+        "role": "Barista or Floor"
       }
     }
   }
-}`
+}
+Do not include any additional text, markdown formatting, or explanations. Return only the JSON object.`
           },
           {
             role: "user",
-            content: `Generate a schedule for week starting ${weekStart}. Staff: ${JSON.stringify(staff)}. Rules: ${JSON.stringify(rules)}. Return ONLY the JSON object, no additional text or formatting.`
+            content: `Create a schedule for week starting ${weekStart}. Staff data: ${JSON.stringify(staff)}. Rules: ${JSON.stringify(rules)}.`
           }
         ],
         temperature: 0.7,
@@ -89,6 +90,7 @@ serve(async (req) => {
     console.log('OpenAI Response:', aiResponse);
     
     if (!aiResponse.choices?.[0]?.message?.content) {
+      console.error('Invalid AI response format:', aiResponse);
       throw new Error('Invalid AI response format');
     }
 
@@ -97,32 +99,41 @@ serve(async (req) => {
       const content = aiResponse.choices[0].message.content.trim();
       console.log('Raw content:', content);
       
-      // Remove any potential markdown or extra formatting
+      // Clean the content to ensure it's valid JSON
       const jsonContent = content
         .replace(/```json\n?|\n?```/g, '')  // Remove markdown code blocks
-        .replace(/^[^{]*({.*})[^}]*$/, '$1'); // Extract just the JSON object
+        .replace(/^[^{]*({.*})[^}]*$/, '$1') // Extract just the JSON object
+        .trim();
       
       console.log('Cleaned JSON content:', jsonContent);
       
       schedule = JSON.parse(jsonContent);
       console.log('Parsed schedule:', schedule);
       
-      // Validate schedule structure
-      if (!schedule.shifts) {
+      // Validate the schedule structure
+      if (!schedule?.shifts) {
+        console.error('Missing shifts property:', schedule);
         throw new Error('Invalid schedule structure - missing shifts property');
       }
 
       // Validate each shift
       for (const [staffName, dates] of Object.entries(schedule.shifts)) {
         for (const [date, shift] of Object.entries(dates as Record<string, any>)) {
-          if (!shift.startTime || !shift.endTime || !shift.role) {
-            console.error('Invalid shift structure:', { staffName, date, shift });
+          if (!shift?.startTime || !shift?.endTime || !shift?.role) {
+            console.error('Invalid shift data:', { staffName, date, shift });
             throw new Error(`Invalid shift structure for ${staffName} on ${date}`);
           }
           
           // Validate time format
           if (!/^\d{2}:\d{2}$/.test(shift.startTime) || !/^\d{2}:\d{2}$/.test(shift.endTime)) {
+            console.error('Invalid time format:', { staffName, date, shift });
             throw new Error(`Invalid time format for ${staffName} on ${date}`);
+          }
+          
+          // Validate role
+          if (!['Barista', 'Floor'].includes(shift.role)) {
+            console.error('Invalid role:', { staffName, date, shift });
+            throw new Error(`Invalid role for ${staffName} on ${date}. Must be either 'Barista' or 'Floor'`);
           }
         }
       }
