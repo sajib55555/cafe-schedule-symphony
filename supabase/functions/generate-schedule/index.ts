@@ -118,7 +118,17 @@ serve(async (req) => {
         throw new Error('Invalid schedule structure');
       }
 
-      // Additional validation to ensure the schedule follows the requirements
+      // Save the AI-generated schedule
+      const { error: insertError } = await supabase
+        .from('ai_schedules')
+        .insert({
+          company_id: companyId,
+          week_start: weekStart,
+          schedule_data: schedule.shifts
+        });
+
+      if (insertError) throw insertError;
+
       console.log('Parsed schedule:', schedule);
     } catch (error) {
       console.error('Error parsing AI response:', error);
