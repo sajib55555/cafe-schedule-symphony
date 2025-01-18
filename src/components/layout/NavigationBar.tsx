@@ -2,12 +2,14 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { LogOut } from "lucide-react";
+import { Menu, X, LogOut } from "lucide-react";
 import { toast } from "sonner";
+import { useState } from "react";
 
 export function NavigationBar() {
   const { session } = useAuth();
   const navigate = useNavigate();
+  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
 
   const handleLogout = async () => {
     try {
@@ -20,6 +22,10 @@ export function NavigationBar() {
       console.error("Error logging out:", error);
       toast.error("Failed to log out");
     }
+  };
+
+  const toggleMobileMenu = () => {
+    setIsMobileMenuOpen(!isMobileMenuOpen);
   };
 
   return (
@@ -71,21 +77,97 @@ export function NavigationBar() {
               </div>
             )}
           </div>
-          {session && (
-            <div className="flex items-center">
-              <Button
-                onClick={handleLogout}
-                variant="ghost"
-                size="sm"
-                className="text-gray-700 hover:text-gray-900"
-              >
-                <LogOut className="h-4 w-4 mr-2" />
-                Logout
-              </Button>
-            </div>
-          )}
+          <div className="flex items-center">
+            {session && (
+              <>
+                <Button
+                  onClick={handleLogout}
+                  variant="ghost"
+                  size="sm"
+                  className="hidden sm:inline-flex text-gray-700 hover:text-gray-900"
+                >
+                  <LogOut className="h-4 w-4 mr-2" />
+                  Logout
+                </Button>
+                <Button
+                  onClick={toggleMobileMenu}
+                  variant="ghost"
+                  size="sm"
+                  className="sm:hidden"
+                >
+                  {isMobileMenuOpen ? (
+                    <X className="h-6 w-6" />
+                  ) : (
+                    <Menu className="h-6 w-6" />
+                  )}
+                </Button>
+              </>
+            )}
+          </div>
         </div>
       </div>
+
+      {/* Mobile menu */}
+      {session && isMobileMenuOpen && (
+        <div className="sm:hidden">
+          <div className="pt-2 pb-3 space-y-1">
+            <Link
+              to="/dashboard"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Dashboard
+            </Link>
+            <Link
+              to="/staff"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Staff
+            </Link>
+            <Link
+              to="/tasks"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Tasks
+            </Link>
+            <Link
+              to="/wages"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Wages
+            </Link>
+            <Link
+              to="/holiday"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Holiday
+            </Link>
+            <Link
+              to="/settings"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              Settings
+            </Link>
+            <Button
+              onClick={() => {
+                handleLogout();
+                setIsMobileMenuOpen(false);
+              }}
+              variant="ghost"
+              size="sm"
+              className="w-full text-left px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+            >
+              <LogOut className="h-4 w-4 mr-2 inline" />
+              Logout
+            </Button>
+          </div>
+        </div>
+      )}
     </nav>
   );
 }
