@@ -48,7 +48,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       
       if (user) {
         console.log("Signup successful, user:", user);
-        toast.success("Your account has been created with a 2-day trial period.");
+        toast.success("Your account has been created with a 30-day trial period.");
         
         // Add a small delay to ensure the toast is visible and auth state is updated
         setTimeout(() => {

@@ -96,7 +96,7 @@ export const handleSignUp = async (values: SignUpData) => {
     // Set trial dates
     const trialStart = new Date();
     const trialEnd = new Date();
-    trialEnd.setDate(trialEnd.getDate() + 2); // 2 days trial period
+    trialEnd.setDate(trialEnd.getDate() + 30); // 30 days trial period
 
     // Update profile with trial dates, company_id, and additional info
     const { error: profileError } = await supabase
