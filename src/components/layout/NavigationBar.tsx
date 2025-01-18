@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { CalendarDays, Users, DollarSign, Settings, Calendar, CheckSquare } from "lucide-react";
+import { CalendarDays, Users, DollarSign, Settings, Calendar, CheckSquare, LayoutDashboard } from "lucide-react";
 
 export function NavigationBar() {
   const { session } = useAuth();
@@ -11,9 +11,9 @@ export function NavigationBar() {
   return (
     <nav className="flex space-x-4 lg:space-x-6 mx-6">
       <Button asChild variant="ghost">
-        <Link to="/">
-          <CalendarDays className="h-4 w-4 mr-2" />
-          Schedule
+        <Link to="/dashboard">
+          <LayoutDashboard className="h-4 w-4 mr-2" />
+          Dashboard
         </Link>
       </Button>
       <Button asChild variant="ghost">

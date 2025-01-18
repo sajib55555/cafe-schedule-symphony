@@ -9,6 +9,7 @@ import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import WagesAnalysis from "./pages/WagesAnalysis";
 import Tasks from "./pages/Tasks";
+import Dashboard from "./pages/Dashboard";
 import { EmployeeList } from "./components/EmployeeList";
 
 function AppRoutes() {
@@ -18,6 +19,14 @@ function AppRoutes() {
     <Routes>
       <Route path="/" element={<LandingPage />} />
       <Route path="/auth/*" element={<Auth />} />
+      <Route
+        path="/dashboard"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <Dashboard />
+          </ProtectedRoute>
+        }
+      />
       <Route
         path="/settings"
         element={
