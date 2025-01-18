@@ -10,11 +10,11 @@ export default function Staff() {
     <Layout>
       <div className="container mx-auto p-6">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex justify-between items-center gap-4 flex-wrap">
+          <div className="flex justify-between items-center">
             <h1 className="text-2xl font-bold">Staff Management</h1>
             <Dialog>
               <DialogTrigger asChild>
-                <Button className="whitespace-nowrap">
+                <Button>
                   <UserPlus className="mr-2 h-4 w-4" />
                   Add Staff
                 </Button>
