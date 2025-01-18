@@ -21,7 +21,7 @@ export function NavigationBar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold text-primary">Easy Rota</span>
+              <span className="text-xl font-bold"><span className="text-[#E67E22]">Easy</span><span className="text-[#A5B81D]">Rotas</span></span>
             </Link>
             {session && <DesktopNav />}
           </div>
