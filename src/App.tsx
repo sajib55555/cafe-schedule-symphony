@@ -12,6 +12,7 @@ import Tasks from "./pages/Tasks";
 import Dashboard from "./pages/Dashboard";
 import HolidayTracking from "./pages/HolidayTracking";
 import { EmployeeList } from "./components/EmployeeList";
+import AIHRAdvisor from "./pages/AIHRAdvisor";
 
 function AppRoutes() {
   const { session, hasAccess, trialEnded } = useAuth();
@@ -67,6 +68,14 @@ function AppRoutes() {
             <div className="container mx-auto py-6">
               <EmployeeList />
             </div>
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/hr-advisor"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <AIHRAdvisor />
           </ProtectedRoute>
         }
       />
