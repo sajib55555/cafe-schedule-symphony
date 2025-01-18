@@ -130,7 +130,7 @@ export function HolidayTrackingTable() {
               <TableHead>Holiday Entitlement (Hours)</TableHead>
               <TableHead>Holiday Hours Taken</TableHead>
               <TableHead>Remaining Holiday Hours</TableHead>
-              <TableHead>Add Holiday Hours</TableHead>
+              <TableHead>Holiday Hours Taken</TableHead>
             </TableRow>
           </TableHeader>
           <TableBody>
