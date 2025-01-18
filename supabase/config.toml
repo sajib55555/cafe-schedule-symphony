@@ -21,7 +21,6 @@ enabled = true
 
 [auth]
 enabled = true
-port = 54325
 
 [realtime]
 enabled = true
@@ -31,4 +30,7 @@ enabled = true
 verify_jwt = true
 
 [functions.delete-user]
+verify_jwt = true
+
+[functions.generate-schedule]
 verify_jwt = true
