@@ -5,6 +5,10 @@ import { CalendarDays, Clock, Users, Wallet, ArrowRight, BarChart3, Shield } fro
 const LandingPage = () => {
   const navigate = useNavigate();
 
+  const handleSignUp = () => {
+    navigate('/auth', { state: { mode: 'signup' } });
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-b from-white to-gray-50">
       {/* Navigation */}
@@ -17,7 +21,7 @@ const LandingPage = () => {
               </div>
             </div>
             <Button 
-              onClick={() => navigate('/auth')}
+              onClick={handleSignUp}
               className="bg-primary hover:bg-primary/90"
             >
               Try EasyRotas For Free
@@ -38,7 +42,7 @@ const LandingPage = () => {
             </p>
             <Button 
               size="lg"
-              onClick={() => navigate('/auth')}
+              onClick={handleSignUp}
               className="bg-primary hover:bg-primary/90"
             >
               Start Your Free Trial <ArrowRight className="ml-2 h-5 w-5" />
@@ -98,7 +102,7 @@ const LandingPage = () => {
           </h2>
           <Button 
             size="lg"
-            onClick={() => navigate('/auth')}
+            onClick={handleSignUp}
             className="bg-primary hover:bg-primary/90"
           >
             Start Your Free 30-Day Trial
