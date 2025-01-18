@@ -1,7 +1,7 @@
 import { Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
-import { CalendarDays, Users, DollarSign, Settings, Calendar } from "lucide-react";
+import { CalendarDays, Users, DollarSign, Settings, Calendar, CheckSquare } from "lucide-react";
 
 export function NavigationBar() {
   const { session } = useAuth();
@@ -32,6 +32,12 @@ export function NavigationBar() {
         <Link to="/holiday">
           <Calendar className="h-4 w-4 mr-2" />
           Holiday Tracking
+        </Link>
+      </Button>
+      <Button asChild variant="ghost">
+        <Link to="/tasks">
+          <CheckSquare className="h-4 w-4 mr-2" />
+          Tasks
         </Link>
       </Button>
       <Button asChild variant="ghost">

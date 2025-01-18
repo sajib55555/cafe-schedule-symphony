@@ -380,6 +380,54 @@ export type Database = {
           },
         ]
       }
+      staff_tasks: {
+        Row: {
+          company_id: string | null
+          completed: boolean | null
+          created_at: string
+          id: number
+          staff_id: number | null
+          task_description: string
+          updated_at: string
+          week_start: string
+        }
+        Insert: {
+          company_id?: string | null
+          completed?: boolean | null
+          created_at?: string
+          id?: number
+          staff_id?: number | null
+          task_description: string
+          updated_at?: string
+          week_start: string
+        }
+        Update: {
+          company_id?: string | null
+          completed?: boolean | null
+          created_at?: string
+          id?: number
+          staff_id?: number | null
+          task_description?: string
+          updated_at?: string
+          week_start?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "staff_tasks_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "staff_tasks_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       wage_budgets: {
         Row: {
           company_id: string | null
