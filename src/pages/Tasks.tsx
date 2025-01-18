@@ -1,4 +1,4 @@
-import { useState, useRef } from "react";
+import { useState, useRef, useEffect } from "react";
 import { useStaff } from "@/contexts/StaffContext";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
@@ -112,7 +112,7 @@ export default function Tasks() {
   const handleDownloadPdf = async () => {
     if (tasksRef.current) {
       try {
-        await toPdf(tasksRef.current, {
+        await toPdf(() => tasksRef.current, {
           filename: 'staff-tasks.pdf',
           page: {
             margin: 20,
@@ -130,8 +130,10 @@ export default function Tasks() {
     }
   };
 
-  useState(() => {
-    loadTasks();
+  useEffect(() => {
+    if (session?.user?.id) {
+      loadTasks();
+    }
   }, [session?.user?.id]);
 
   return (
