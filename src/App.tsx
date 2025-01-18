@@ -4,6 +4,7 @@ import { StaffProvider } from "./contexts/StaffContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
+import { Layout } from "./components/Layout";
 import LandingPage from "./pages/LandingPage";
 import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
@@ -25,7 +26,9 @@ function AppRoutes() {
         path="/dashboard"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <Dashboard />
+            <Layout>
+              <Dashboard />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -33,7 +36,9 @@ function AppRoutes() {
         path="/settings"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <Settings />
+            <Layout>
+              <Settings />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -41,7 +46,9 @@ function AppRoutes() {
         path="/wages"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <WagesAnalysis />
+            <Layout>
+              <WagesAnalysis />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -49,7 +56,9 @@ function AppRoutes() {
         path="/tasks"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <Tasks />
+            <Layout>
+              <Tasks />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -57,7 +66,9 @@ function AppRoutes() {
         path="/holiday"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <HolidayTracking />
+            <Layout>
+              <HolidayTracking />
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -65,9 +76,11 @@ function AppRoutes() {
         path="/staff"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <div className="container mx-auto py-6">
-              <EmployeeList />
-            </div>
+            <Layout>
+              <div className="container mx-auto py-6">
+                <EmployeeList />
+              </div>
+            </Layout>
           </ProtectedRoute>
         }
       />
@@ -75,7 +88,9 @@ function AppRoutes() {
         path="/hr-advisor"
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <AIHRAdvisor />
+            <Layout>
+              <AIHRAdvisor />
+            </Layout>
           </ProtectedRoute>
         }
       />
