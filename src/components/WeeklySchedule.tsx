@@ -7,6 +7,10 @@ import { useSchedule } from './schedule/useSchedule';
 import { useShiftActions } from './schedule/useShiftActions';
 import { ScheduleActions } from './schedule/ScheduleActions';
 import { useIsMobile } from '@/hooks/use-mobile';
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { UserPlus } from "lucide-react";
+import { AddStaffForm } from "@/components/AddStaffForm";
 
 export function WeeklySchedule() {
   const scheduleRef = useRef<HTMLDivElement>(null);
@@ -73,11 +77,29 @@ export function WeeklySchedule() {
           onPdfGenerating={setIsPdfGenerating}
           isMobile={isMobile}
         />
-        <ScheduleActions
-          handleSaveSchedule={handleSaveSchedule}
-          isSaving={isSaving}
-          onLoadSchedule={handleLoadSchedule}
-        />
+        <div className="flex items-center gap-2">
+          <Dialog>
+            <DialogTrigger asChild>
+              <Button variant="outline" className="whitespace-nowrap">
+                <UserPlus className="mr-2 h-4 w-4" />
+                Add Staff
+              </Button>
+            </DialogTrigger>
+            <DialogContent className="sm:max-w-[425px]">
+              <AddStaffForm onClose={() => {
+                const closeButton = document.querySelector('[aria-label="Close"]');
+                if (closeButton instanceof HTMLElement) {
+                  closeButton.click();
+                }
+              }} />
+            </DialogContent>
+          </Dialog>
+          <ScheduleActions
+            handleSaveSchedule={handleSaveSchedule}
+            isSaving={isSaving}
+            onLoadSchedule={handleLoadSchedule}
+          />
+        </div>
       </div>
       <div ref={scheduleRef} className="border rounded-lg overflow-hidden">
         <ScheduleGrid
