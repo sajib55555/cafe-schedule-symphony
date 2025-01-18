@@ -10,6 +10,7 @@ import Settings from "./pages/Settings";
 import WagesAnalysis from "./pages/WagesAnalysis";
 import Tasks from "./pages/Tasks";
 import Dashboard from "./pages/Dashboard";
+import HolidayTracking from "./pages/HolidayTracking";
 import { EmployeeList } from "./components/EmployeeList";
 
 function AppRoutes() {
@@ -48,6 +49,14 @@ function AppRoutes() {
         element={
           <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Tasks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/holiday"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <HolidayTracking />
           </ProtectedRoute>
         }
       />
