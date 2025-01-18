@@ -3,14 +3,17 @@ import { AuthProvider } from "./contexts/AuthContext";
 import { StaffProvider } from "./contexts/StaffContext";
 import { Toaster } from "@/components/ui/toaster";
 import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import { LandingPage } from "./pages/LandingPage";
-import { Auth } from "./pages/Auth";
-import { Settings } from "./pages/Settings";
-import { WagesAnalysis } from "./pages/WagesAnalysis";
-import { Tasks } from "./pages/Tasks";
+import { useAuth } from "./contexts/AuthContext";
+import LandingPage from "./pages/LandingPage";
+import Auth from "./pages/Auth";
+import Settings from "./pages/Settings";
+import WagesAnalysis from "./pages/WagesAnalysis";
+import Tasks from "./pages/Tasks";
 import { EmployeeList } from "./components/EmployeeList";
 
 function AppRoutes() {
+  const { session, hasAccess, trialEnded } = useAuth();
+
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
@@ -18,7 +21,7 @@ function AppRoutes() {
       <Route
         path="/settings"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Settings />
           </ProtectedRoute>
         }
@@ -26,7 +29,7 @@ function AppRoutes() {
       <Route
         path="/wages"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <WagesAnalysis />
           </ProtectedRoute>
         }
@@ -34,7 +37,7 @@ function AppRoutes() {
       <Route
         path="/tasks"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <Tasks />
           </ProtectedRoute>
         }
@@ -42,7 +45,7 @@ function AppRoutes() {
       <Route
         path="/staff"
         element={
-          <ProtectedRoute>
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
             <div className="container mx-auto py-6">
               <EmployeeList />
             </div>
