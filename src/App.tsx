@@ -1,119 +1,59 @@
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
 import { Toaster } from "@/components/ui/toaster";
-import { Toaster as Sonner } from "@/components/ui/sonner";
-import { TooltipProvider } from "@/components/ui/tooltip";
-import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
-import { StaffProvider } from "./contexts/StaffContext";
-import { AuthProvider } from "./contexts/AuthContext";
-import { useAuth } from "./contexts/AuthContext";
-import { ProtectedRoute } from "./components/auth/ProtectedRoute";
-import Index from "./pages/Index";
-import Subscription from "./pages/Subscription";
-import UpgradePage from "./pages/UpgradePage";
-import Auth from "./pages/Auth";
-import WagesAnalysis from "./pages/WagesAnalysis";
-import Settings from "./pages/Settings";
-import LandingPage from "./pages/LandingPage";
+import { AuthProvider } from "@/contexts/AuthContext";
+import { StaffProvider } from "@/contexts/StaffContext";
+import Index from "@/pages/Index";
+import Auth from "@/pages/Auth";
+import Settings from "@/pages/Settings";
+import WagesAnalysis from "@/pages/WagesAnalysis";
+import HolidayTracking from "@/pages/HolidayTracking";
+import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 
-const queryClient = new QueryClient();
-
-const AppRoutes = () => {
-  const { loading, hasAccess, session, trialEnded } = useAuth();
-
-  if (loading) {
-    return <div className="flex items-center justify-center min-h-screen">
-      <div className="text-lg">Loading...</div>
-    </div>;
-  }
-
+function App() {
   return (
-    <Routes>
-      <Route path="/landing" element={<LandingPage />} />
-      <Route 
-        path="/" 
-        element={
-          session ? (
-            <Navigate to="/dashboard" replace />
-          ) : (
-            <Navigate to="/landing" replace />
-          )
-        } 
-      />
-      <Route path="/auth" element={<Auth />} />
-      <Route
-        path="/dashboard"
-        element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <Index />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/wages"
-        element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <WagesAnalysis />
-          </ProtectedRoute>
-        }
-      />
-      <Route 
-        path="/subscription" 
-        element={
-          session ? (
-            <Subscription />
-          ) : (
-            <Navigate to="/" replace />
-          )
-        } 
-      />
-      <Route 
-        path="/upgrade" 
-        element={
-          session ? (
-            hasAccess ? (
-              <Navigate to="/dashboard" replace />
-            ) : (
-              <UpgradePage />
-            )
-          ) : (
-            <Navigate to="/" replace />
-          )
-        } 
-      />
-      <Route
-        path="/settings"
-        element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <Settings />
-          </ProtectedRoute>
-        }
-      />
-      <Route 
-        path="*" 
-        element={
-          <Navigate to={session ? "/dashboard" : "/"} replace />
-        } 
-      />
-    </Routes>
+    <Router>
+      <AuthProvider>
+        <StaffProvider>
+          <Routes>
+            <Route path="/auth" element={<Auth />} />
+            <Route
+              path="/"
+              element={
+                <ProtectedRoute>
+                  <Index />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/settings"
+              element={
+                <ProtectedRoute>
+                  <Settings />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/wages"
+              element={
+                <ProtectedRoute>
+                  <WagesAnalysis />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/holiday"
+              element={
+                <ProtectedRoute>
+                  <HolidayTracking />
+                </ProtectedRoute>
+              }
+            />
+          </Routes>
+          <Toaster />
+        </StaffProvider>
+      </AuthProvider>
+    </Router>
   );
-};
-
-const App = () => {
-  return (
-    <QueryClientProvider client={queryClient}>
-      <TooltipProvider>
-        <AuthProvider>
-          <BrowserRouter>
-            <StaffProvider>
-              <Toaster />
-              <Sonner />
-              <AppRoutes />
-            </StaffProvider>
-          </BrowserRouter>
-        </AuthProvider>
-      </TooltipProvider>
-    </QueryClientProvider>
-  );
-};
+}
 
 export default App;

@@ -77,6 +77,57 @@ export type Database = {
         }
         Relationships: []
       }
+      holiday_tracking: {
+        Row: {
+          company_id: string | null
+          created_at: string
+          holiday_entitlement_hours: number | null
+          holiday_hours_taken: number | null
+          id: number
+          staff_id: number | null
+          total_worked_hours: number | null
+          updated_at: string
+          year: number
+        }
+        Insert: {
+          company_id?: string | null
+          created_at?: string
+          holiday_entitlement_hours?: number | null
+          holiday_hours_taken?: number | null
+          id?: number
+          staff_id?: number | null
+          total_worked_hours?: number | null
+          updated_at?: string
+          year: number
+        }
+        Update: {
+          company_id?: string | null
+          created_at?: string
+          holiday_entitlement_hours?: number | null
+          holiday_hours_taken?: number | null
+          id?: number
+          staff_id?: number | null
+          total_worked_hours?: number | null
+          updated_at?: string
+          year?: number
+        }
+        Relationships: [
+          {
+            foreignKeyName: "holiday_tracking_company_id_fkey"
+            columns: ["company_id"]
+            isOneToOne: false
+            referencedRelation: "companies"
+            referencedColumns: ["id"]
+          },
+          {
+            foreignKeyName: "holiday_tracking_staff_id_fkey"
+            columns: ["staff_id"]
+            isOneToOne: false
+            referencedRelation: "staff"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       monthly_wages: {
         Row: {
           company_id: string | null
