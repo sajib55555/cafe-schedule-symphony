@@ -137,13 +137,13 @@ export default function Tasks() {
   }, [session?.user?.id]);
 
   return (
-    <div className="container mx-auto p-6">
+    <div className="container mx-auto p-6 animate-fade-in">
       <div className="space-y-6">
-        <div className="flex items-end gap-4">
+        <div className="flex items-end gap-4 bg-white/30 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-primary/10">
           <div className="space-y-2 flex-1">
-            <label className="text-sm font-medium">Staff Member</label>
+            <label className="text-sm font-medium text-secondary">Staff Member</label>
             <Select value={selectedStaff} onValueChange={setSelectedStaff}>
-              <SelectTrigger>
+              <SelectTrigger className="bg-white/50 border-primary/20">
                 <SelectValue placeholder="Select staff member" />
               </SelectTrigger>
               <SelectContent>
@@ -156,45 +156,59 @@ export default function Tasks() {
             </Select>
           </div>
           <div className="space-y-2 flex-1">
-            <label className="text-sm font-medium">Task Description</label>
+            <label className="text-sm font-medium text-secondary">Task Description</label>
             <Input
               value={taskDescription}
               onChange={(e) => setTaskDescription(e.target.value)}
               placeholder="Enter task description"
+              className="bg-white/50 border-primary/20"
             />
           </div>
-          <Button onClick={handleAddTask} disabled={loading}>
+          <Button 
+            onClick={handleAddTask} 
+            disabled={loading}
+            className="bg-gradient-to-r from-primary to-accent hover:opacity-90 transition-opacity"
+          >
             Add Task
           </Button>
         </div>
 
         <div className="space-y-4">
           <div className="flex justify-between items-center">
-            <h2 className="text-2xl font-bold">Weekly Tasks</h2>
-            <Button variant="outline" onClick={handleDownloadPdf}>
+            <h2 className="text-2xl font-bold bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
+              Weekly Tasks
+            </h2>
+            <Button 
+              variant="outline" 
+              onClick={handleDownloadPdf}
+              className="border-primary/20 hover:bg-primary/10 transition-colors"
+            >
               <Download className="h-4 w-4 mr-2" />
               Download PDF
             </Button>
           </div>
 
-          <div ref={tasksRef} className="bg-white p-6 rounded-lg shadow">
-            <h3 className="text-xl font-semibold mb-4">
+          <div 
+            ref={tasksRef} 
+            className="bg-white/30 backdrop-blur-sm p-6 rounded-lg shadow-lg border border-primary/10 transition-all hover:shadow-xl"
+          >
+            <h3 className="text-xl font-semibold mb-4 text-secondary">
               Week Starting: {format(startOfWeek(new Date()), 'PPP')}
             </h3>
             <div className="space-y-4">
               {tasks.map((task) => (
                 <div
                   key={task.id}
-                  className="p-4 border rounded-lg flex items-start justify-between"
+                  className="p-4 bg-gradient-to-r from-white/50 to-primary/5 rounded-lg border border-primary/10 flex items-start justify-between hover:shadow-md transition-shadow"
                 >
                   <div>
-                    <p className="font-medium">{task.staff.name}</p>
-                    <p className="text-gray-600">{task.task_description}</p>
+                    <p className="font-medium text-secondary">{task.staff.name}</p>
+                    <p className="text-muted-foreground">{task.task_description}</p>
                   </div>
                 </div>
               ))}
               {tasks.length === 0 && (
-                <p className="text-gray-500 text-center">No tasks added for this week</p>
+                <p className="text-center text-muted-foreground py-8">No tasks added for this week</p>
               )}
             </div>
           </div>
