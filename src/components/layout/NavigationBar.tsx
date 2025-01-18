@@ -34,7 +34,7 @@ export function NavigationBar() {
         <div className="flex justify-between h-16">
           <div className="flex">
             <Link to="/" className="flex-shrink-0 flex items-center">
-              <span className="text-xl font-bold text-primary">Café Schedule Manager</span>
+              <span className="text-xl font-bold text-primary">Easy Rota</span>
             </Link>
             {session && (
               <div className="hidden sm:ml-6 sm:flex sm:space-x-8">
