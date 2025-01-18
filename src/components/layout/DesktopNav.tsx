@@ -8,7 +8,7 @@ export function DesktopNav() {
         to="/dashboard"
         className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
       >
-        Dashboard
+        Schedule
       </Link>
       <Link
         to="/staff"

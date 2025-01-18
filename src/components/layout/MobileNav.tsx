@@ -18,7 +18,7 @@ export function MobileNav({ isOpen, onClose }: MobileNavProps) {
           className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
           onClick={onClose}
         >
-          Dashboard
+          Schedule
         </Link>
         <Link
           to="/staff"
