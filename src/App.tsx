@@ -1,34 +1,24 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { AuthProvider } from "./contexts/AuthContext";
+import { StaffProvider } from "./contexts/StaffContext";
 import { Toaster } from "@/components/ui/toaster";
-import { AuthProvider } from "@/contexts/AuthContext";
-import { StaffProvider } from "@/contexts/StaffContext";
-import Index from "@/pages/Index";
-import Auth from "@/pages/Auth";
-import Settings from "@/pages/Settings";
-import WagesAnalysis from "@/pages/WagesAnalysis";
-import HolidayTracking from "@/pages/HolidayTracking";
-import Tasks from "@/pages/Tasks";
-import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
-import { useAuth } from "@/contexts/AuthContext";
+import { ProtectedRoute } from "./components/auth/ProtectedRoute";
+import { LandingPage } from "./pages/LandingPage";
+import { Auth } from "./pages/Auth";
+import { Settings } from "./pages/Settings";
+import { WagesAnalysis } from "./pages/WagesAnalysis";
+import { Tasks } from "./pages/Tasks";
+import { EmployeeList } from "./components/EmployeeList";
 
 function AppRoutes() {
-  const { session, hasAccess, trialEnded } = useAuth();
-
   return (
     <Routes>
-      <Route path="/auth" element={<Auth />} />
-      <Route
-        path="/"
-        element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <Index />
-          </ProtectedRoute>
-        }
-      />
+      <Route path="/" element={<LandingPage />} />
+      <Route path="/auth/*" element={<Auth />} />
       <Route
         path="/settings"
         element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+          <ProtectedRoute>
             <Settings />
           </ProtectedRoute>
         }
@@ -36,24 +26,26 @@ function AppRoutes() {
       <Route
         path="/wages"
         element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+          <ProtectedRoute>
             <WagesAnalysis />
-          </ProtectedRoute>
-        }
-      />
-      <Route
-        path="/holiday"
-        element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
-            <HolidayTracking />
           </ProtectedRoute>
         }
       />
       <Route
         path="/tasks"
         element={
-          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+          <ProtectedRoute>
             <Tasks />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/staff"
+        element={
+          <ProtectedRoute>
+            <div className="container mx-auto py-6">
+              <EmployeeList />
+            </div>
           </ProtectedRoute>
         }
       />
@@ -61,7 +53,7 @@ function AppRoutes() {
   );
 }
 
-function App() {
+export default function App() {
   return (
     <Router>
       <AuthProvider>
@@ -73,5 +65,3 @@ function App() {
     </Router>
   );
 }
-
-export default App;
