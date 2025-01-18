@@ -5,6 +5,7 @@ import { ShiftDialog } from './ShiftDialog';
 import { Staff } from '@/contexts/StaffContext';
 import { Edit2, Trash2, Plus } from 'lucide-react';
 import { format } from 'date-fns';
+import { calculateTotalHours } from './utils/timeCalculations';
 
 interface ScheduleGridProps {
   days: Array<{ name: string; fullDate: string }>;
@@ -47,6 +48,23 @@ export function ScheduleGrid({
   isPdfGenerating = false,
   isMobile = false
 }: ScheduleGridProps) {
+  const calculateWeeklyHours = (staffName: string) => {
+    let totalHours = 0;
+    const staffShifts = currentWeekShifts[staffName] || {};
+    
+    Object.values(staffShifts).forEach((shift: any) => {
+      const startHour = parseInt(shift.startTime.split(':')[0]);
+      const startMinute = parseInt(shift.startTime.split(':')[1]);
+      const endHour = parseInt(shift.endTime.split(':')[0]);
+      const endMinute = parseInt(shift.endTime.split(':')[1]);
+      
+      const hours = endHour - startHour + (endMinute - startMinute) / 60;
+      totalHours += hours;
+    });
+    
+    return totalHours.toFixed(1);
+  };
+
   if (isMobile) {
     return (
       <div className="space-y-4">
@@ -57,12 +75,13 @@ export function ScheduleGrid({
             </div>
             {staff.map((person) => {
               const shift = currentWeekShifts[person.name]?.[day.fullDate];
+              const weeklyHours = calculateWeeklyHours(person.name);
               return (
                 <div key={`${person.name}-${day.fullDate}`} className="p-2 border-t">
                   <div className="flex justify-between items-center">
                     <div>
                       <div className="font-medium">{person.name}</div>
-                      <div className="text-sm text-gray-500">{person.hours} hrs</div>
+                      <div className="text-sm text-gray-500">Weekly Hours: {weeklyHours}h</div>
                     </div>
                     {shift ? (
                       <div className="space-y-2">
@@ -154,7 +173,7 @@ export function ScheduleGrid({
         <React.Fragment key={person.id}>
           <div className="border-t p-2 bg-gray-50">
             <div className="font-medium">{person.name}</div>
-            <div className="text-sm text-gray-500">{person.hours} hrs</div>
+            <div className="text-sm text-gray-500">Weekly Hours: {calculateWeeklyHours(person.name)}h</div>
           </div>
           {days.map((day) => {
             const shift = currentWeekShifts[person.name]?.[day.fullDate];
