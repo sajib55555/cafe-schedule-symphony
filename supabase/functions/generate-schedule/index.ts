@@ -57,23 +57,23 @@ serve(async (req) => {
         messages: [
           {
             role: "system",
-            content: `Generate a valid JSON schedule object with this exact structure:
+            content: `You are a scheduling assistant. Generate a schedule in this exact JSON format:
 {
   "shifts": {
     "staffName": {
       "YYYY-MM-DD": {
         "startTime": "HH:MM",
         "endTime": "HH:MM",
-        "role": "Barista or Floor"
+        "role": "Barista"
       }
     }
   }
 }
-Do not include any additional text, markdown formatting, or explanations. Return only the JSON object.`
+Only return the JSON object, no additional text or formatting.`
           },
           {
             role: "user",
-            content: `Create a schedule for week starting ${weekStart}. Staff data: ${JSON.stringify(staff)}. Rules: ${JSON.stringify(rules)}.`
+            content: `Create a schedule for week starting ${weekStart}. Staff: ${JSON.stringify(staff)}. Rules: ${JSON.stringify(rules)}.`
           }
         ],
         temperature: 0.7,
@@ -96,23 +96,21 @@ Do not include any additional text, markdown formatting, or explanations. Return
 
     let schedule;
     try {
+      // Clean the content to ensure it's valid JSON
       const content = aiResponse.choices[0].message.content.trim();
       console.log('Raw content:', content);
       
-      // Clean the content to ensure it's valid JSON
+      // Remove any markdown formatting and extract just the JSON
       const jsonContent = content
-        .replace(/```json\n?|\n?```/g, '')  // Remove markdown code blocks
-        .replace(/^[^{]*({.*})[^}]*$/, '$1') // Extract just the JSON object
+        .replace(/```json\n?|\n?```/g, '')
+        .replace(/^[^{]*({.*})[^}]*$/, '$1')
         .trim();
       
       console.log('Cleaned JSON content:', jsonContent);
-      
       schedule = JSON.parse(jsonContent);
-      console.log('Parsed schedule:', schedule);
       
       // Validate the schedule structure
       if (!schedule?.shifts) {
-        console.error('Missing shifts property:', schedule);
         throw new Error('Invalid schedule structure - missing shifts property');
       }
 
@@ -120,20 +118,18 @@ Do not include any additional text, markdown formatting, or explanations. Return
       for (const [staffName, dates] of Object.entries(schedule.shifts)) {
         for (const [date, shift] of Object.entries(dates as Record<string, any>)) {
           if (!shift?.startTime || !shift?.endTime || !shift?.role) {
-            console.error('Invalid shift data:', { staffName, date, shift });
             throw new Error(`Invalid shift structure for ${staffName} on ${date}`);
           }
           
-          // Validate time format
-          if (!/^\d{2}:\d{2}$/.test(shift.startTime) || !/^\d{2}:\d{2}$/.test(shift.endTime)) {
-            console.error('Invalid time format:', { staffName, date, shift });
+          // Validate time format (HH:MM)
+          const timeRegex = /^([0-1][0-9]|2[0-3]):[0-5][0-9]$/;
+          if (!timeRegex.test(shift.startTime) || !timeRegex.test(shift.endTime)) {
             throw new Error(`Invalid time format for ${staffName} on ${date}`);
           }
           
           // Validate role
-          if (!['Barista', 'Floor'].includes(shift.role)) {
-            console.error('Invalid role:', { staffName, date, shift });
-            throw new Error(`Invalid role for ${staffName} on ${date}. Must be either 'Barista' or 'Floor'`);
+          if (shift.role !== 'Barista' && shift.role !== 'Floor') {
+            throw new Error(`Invalid role for ${staffName} on ${date}`);
           }
         }
       }
