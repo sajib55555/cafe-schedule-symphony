@@ -2,7 +2,7 @@ import { Link, useNavigate } from "react-router-dom";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
-import { Menu, X, LogOut } from "lucide-react";
+import { Menu, X, LogOut, MessageSquare } from "lucide-react";
 import { toast } from "sonner";
 import { useState } from "react";
 
@@ -67,6 +67,13 @@ export function NavigationBar() {
                   className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
                 >
                   Holiday
+                </Link>
+                <Link
+                  to="/hr-advisor"
+                  className="inline-flex items-center px-1 pt-1 text-sm font-medium text-gray-900"
+                >
+                  <MessageSquare className="h-4 w-4 mr-1" />
+                  AI HR
                 </Link>
                 <Link
                   to="/settings"
@@ -145,6 +152,13 @@ export function NavigationBar() {
               onClick={() => setIsMobileMenuOpen(false)}
             >
               Holiday
+            </Link>
+            <Link
+              to="/hr-advisor"
+              className="block px-3 py-2 text-base font-medium text-gray-700 hover:bg-gray-50"
+              onClick={() => setIsMobileMenuOpen(false)}
+            >
+              AI HR
             </Link>
             <Link
               to="/settings"
