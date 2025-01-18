@@ -8,14 +8,14 @@ import { UserPlus } from "lucide-react";
 export default function Staff() {
   return (
     <Layout>
-      <div className="p-6">
+      <div className="container mx-auto p-6">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-4 flex-wrap">
             <h1 className="text-2xl font-bold">Staff Management</h1>
             <Dialog>
               <DialogTrigger asChild>
-                <Button>
-                  <UserPlus className="mr-2" />
+                <Button className="whitespace-nowrap">
+                  <UserPlus className="mr-2 h-4 w-4" />
                   Add Staff
                 </Button>
               </DialogTrigger>
