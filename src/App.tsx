@@ -8,47 +8,56 @@ import Settings from "@/pages/Settings";
 import WagesAnalysis from "@/pages/WagesAnalysis";
 import HolidayTracking from "@/pages/HolidayTracking";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
+import { useAuth } from "@/contexts/AuthContext";
+
+function AppRoutes() {
+  const { session, hasAccess, trialEnded } = useAuth();
+
+  return (
+    <Routes>
+      <Route path="/auth" element={<Auth />} />
+      <Route
+        path="/"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <Index />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/settings"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <Settings />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/wages"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <WagesAnalysis />
+          </ProtectedRoute>
+        }
+      />
+      <Route
+        path="/holiday"
+        element={
+          <ProtectedRoute session={session} hasAccess={hasAccess} trialEnded={trialEnded}>
+            <HolidayTracking />
+          </ProtectedRoute>
+        }
+      />
+    </Routes>
+  );
+}
 
 function App() {
   return (
     <Router>
       <AuthProvider>
         <StaffProvider>
-          <Routes>
-            <Route path="/auth" element={<Auth />} />
-            <Route
-              path="/"
-              element={
-                <ProtectedRoute>
-                  <Index />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/settings"
-              element={
-                <ProtectedRoute>
-                  <Settings />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/wages"
-              element={
-                <ProtectedRoute>
-                  <WagesAnalysis />
-                </ProtectedRoute>
-              }
-            />
-            <Route
-              path="/holiday"
-              element={
-                <ProtectedRoute>
-                  <HolidayTracking />
-                </ProtectedRoute>
-              }
-            />
-          </Routes>
+          <AppRoutes />
           <Toaster />
         </StaffProvider>
       </AuthProvider>
