@@ -10,16 +10,16 @@ export default function Staff() {
     <Layout>
       <div className="container mx-auto p-6">
         <div className="max-w-7xl mx-auto space-y-8">
-          <div className="flex justify-between items-center">
+          <div className="flex justify-between items-center gap-4">
             <h1 className="text-2xl font-bold">Staff Management</h1>
             <Dialog>
               <DialogTrigger asChild>
-                <Button>
+                <Button className="whitespace-nowrap">
                   <UserPlus className="mr-2 h-4 w-4" />
                   Add Staff
                 </Button>
               </DialogTrigger>
-              <DialogContent>
+              <DialogContent className="sm:max-w-[425px]">
                 <AddStaffForm onClose={() => {
                   const closeButton = document.querySelector('[aria-label="Close"]');
                   if (closeButton instanceof HTMLElement) {
