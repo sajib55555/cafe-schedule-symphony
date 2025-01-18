@@ -1,6 +1,5 @@
 import { useState } from "react";
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from "@/components/ui/sheet";
-import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { useStaff } from '@/contexts/StaffContext';
 import { StaffCard } from "./StaffCard";
@@ -25,21 +24,6 @@ export function EmployeeList() {
     <div className="space-y-4">
       <div className="flex justify-between items-center">
         <h2 className="text-2xl font-bold text-secondary">Staff</h2>
-        <div className="space-x-2">
-          <Sheet open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
-            <SheetTrigger asChild>
-              <Button>Add Staff</Button>
-            </SheetTrigger>
-            <SheetContent className="overflow-y-auto">
-              <SheetHeader>
-                <SheetTitle>Add New Staff Member</SheetTitle>
-              </SheetHeader>
-              <div className="mt-4">
-                <AddStaffForm onClose={() => setIsAddStaffOpen(false)} />
-              </div>
-            </SheetContent>
-          </Sheet>
-        </div>
       </div>
 
       <div className="grid gap-4">
