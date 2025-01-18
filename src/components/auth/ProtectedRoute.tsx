@@ -1,5 +1,4 @@
 import { Navigate } from "react-router-dom";
-import { Layout } from "../Layout";
 
 interface ProtectedRouteProps {
   session: any;
@@ -22,5 +21,5 @@ export const ProtectedRoute = ({
     return <Navigate to="/upgrade" replace />;
   }
 
-  return <Layout>{children}</Layout>;
+  return children;
 };
