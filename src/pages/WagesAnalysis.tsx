@@ -1,4 +1,3 @@
-import { Layout } from "@/components/Layout";
 import { WageBudgetForm } from "@/components/wages/WageBudgetForm";
 import { WagesStats } from "@/components/wages/WagesStats";
 import { WagesChart } from "@/components/wages/WagesChart";
@@ -16,47 +15,45 @@ const WagesAnalysis = () => {
   const { staff } = useStaff();
 
   return (
-    <Layout>
-      <div className="container mx-auto py-8">
-        <WagesHeader />
-        
-        <div className="grid gap-8 md:grid-cols-2">
-          <div className="space-y-8">
-            <CurrencySelector />
-            <WageBudgetForm 
-              currentBudget={monthlyBudget} 
-              onUpdate={setMonthlyBudget} 
-            />
-            <WagesStats 
-              monthlyBudget={monthlyBudget}
-              currentCost={currentCost}
-              yearlyPrediction={yearlyPrediction}
-              selectedMonth={selectedMonth}
-              onMonthChange={setSelectedMonth}
-            />
-          </div>
-          
-          <div className="space-y-8">
-            <WagesChart 
-              monthlyBudget={monthlyBudget}
-              currentCost={currentCost}
-            />
-            <AIAdvice 
-              monthlyBudget={monthlyBudget}
-              currentCost={currentCost}
-              yearlyPrediction={yearlyPrediction}
-            />
-          </div>
-        </div>
-
-        <div className="mt-8">
-          <StaffWagesTable 
-            staff={staff} 
+    <div className="container mx-auto py-8">
+      <WagesHeader />
+      
+      <div className="grid gap-8 md:grid-cols-2">
+        <div className="space-y-8">
+          <CurrencySelector />
+          <WageBudgetForm 
+            currentBudget={monthlyBudget} 
+            onUpdate={setMonthlyBudget} 
+          />
+          <WagesStats 
+            monthlyBudget={monthlyBudget}
+            currentCost={currentCost}
+            yearlyPrediction={yearlyPrediction}
             selectedMonth={selectedMonth}
+            onMonthChange={setSelectedMonth}
+          />
+        </div>
+        
+        <div className="space-y-8">
+          <WagesChart 
+            monthlyBudget={monthlyBudget}
+            currentCost={currentCost}
+          />
+          <AIAdvice 
+            monthlyBudget={monthlyBudget}
+            currentCost={currentCost}
+            yearlyPrediction={yearlyPrediction}
           />
         </div>
       </div>
-    </Layout>
+
+      <div className="mt-8">
+        <StaffWagesTable 
+          staff={staff} 
+          selectedMonth={selectedMonth}
+        />
+      </div>
+    </div>
   );
 };
 
