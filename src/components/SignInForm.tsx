@@ -24,7 +24,7 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     console.error('Auth error:', error);
     switch (error.message) {
       case 'Invalid login credentials':
-        return 'Invalid email or password';
+        return 'Invalid email or password. Please check your credentials and try again.';
       case 'Email not confirmed':
         return 'Please verify your email before signing in';
       default:
