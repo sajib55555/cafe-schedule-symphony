@@ -12,7 +12,8 @@ export function LogoutButton({ className }: { className?: string }) {
       const { error } = await supabase.auth.signOut();
       if (error) {
         console.error('Error during sign out:', error);
-        throw error;
+        toast.error(error.message || "Failed to log out");
+        return;
       }
       
       console.log('Successfully signed out');
