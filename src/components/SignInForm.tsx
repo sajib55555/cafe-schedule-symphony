@@ -21,15 +21,28 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: SignInFormData) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
       if (error) throw error;
 
-      toast.success("Successfully signed in!");
-      navigate("/dashboard");
+      if (authData.user) {
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', authData.user.id)
+          .single();
+
+        if (profile) {
+          toast.success("Successfully signed in!");
+          navigate("/dashboard");
+        } else {
+          console.error("Profile not found");
+          toast.error("Error accessing user profile");
+        }
+      }
     } catch (error: any) {
       console.error("Sign in error:", error);
       toast.error(error.message || "Failed to sign in");

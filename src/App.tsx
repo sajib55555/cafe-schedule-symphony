@@ -1,4 +1,4 @@
-import { BrowserRouter as Router, Routes, Route } from "react-router-dom";
+import { BrowserRouter as Router, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "./contexts/AuthContext";
 import { StaffProvider } from "./contexts/StaffContext";
 import { Toaster } from "@/components/ui/toaster";
@@ -20,8 +20,8 @@ function AppRoutes() {
 
   return (
     <Routes>
-      <Route path="/" element={<LandingPage />} />
-      <Route path="/auth/*" element={<Auth />} />
+      <Route path="/" element={session ? <Navigate to="/dashboard" replace /> : <LandingPage />} />
+      <Route path="/auth/*" element={session ? <Navigate to="/dashboard" replace /> : <Auth />} />
       <Route
         path="/dashboard"
         element={
