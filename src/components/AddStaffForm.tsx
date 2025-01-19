@@ -32,7 +32,7 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
   const { isSubmitting, handleSubmit } = useStaffForm(companyId, onClose, setStaff, form);
 
   if (isLoadingCompany) {
-    return <div className="p-4">Loading...</div>;
+    return <div className="p-4">Loading company information...</div>;
   }
 
   if (!companyId) {

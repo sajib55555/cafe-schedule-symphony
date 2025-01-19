@@ -2,6 +2,7 @@ import { Dialog, DialogContent, DialogTrigger, DialogDescription } from "@/compo
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { AddStaffForm } from "@/components/AddStaffForm";
+import { useState } from "react";
 
 interface AddStaffDialogProps {
   isOpen: boolean;
@@ -9,6 +10,14 @@ interface AddStaffDialogProps {
 }
 
 export function AddStaffDialog({ isOpen, onOpenChange }: AddStaffDialogProps) {
+  const [isClosing, setIsClosing] = useState(false);
+
+  const handleClose = () => {
+    setIsClosing(true);
+    onOpenChange(false);
+    setTimeout(() => setIsClosing(false), 300);
+  };
+
   return (
     <Dialog open={isOpen} onOpenChange={onOpenChange}>
       <DialogTrigger asChild>
@@ -21,7 +30,7 @@ export function AddStaffDialog({ isOpen, onOpenChange }: AddStaffDialogProps) {
         <DialogDescription className="sr-only">
           Form to add a new staff member
         </DialogDescription>
-        <AddStaffForm onClose={() => onOpenChange(false)} />
+        {!isClosing && <AddStaffForm onClose={handleClose} />}
       </DialogContent>
     </Dialog>
   );
