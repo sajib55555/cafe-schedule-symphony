@@ -8,7 +8,6 @@ import { useAuth } from '@/contexts/AuthContext';
 import { useToast } from "@/components/ui/use-toast";
 import { RolesSelector } from "./staff/RolesSelector";
 import { AvailabilitySelector } from "./staff/AvailabilitySelector";
-import { DialogTitle } from "@/components/ui/dialog";
 
 export function AddStaffForm({ onClose }: { onClose: () => void }) {
   const { staff, setStaff } = useStaff();
@@ -51,11 +50,15 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         .eq('id', session.user.id)
         .single();
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Error fetching company ID:', profileError);
+        throw new Error('Could not get company ID');
+      }
+
       if (!profileData?.company_id) {
         toast({
           title: "Error",
-          description: "No company associated with your account",
+          description: "No company associated with your account. Please contact support.",
           variant: "destructive",
         });
         return;
@@ -74,7 +77,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           availability: newEmployee.availability,
           hours: newEmployee.hours,
           hourly_pay: newEmployee.hourly_pay,
-          company_id: profileData.company_id // Add the company_id here
+          company_id: profileData.company_id
         }])
         .select()
         .single();
@@ -128,8 +131,6 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
 
   return (
     <div className="space-y-4">
-      <DialogTitle className="text-xl font-semibold">Add New Staff Member</DialogTitle>
-      
       <div className="space-y-2">
         <Label htmlFor="name">Name *</Label>
         <Input
@@ -174,7 +175,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           min="0"
           step="0.01"
           value={newEmployee.hourly_pay}
-          onChange={(e) => setNewEmployee({ ...newEmployee, hourly_pay: parseFloat(e.target.value) || 0 })}
+          onChange={(e) => setNewEmployee({ ...newEmployee, hourly_pay: parseFloat(e.target.value) })}
           placeholder="Enter hourly pay rate"
         />
       </div>

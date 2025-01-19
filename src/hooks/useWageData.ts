@@ -1,8 +1,8 @@
 import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
-import { useToast } from "@/hooks/use-toast";
+import { useToast } from "@/components/ui/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, format, differenceInHours } from "date-fns";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 
 export const useWageData = (selectedMonth: Date = new Date()) => {
   const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
@@ -16,67 +16,39 @@ export const useWageData = (selectedMonth: Date = new Date()) => {
       try {
         if (!session?.user?.id) return;
 
-        // Get monthly budget from wage_budgets table
-        const { data: budgetData } = await supabase
-          .from('wage_budgets')
-          .select('monthly_budget')
-          .order('created_at', { ascending: false })
-          .limit(1)
+        const { data: profile } = await supabase
+          .from('profiles')
+          .select('company_id')
+          .eq('id', session.user.id)
           .maybeSingle();
 
-        setMonthlyBudget(budgetData?.monthly_budget || 0);
+        if (profile?.company_id) {
+          // Get monthly budget
+          const { data: budget } = await supabase
+            .from('wage_budgets')
+            .select('monthly_budget')
+            .eq('company_id', profile.company_id)
+            .maybeSingle();
 
-        // Calculate total cost for the selected month
-        const monthStart = startOfMonth(selectedMonth);
-        const monthEnd = endOfMonth(selectedMonth);
+          setMonthlyBudget(budget?.monthly_budget || 0);
 
-        // Get all staff with their hourly pay
-        const { data: staffData } = await supabase
-          .from('staff')
-          .select('id, hourly_pay');
+          // Calculate total cost for the selected month
+          const monthStart = startOfMonth(selectedMonth);
+          const monthEnd = endOfMonth(selectedMonth);
 
-        if (!staffData) return;
+          const { data: monthlyWages } = await supabase
+            .from('monthly_wages')
+            .select('total_wages')
+            .eq('company_id', profile.company_id)
+            .gte('month_start', format(monthStart, 'yyyy-MM-dd'))
+            .lte('month_end', format(monthEnd, 'yyyy-MM-dd'));
 
-        // Get all shifts for the month
-        const { data: shiftsData } = await supabase
-          .from('shifts')
-          .select('staff_id, start_time, end_time')
-          .gte('start_time', format(monthStart, 'yyyy-MM-dd'))
-          .lte('end_time', format(monthEnd, 'yyyy-MM-dd'));
+          const totalCost = monthlyWages?.reduce((sum, record) => sum + (record.total_wages || 0), 0) || 0;
+          setCurrentCost(totalCost);
 
-        if (!shiftsData) return;
-
-        // Calculate total cost
-        let totalCost = 0;
-        shiftsData.forEach(shift => {
-          const staff = staffData.find(s => s.id === shift.staff_id);
-          if (!staff) return;
-
-          const hours = differenceInHours(
-            new Date(shift.end_time),
-            new Date(shift.start_time)
-          );
-          totalCost += hours * staff.hourly_pay;
-        });
-
-        setCurrentCost(totalCost);
-
-        // Calculate yearly prediction based on average daily cost
-        const daysInMonth = endOfMonth(selectedMonth).getDate();
-        const dailyAverage = totalCost / daysInMonth;
-        const yearlyEstimate = dailyAverage * 365;
-        setYearlyPrediction(yearlyEstimate);
-
-        // Update monthly_wages record
-        await supabase
-          .from('monthly_wages')
-          .upsert({
-            month_start: format(monthStart, 'yyyy-MM-dd'),
-            month_end: format(monthEnd, 'yyyy-MM-dd'),
-            total_wages: totalCost,
-            updated_at: new Date().toISOString()
-          });
-
+          // Calculate yearly prediction based on current month
+          setYearlyPrediction(totalCost * 12);
+        }
       } catch (error) {
         console.error('Error loading wage data:', error);
         toast({
