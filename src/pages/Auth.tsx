@@ -18,24 +18,18 @@ const Auth = () => {
         console.log('Starting email confirmation process...');
         console.log('Current URL:', window.location.href);
         
-        // Extract tokens from URL - handle both formats
-        let accessToken, refreshToken, type;
-        
-        // First try the hash format
-        if (window.location.hash) {
-          const hashParams = new URLSearchParams(window.location.hash.substring(1));
-          accessToken = hashParams.get('access_token');
-          refreshToken = hashParams.get('refresh_token');
-          type = hashParams.get('type');
+        // Only handle hash parameters
+        const hash = window.location.hash;
+        if (!hash) {
+          console.log('No hash parameters found');
+          return;
         }
-        
-        // If not in hash, try the path format
-        if (!accessToken) {
-          const pathParams = new URLSearchParams(window.location.pathname.split('/auth/')[1]);
-          accessToken = pathParams.get('access_token');
-          refreshToken = pathParams.get('refresh_token');
-          type = pathParams.get('type');
-        }
+
+        // Remove the # symbol and parse parameters
+        const params = new URLSearchParams(hash.substring(1));
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
 
         console.log('Token check:', {
           accessToken: accessToken ? 'present' : 'missing',
@@ -43,49 +37,48 @@ const Auth = () => {
           type
         });
 
-        if (accessToken && refreshToken) {
-          console.log('Valid tokens detected, setting session...');
-
-          const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken,
-          });
-
-          if (sessionError) {
-            console.error('Session error:', sessionError);
-            throw sessionError;
-          }
-
-          console.log('Session established:', sessionData);
-
-          const { data: { user }, error: userError } = await supabase.auth.getUser();
-
-          if (userError) {
-            console.error('User error:', userError);
-            throw userError;
-          }
-
-          if (!user) {
-            console.error('No user found after verification');
-            throw new Error('No user found after verification');
-          }
-
-          console.log('User verified successfully:', user.email);
-
-          // Clean up URL
-          window.history.replaceState({}, document.title, '/auth');
-
-          // Show success message and redirect
-          toast.success("Email verified successfully! Redirecting to dashboard...");
-          
-          setTimeout(() => {
-            navigate('/dashboard', { replace: true });
-          }, 1500);
+        if (!accessToken || !refreshToken) {
+          console.log('Missing required tokens');
+          return;
         }
+
+        console.log('Setting session with tokens...');
+        const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        });
+
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          throw sessionError;
+        }
+
+        console.log('Session established:', sessionData);
+        const { data: { user }, error: userError } = await supabase.auth.getUser();
+
+        if (userError) {
+          console.error('User error:', userError);
+          throw userError;
+        }
+
+        if (!user) {
+          console.error('No user found after verification');
+          throw new Error('No user found after verification');
+        }
+
+        console.log('User verified successfully:', user.email);
+        
+        // Clean up URL
+        window.history.replaceState({}, document.title, '/auth');
+        
+        // Show success message and redirect
+        toast.success("Email verified successfully! Redirecting to dashboard...");
+        setTimeout(() => {
+          navigate('/dashboard', { replace: true });
+        }, 1500);
       } catch (error: any) {
         console.error('Error during email confirmation:', error);
         toast.error("Failed to verify email. Please try again or contact support.");
-        // Clean up URL on error too
         window.history.replaceState({}, document.title, '/auth');
       }
     };
