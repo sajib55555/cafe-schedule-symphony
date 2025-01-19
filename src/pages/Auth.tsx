@@ -34,11 +34,22 @@ const Auth = () => {
               refresh_token: tokens.refresh_token,
             });
 
-            if (sessionError) throw sessionError;
+            if (sessionError) {
+              console.error('Session error:', sessionError);
+              throw sessionError;
+            }
 
             // Get user details to confirm verification
-            const { error: userError } = await supabase.auth.getUser();
-            if (userError) throw userError;
+            const { data: { user }, error: userError } = await supabase.auth.getUser();
+            
+            if (userError) {
+              console.error('User error:', userError);
+              throw userError;
+            }
+
+            if (!user) {
+              throw new Error('No user found after verification');
+            }
 
             // Email confirmed successfully
             toast.success("Email verified successfully! You can now sign in.");
