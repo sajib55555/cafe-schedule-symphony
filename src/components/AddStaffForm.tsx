@@ -44,6 +44,23 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
     }
 
     try {
+      // First get the user's company_id
+      const { data: profileData, error: profileError } = await supabase
+        .from('profiles')
+        .select('company_id')
+        .eq('id', session.user.id)
+        .single();
+
+      if (profileError) throw profileError;
+      if (!profileData?.company_id) {
+        toast({
+          title: "Error",
+          description: "No company associated with your account",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // Convert roles array to a comma-separated string for the role column
       const roleString = newEmployee.roles.join(', ');
 
@@ -57,6 +74,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           availability: newEmployee.availability,
           hours: newEmployee.hours,
           hourly_pay: newEmployee.hourly_pay,
+          company_id: profileData.company_id // Add the company_id here
         }])
         .select()
         .single();
