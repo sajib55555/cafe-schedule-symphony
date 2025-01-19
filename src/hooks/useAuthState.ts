@@ -19,8 +19,31 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
           throw sessionError;
         }
 
-        setSession(initialSession);
-        onSessionChange(initialSession);
+        if (initialSession?.user) {
+          // Verify profile exists
+          const { data: profile, error: profileError } = await supabase
+            .from('profiles')
+            .select('*')
+            .eq('id', initialSession.user.id)
+            .maybeSingle();
+
+          if (profileError) {
+            console.error('Error fetching profile:', profileError);
+            throw profileError;
+          }
+
+          if (!profile) {
+            console.error('Profile not found for user:', initialSession.user.id);
+            await supabase.auth.signOut();
+            toast.error("User profile not found. Please contact support.");
+            setSession(null);
+            onSessionChange(null);
+            return;
+          }
+
+          setSession(initialSession);
+          onSessionChange(initialSession);
+        }
 
         // Set up auth state change listener
         const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
@@ -35,7 +58,28 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
             onSessionChange(null);
           }
 
-          if (newSession) {
+          if (newSession?.user) {
+            // Verify profile exists on auth state change
+            const { data: profile, error: profileError } = await supabase
+              .from('profiles')
+              .select('*')
+              .eq('id', newSession.user.id)
+              .maybeSingle();
+
+            if (profileError) {
+              console.error('Error fetching profile:', profileError);
+              return;
+            }
+
+            if (!profile) {
+              console.error('Profile not found for user:', newSession.user.id);
+              await supabase.auth.signOut();
+              toast.error("User profile not found. Please contact support.");
+              setSession(null);
+              onSessionChange(null);
+              return;
+            }
+
             setSession(newSession);
             onSessionChange(newSession);
           }
@@ -62,6 +106,8 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
           setSession(null);
           onSessionChange(null);
           toast.error("Your session has expired. Please sign in again.");
+        } else {
+          toast.error("Authentication error. Please try again.");
         }
       } finally {
         setLoading(false);
