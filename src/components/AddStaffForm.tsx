@@ -8,6 +8,7 @@ import { staffFormSchema, type StaffFormData } from "@/utils/staffSchema";
 import { useStaff } from "@/contexts/StaffContext";
 import { FormActions } from "./staff/FormActions";
 import { useStaffForm } from "@/hooks/useStaffForm";
+import { toast } from "sonner";
 
 interface AddStaffFormProps {
   onClose: () => void;
@@ -32,6 +33,12 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
 
   if (isLoadingCompany) {
     return <div className="p-4">Loading...</div>;
+  }
+
+  if (!companyId) {
+    toast.error("Please create a company first");
+    onClose();
+    return null;
   }
 
   return (

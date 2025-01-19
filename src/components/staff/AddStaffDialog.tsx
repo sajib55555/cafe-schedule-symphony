@@ -1,4 +1,4 @@
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
+import { Dialog, DialogContent, DialogTrigger, DialogDescription } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { UserPlus } from "lucide-react";
 import { AddStaffForm } from "@/components/AddStaffForm";
@@ -18,6 +18,9 @@ export function AddStaffDialog({ isOpen, onOpenChange }: AddStaffDialogProps) {
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[425px]">
+        <DialogDescription className="sr-only">
+          Form to add a new staff member
+        </DialogDescription>
         <AddStaffForm onClose={() => onOpenChange(false)} />
       </DialogContent>
     </Dialog>

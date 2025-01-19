@@ -14,16 +14,14 @@ export function useStaffForm(
 
   const handleSubmit = async (data: StaffFormData) => {
     if (!companyId) {
-      toast.error('Please create a company first');
+      toast.error("Please create a company first");
       return;
     }
 
     setIsSubmitting(true);
     try {
-      console.log('Submitting staff data:', data);
-
       const { data: newStaff, error: insertError } = await supabase
-        .from('staff')
+        .from("staff")
         .insert([
           {
             name: data.name,
@@ -40,21 +38,20 @@ export function useStaffForm(
         .single();
 
       if (insertError) {
-        console.error('Staff insertion error:', insertError);
-        toast.error('Failed to add staff member');
+        console.error("Staff insertion error:", insertError);
+        toast.error("Failed to add staff member");
         return;
       }
 
       if (newStaff) {
-        console.log('Staff member added successfully:', newStaff);
         setStaff(currentStaff => [...currentStaff, newStaff]);
-        toast.success('Staff member added successfully');
+        toast.success("Staff member added successfully");
         form.reset();
         onClose();
       }
     } catch (error) {
-      console.error('Error in onSubmit:', error);
-      toast.error('An unexpected error occurred');
+      console.error("Error in onSubmit:", error);
+      toast.error("An unexpected error occurred");
     } finally {
       setIsSubmitting(false);
     }
@@ -62,6 +59,6 @@ export function useStaffForm(
 
   return {
     isSubmitting,
-    handleSubmit
+    handleSubmit,
   };
 }
