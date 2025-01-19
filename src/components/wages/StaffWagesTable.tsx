@@ -1,9 +1,7 @@
 import { useEffect, useState, useRef } from "react";
-import { startOfMonth, endOfMonth, format, addMonths, subMonths } from "date-fns";
+import { startOfMonth, endOfMonth, format } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
-import { Button } from "@/components/ui/button";
-import { ChevronLeft, ChevronRight } from "lucide-react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Staff } from "@/contexts/StaffContext";
@@ -28,13 +26,13 @@ export function StaffWagesTable({ staff, selectedMonth }: { staff: Staff[]; sele
   useEffect(() => {
     const fetchCurrencySymbol = async () => {
       if (session?.user) {
-        const { data, error } = await supabase
+        const { data } = await supabase
           .from('profiles')
           .select('currency_symbol')
           .eq('id', session.user.id)
           .maybeSingle();
 
-        if (!error && data) {
+        if (data) {
           setCurrencySymbol(data.currency_symbol);
         }
       }
@@ -47,30 +45,33 @@ export function StaffWagesTable({ staff, selectedMonth }: { staff: Staff[]; sele
     const calculateWages = async () => {
       if (!session?.user) return;
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('company_id')
-        .eq('id', session.user.id)
-        .maybeSingle();
-
-      if (!profile?.company_id) return;
-
       const wagesPromises = staff.map(async (member) => {
-        const totalHours = await calculateMonthlyWages(
-          member.id,
-          profile.company_id,
-          monthStart,
-          monthEnd
-        );
+        // Get total hours from shifts table for the selected month
+        const { data: shifts } = await supabase
+          .from('shifts')
+          .select('start_time, end_time')
+          .eq('staff_id', member.id)
+          .gte('start_time', monthStart.toISOString())
+          .lte('end_time', monthEnd.toISOString());
 
-        await updateMonthlyWagesRecord(
-          member.id,
-          profile.company_id,
-          monthStart,
-          monthEnd,
-          totalHours,
-          member.hourly_pay
-        );
+        const totalHours = shifts?.reduce((sum, shift) => {
+          const start = new Date(shift.start_time);
+          const end = new Date(shift.end_time);
+          const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
+          return sum + hours;
+        }, 0) || 0;
+
+        // Update monthly wages record
+        await supabase
+          .from('monthly_wages')
+          .upsert({
+            staff_id: member.id,
+            month_start: format(monthStart, 'yyyy-MM-dd'),
+            month_end: format(monthEnd, 'yyyy-MM-dd'),
+            total_hours: totalHours,
+            total_wages: totalHours * member.hourly_pay,
+            updated_at: new Date().toISOString()
+          });
 
         return {
           staff_id: member.id,
@@ -90,11 +91,6 @@ export function StaffWagesTable({ staff, selectedMonth }: { staff: Staff[]; sele
     <Card>
       <CardHeader className="flex flex-row items-center justify-between space-y-0 pb-4">
         <CardTitle>Staff Monthly Wages</CardTitle>
-        <div className="flex items-center space-x-4">
-          <span className="font-medium">
-            {format(selectedMonth, 'MMMM yyyy')}
-          </span>
-        </div>
       </CardHeader>
       <CardContent>
         <div className="flex justify-end mb-4">

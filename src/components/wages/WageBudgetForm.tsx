@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { useToast } from "@/hooks/use-toast";
@@ -16,6 +16,27 @@ export const WageBudgetForm = ({ currentBudget, onUpdate }: WageBudgetFormProps)
   const { session } = useAuth();
   const { toast } = useToast();
 
+  // Load saved budget when component mounts
+  useEffect(() => {
+    const loadBudget = async () => {
+      if (!session?.user?.id) return;
+
+      const { data } = await supabase
+        .from('wage_budgets')
+        .select('monthly_budget')
+        .order('created_at', { ascending: false })
+        .limit(1)
+        .maybeSingle();
+
+      if (data?.monthly_budget) {
+        setBudget(data.monthly_budget.toString());
+        onUpdate(data.monthly_budget);
+      }
+    };
+
+    loadBudget();
+  }, [session?.user?.id, onUpdate]);
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
@@ -27,7 +48,7 @@ export const WageBudgetForm = ({ currentBudget, onUpdate }: WageBudgetFormProps)
 
       const { error } = await supabase
         .from('wage_budgets')
-        .upsert({
+        .insert({
           monthly_budget: numericBudget,
           updated_at: new Date().toISOString(),
         });
