@@ -1,11 +1,12 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
+import { AuthError, Session, User } from "@supabase/supabase-js";
 
 interface AuthContextType {
   loading: boolean;
   hasAccess: boolean;
-  session: any;
+  session: Session | null;
   trialEnded: boolean;
 }
 
@@ -14,7 +15,7 @@ const AuthContext = createContext<AuthContextType | undefined>(undefined);
 export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [loading, setLoading] = useState(true);
   const [hasAccess, setHasAccess] = useState(false);
-  const [session, setSession] = useState<any>(null);
+  const [session, setSession] = useState<Session | null>(null);
   const [trialEnded, setTrialEnded] = useState(false);
 
   useEffect(() => {
@@ -49,21 +50,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
 
           // Handle email confirmation
-          if (event === 'USER_UPDATED') {
-            console.log('User updated - checking email confirmation status');
-            if (newSession?.user?.email_confirmed_at) {
-              toast.success('Email confirmed successfully! You can now sign in.');
-            }
+          if (event === 'USER_UPDATED' && newSession?.user?.email_confirmed_at) {
+            console.log('Email confirmed successfully');
+            toast.success('Email confirmed successfully! You can now sign in.');
           }
 
           if (newSession) {
             setSession(newSession);
             await checkAccessStatus();
-          }
-
-          // Handle email confirmation error
-          if (event === 'USER_DELETED') {
-            toast.error('Email confirmation failed. Please try signing up again.');
           }
         });
 
@@ -73,25 +67,29 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
         const refreshToken = params.get('refresh_token');
         const type = params.get('type');
 
-        if (type === 'email_confirmation' && accessToken && refreshToken) {
-          console.log('Found email confirmation tokens, setting session...');
+        if (type === 'recovery' || type === 'signup' || type === 'email_confirmation') {
+          console.log('Processing authentication callback:', type);
           try {
-            const { error } = await supabase.auth.setSession({
-              access_token: accessToken,
-              refresh_token: refreshToken
-            });
-            
-            if (error) {
-              console.error('Error setting session:', error);
-              toast.error('Failed to confirm email. Please try again.');
-            } else {
-              toast.success('Email confirmed successfully! You can now sign in.');
-              // Clear URL parameters after successful confirmation
-              window.history.replaceState({}, document.title, window.location.pathname);
+            if (accessToken && refreshToken) {
+              const { error } = await supabase.auth.setSession({
+                access_token: accessToken,
+                refresh_token: refreshToken
+              });
+              
+              if (error) {
+                console.error('Error setting session:', error);
+                toast.error('Authentication failed. Please try again.');
+              } else {
+                if (type === 'email_confirmation') {
+                  toast.success('Email confirmed successfully! You can now sign in.');
+                }
+                // Clear URL parameters after successful confirmation
+                window.history.replaceState({}, document.title, window.location.pathname);
+              }
             }
           } catch (error) {
-            console.error('Error during email confirmation:', error);
-            toast.error('Failed to confirm email. Please try again.');
+            console.error('Error during authentication callback:', error);
+            toast.error('Authentication failed. Please try again.');
           }
         }
 
