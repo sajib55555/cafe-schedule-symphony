@@ -13,56 +13,52 @@ const Auth = () => {
   const navigate = useNavigate();
 
   useEffect(() => {
-    // Handle email confirmation
     const handleEmailConfirmation = async () => {
-      const hash = window.location.hash;
-      
-      // Check if this is an email confirmation callback
-      if (hash && hash.includes('type=signup')) {
-        try {
-          // Parse the URL fragment to get the tokens
-          const tokens = hash.substring(1).split('&').reduce((acc: any, curr) => {
-            const [key, value] = curr.split('=');
-            acc[key] = decodeURIComponent(value);
-            return acc;
-          }, {});
+      try {
+        // Get the current URL
+        const url = new URL(window.location.href);
+        const accessToken = url.searchParams.get('access_token');
+        const refreshToken = url.searchParams.get('refresh_token');
+        const type = url.searchParams.get('type');
 
-          if (tokens.access_token) {
-            // Set the session with the tokens
-            const { error: sessionError } = await supabase.auth.setSession({
-              access_token: tokens.access_token,
-              refresh_token: tokens.refresh_token,
-            });
+        // Check if this is an email confirmation
+        if (type === 'signup' && accessToken && refreshToken) {
+          console.log('Processing email confirmation...');
 
-            if (sessionError) {
-              console.error('Session error:', sessionError);
-              throw sessionError;
-            }
+          // Set the session with the tokens
+          const { error: sessionError } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken,
+          });
 
-            // Get user details to confirm verification
-            const { data: { user }, error: userError } = await supabase.auth.getUser();
-            
-            if (userError) {
-              console.error('User error:', userError);
-              throw userError;
-            }
-
-            if (!user) {
-              throw new Error('No user found after verification');
-            }
-
-            // Email confirmed successfully
-            toast.success("Email verified successfully! You can now sign in.");
-            
-            // Clear the URL hash and redirect
-            window.location.hash = '';
-            navigate('/dashboard', { replace: true });
+          if (sessionError) {
+            console.error('Session error:', sessionError);
+            throw sessionError;
           }
-        } catch (error: any) {
-          console.error('Error confirming email:', error);
-          toast.error("Failed to verify email. Please try again or contact support.");
-          navigate('/auth', { replace: true });
+
+          // Get user details to confirm verification
+          const { data: { user }, error: userError } = await supabase.auth.getUser();
+          
+          if (userError) {
+            console.error('User error:', userError);
+            throw userError;
+          }
+
+          if (!user) {
+            throw new Error('No user found after verification');
+          }
+
+          // Email confirmed successfully
+          toast.success("Email verified successfully! You can now sign in.");
+          
+          // Clear the URL parameters and redirect
+          window.history.replaceState({}, document.title, '/auth');
+          navigate('/dashboard', { replace: true });
         }
+      } catch (error: any) {
+        console.error('Error confirming email:', error);
+        toast.error("Failed to verify email. Please try again or contact support.");
+        navigate('/auth', { replace: true });
       }
     };
 
