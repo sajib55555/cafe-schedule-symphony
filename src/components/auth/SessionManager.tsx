@@ -14,14 +14,12 @@ export function SessionManager() {
         if (sessionError) {
           console.error('Session error:', sessionError);
           await supabase.auth.signOut();
-          localStorage.clear();
           navigate("/auth");
           return;
         }
-        
+
         if (!session?.user) {
-          console.log('No session found, redirecting to auth');
-          localStorage.clear();
+          console.log('No session found');
           navigate("/auth");
           return;
         }
@@ -34,21 +32,17 @@ export function SessionManager() {
 
         if (profileError) {
           console.error('Error fetching profile:', profileError);
-          if (profileError.message?.includes('JWT expired') || 
-              profileError.message?.includes('Failed to fetch') ||
-              profileError.message?.includes('session_not_found')) {
-            console.log('Invalid session, clearing and redirecting');
+          if (profileError.message?.includes('JWT expired')) {
             await supabase.auth.signOut();
-            localStorage.clear();
             navigate("/auth");
             return;
           }
-          toast.error('Error checking subscription status');
+          toast.error('Error checking profile status');
           return;
         }
 
         if (!profile) {
-          console.log('No profile found, creating new profile');
+          console.log('Creating profile for user:', session.user.id);
           const { error: createError } = await supabase
             .from('profiles')
             .insert([{
@@ -61,7 +55,7 @@ export function SessionManager() {
               currency_symbol: '$'
             }])
             .select()
-            .maybeSingle();
+            .single();
 
           if (createError) {
             console.error('Error creating profile:', createError);
@@ -72,12 +66,27 @@ export function SessionManager() {
       } catch (error: any) {
         console.error('Error in checkSession:', error);
         await supabase.auth.signOut();
-        localStorage.clear();
         navigate("/auth");
       }
     };
 
+    // Initial session check
     checkSession();
+
+    // Listen for auth state changes
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
+      console.log('Auth state changed:', event);
+      
+      if (event === 'SIGNED_OUT') {
+        navigate("/auth");
+      } else if (event === 'SIGNED_IN' && session) {
+        checkSession();
+      }
+    });
+
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   return null;

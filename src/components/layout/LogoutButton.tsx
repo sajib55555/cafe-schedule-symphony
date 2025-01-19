@@ -9,28 +9,21 @@ export function LogoutButton({ className }: { className?: string }) {
 
   const handleLogout = async () => {
     try {
-      // First clear all local storage to ensure clean state
-      localStorage.clear();
-      
-      // Attempt local signout without global scope
-      const { error } = await supabase.auth.signOut({
-        scope: 'local'
-      });
+      const { error } = await supabase.auth.signOut();
       
       if (error) {
         console.error('Logout error:', error);
-        // Only show error for non-session related issues
-        if (!error.message?.includes('session_not_found')) {
-          toast.error("An error occurred during logout");
-        }
-      } else {
-        toast.success("Successfully logged out");
+        toast.error("An error occurred during logout");
+        return;
       }
+
+      // Clear any local state
+      localStorage.clear();
+      toast.success("Successfully logged out");
+      navigate("/auth");
     } catch (error: any) {
       console.error('Logout error:', error);
-    } finally {
-      // Always redirect to auth page
-      navigate("/auth");
+      toast.error("An error occurred during logout");
     }
   };
 

@@ -21,12 +21,12 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: SignInFormData) => {
     try {
-      const { data: authData, error } = await supabase.auth.signInWithPassword({
+      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      if (error) throw error;
+      if (signInError) throw signInError;
 
       if (authData.user) {
         const { data: profile, error: profileError } = await supabase
@@ -52,10 +52,14 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
               subscription_status: 'trial',
               role: 'staff',
               currency_symbol: '$'
-            }]);
+            }])
+            .select()
+            .single();
 
           if (createError) {
             console.error("Error creating profile:", createError);
+            // Clean up the session if profile creation fails
+            await supabase.auth.signOut();
             throw createError;
           }
         }
