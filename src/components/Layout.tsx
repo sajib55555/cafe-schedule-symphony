@@ -14,6 +14,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
       try {
         const { data: { session } } = await supabase.auth.getSession();
         if (!session?.user) {
+          console.log('No session found, skipping trial status check');
           return;
         }
 
