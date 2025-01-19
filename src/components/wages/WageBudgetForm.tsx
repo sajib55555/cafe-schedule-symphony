@@ -16,7 +16,6 @@ export const WageBudgetForm = ({ currentBudget, onUpdate }: WageBudgetFormProps)
   const { session } = useAuth();
   const { toast } = useToast();
 
-  // Load saved budget when component mounts
   useEffect(() => {
     const loadBudget = async () => {
       if (!session?.user?.id) return;

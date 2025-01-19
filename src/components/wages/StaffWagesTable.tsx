@@ -1,11 +1,10 @@
 import { useEffect, useState, useRef } from "react";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import { startOfMonth, endOfMonth, format, differenceInHours } from "date-fns";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Staff } from "@/contexts/StaffContext";
-import { calculateMonthlyWages, updateMonthlyWagesRecord } from "../schedule/utils/wageCalculations";
 import { WagesPdfExport } from "./WagesPdfExport";
 
 interface MonthlyWage {
@@ -45,43 +44,50 @@ export function StaffWagesTable({ staff, selectedMonth }: { staff: Staff[]; sele
     const calculateWages = async () => {
       if (!session?.user) return;
 
-      const wagesPromises = staff.map(async (member) => {
-        // Get total hours from shifts table for the selected month
-        const { data: shifts } = await supabase
-          .from('shifts')
-          .select('start_time, end_time')
-          .eq('staff_id', member.id)
-          .gte('start_time', monthStart.toISOString())
-          .lte('end_time', monthEnd.toISOString());
+      try {
+        // Get all shifts for each staff member in the selected month
+        const wagesPromises = staff.map(async (member) => {
+          const { data: shifts } = await supabase
+            .from('shifts')
+            .select('start_time, end_time')
+            .eq('staff_id', member.id)
+            .gte('start_time', format(monthStart, 'yyyy-MM-dd'))
+            .lte('end_time', format(monthEnd, 'yyyy-MM-dd'));
 
-        const totalHours = shifts?.reduce((sum, shift) => {
-          const start = new Date(shift.start_time);
-          const end = new Date(shift.end_time);
-          const hours = (end.getTime() - start.getTime()) / (1000 * 60 * 60);
-          return sum + hours;
-        }, 0) || 0;
+          const totalHours = shifts?.reduce((sum, shift) => {
+            const hours = differenceInHours(
+              new Date(shift.end_time),
+              new Date(shift.start_time)
+            );
+            return sum + hours;
+          }, 0) || 0;
 
-        // Update monthly wages record
-        await supabase
-          .from('monthly_wages')
-          .upsert({
+          const totalWages = totalHours * member.hourly_pay;
+
+          // Update monthly wages record
+          await supabase
+            .from('monthly_wages')
+            .upsert({
+              staff_id: member.id,
+              month_start: format(monthStart, 'yyyy-MM-dd'),
+              month_end: format(monthEnd, 'yyyy-MM-dd'),
+              total_hours: totalHours,
+              total_wages: totalWages,
+              updated_at: new Date().toISOString()
+            });
+
+          return {
             staff_id: member.id,
-            month_start: format(monthStart, 'yyyy-MM-dd'),
-            month_end: format(monthEnd, 'yyyy-MM-dd'),
             total_hours: totalHours,
-            total_wages: totalHours * member.hourly_pay,
-            updated_at: new Date().toISOString()
-          });
+            total_wages: totalWages
+          };
+        });
 
-        return {
-          staff_id: member.id,
-          total_hours: totalHours,
-          total_wages: totalHours * member.hourly_pay
-        };
-      });
-
-      const wages = await Promise.all(wagesPromises);
-      setMonthlyWages(wages);
+        const wages = await Promise.all(wagesPromises);
+        setMonthlyWages(wages);
+      } catch (error) {
+        console.error('Error calculating wages:', error);
+      }
     };
 
     calculateWages();

@@ -2,7 +2,7 @@ import { useState, useEffect } from "react";
 import { useAuth } from "@/contexts/AuthContext";
 import { useToast } from "@/hooks/use-toast";
 import { supabase } from "@/integrations/supabase/client";
-import { startOfMonth, endOfMonth, format } from "date-fns";
+import { startOfMonth, endOfMonth, format, differenceInHours } from "date-fns";
 
 export const useWageData = (selectedMonth: Date = new Date()) => {
   const [monthlyBudget, setMonthlyBudget] = useState<number>(0);
@@ -30,17 +30,53 @@ export const useWageData = (selectedMonth: Date = new Date()) => {
         const monthStart = startOfMonth(selectedMonth);
         const monthEnd = endOfMonth(selectedMonth);
 
-        const { data: monthlyWages } = await supabase
-          .from('monthly_wages')
-          .select('total_wages')
-          .gte('month_start', format(monthStart, 'yyyy-MM-dd'))
-          .lte('month_end', format(monthEnd, 'yyyy-MM-dd'));
+        // Get all staff with their hourly pay
+        const { data: staffData } = await supabase
+          .from('staff')
+          .select('id, hourly_pay');
 
-        const totalCost = monthlyWages?.reduce((sum, record) => sum + (record.total_wages || 0), 0) || 0;
+        if (!staffData) return;
+
+        // Get all shifts for the month
+        const { data: shiftsData } = await supabase
+          .from('shifts')
+          .select('staff_id, start_time, end_time')
+          .gte('start_time', format(monthStart, 'yyyy-MM-dd'))
+          .lte('end_time', format(monthEnd, 'yyyy-MM-dd'));
+
+        if (!shiftsData) return;
+
+        // Calculate total cost
+        let totalCost = 0;
+        shiftsData.forEach(shift => {
+          const staff = staffData.find(s => s.id === shift.staff_id);
+          if (!staff) return;
+
+          const hours = differenceInHours(
+            new Date(shift.end_time),
+            new Date(shift.start_time)
+          );
+          totalCost += hours * staff.hourly_pay;
+        });
+
         setCurrentCost(totalCost);
 
-        // Calculate yearly prediction based on current month
-        setYearlyPrediction(totalCost * 12);
+        // Calculate yearly prediction based on average daily cost
+        const daysInMonth = endOfMonth(selectedMonth).getDate();
+        const dailyAverage = totalCost / daysInMonth;
+        const yearlyEstimate = dailyAverage * 365;
+        setYearlyPrediction(yearlyEstimate);
+
+        // Update monthly_wages record
+        await supabase
+          .from('monthly_wages')
+          .upsert({
+            month_start: format(monthStart, 'yyyy-MM-dd'),
+            month_end: format(monthEnd, 'yyyy-MM-dd'),
+            total_wages: totalCost,
+            updated_at: new Date().toISOString()
+          });
+
       } catch (error) {
         console.error('Error loading wage data:', error);
         toast({
