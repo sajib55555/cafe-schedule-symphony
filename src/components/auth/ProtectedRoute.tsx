@@ -18,7 +18,9 @@ export const ProtectedRoute = ({
 }: ProtectedRouteProps) => {
   useEffect(() => {
     const verifyProfile = async () => {
-      if (session?.user) {
+      if (!session?.user) return;
+
+      try {
         const { data: profile, error } = await supabase
           .from('profiles')
           .select('*')
@@ -52,6 +54,9 @@ export const ProtectedRoute = ({
             toast.error('Error creating user profile');
           }
         }
+      } catch (error) {
+        console.error('Error in verifyProfile:', error);
+        toast.error('Error verifying user profile');
       }
     };
 

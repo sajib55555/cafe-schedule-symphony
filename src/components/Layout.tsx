@@ -13,57 +13,59 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const checkTrialStatus = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          console.log('Checking trial status for user:', session.user.id);
-          
-          const { data: profile, error } = await supabase
+        if (!session?.user) {
+          return;
+        }
+
+        console.log('Checking trial status for user:', session.user.id);
+        
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('trial_end, subscription_status')
+          .eq('id', session.user.id)
+          .maybeSingle();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          toast.error('Error checking subscription status');
+          return;
+        }
+
+        if (!profile) {
+          console.log('No profile found, creating new profile');
+          const { data: newProfile, error: createError } = await supabase
             .from('profiles')
-            .select('trial_end, subscription_status')
-            .eq('id', session.user.id)
+            .insert([{
+              id: session.user.id,
+              email: session.user.email,
+              trial_start: new Date().toISOString(),
+              trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              subscription_status: 'trial',
+              role: 'staff',
+              currency_symbol: '$'
+            }])
+            .select()
             .maybeSingle();
 
-          if (error) {
-            console.error('Error fetching profile:', error);
-            toast.error('Error checking subscription status');
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            toast.error('Error creating user profile');
             return;
           }
 
-          if (!profile) {
-            console.log('No profile found, creating new profile');
-            const { data: newProfile, error: createError } = await supabase
-              .from('profiles')
-              .insert([{
-                id: session.user.id,
-                email: session.user.email,
-                trial_start: new Date().toISOString(),
-                trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-                subscription_status: 'trial',
-                role: 'staff',
-                currency_symbol: '$'
-              }])
-              .select()
-              .maybeSingle();
-
-            if (createError) {
-              console.error('Error creating profile:', createError);
-              toast.error('Error creating user profile');
-              return;
-            }
-
-            if (newProfile) {
-              setIsSubscribed(false);
-              const daysLeft = differenceInDays(new Date(newProfile.trial_end), new Date());
-              setTrialDaysLeft(Math.max(0, daysLeft));
-            }
-            return;
-          }
-
-          setIsSubscribed(profile.subscription_status === 'active');
-          
-          if (!isSubscribed && profile.trial_end) {
-            const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
+          if (newProfile) {
+            setIsSubscribed(false);
+            const daysLeft = differenceInDays(new Date(newProfile.trial_end), new Date());
             setTrialDaysLeft(Math.max(0, daysLeft));
           }
+          return;
+        }
+
+        setIsSubscribed(profile.subscription_status === 'active');
+        
+        if (!isSubscribed && profile.trial_end) {
+          const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
+          setTrialDaysLeft(Math.max(0, daysLeft));
         }
       } catch (error) {
         console.error('Error in checkTrialStatus:', error);
