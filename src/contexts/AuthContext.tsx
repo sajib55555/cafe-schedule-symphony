@@ -48,11 +48,42 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
             setTrialEnded(false);
           }
 
+          // Handle email confirmation
+          if (event === 'USER_UPDATED') {
+            console.log('User updated - checking email confirmation status');
+            if (newSession?.user?.email_confirmed_at) {
+              toast.success('Email confirmed successfully! You can now sign in.');
+            }
+          }
+
           if (newSession) {
             setSession(newSession);
             await checkAccessStatus();
           }
+
+          // Handle email confirmation error
+          if (event === 'USER_DELETED') {
+            toast.error('Email confirmation failed. Please try signing up again.');
+          }
         });
+
+        // Parse URL hash for email confirmation
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const accessToken = hashParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token');
+        
+        if (accessToken && refreshToken) {
+          console.log('Found tokens in URL, setting session...');
+          const { error } = await supabase.auth.setSession({
+            access_token: accessToken,
+            refresh_token: refreshToken
+          });
+          
+          if (error) {
+            console.error('Error setting session:', error);
+            toast.error('Failed to confirm email. Please try again.');
+          }
+        }
 
         return () => {
           subscription.unsubscribe();
@@ -114,7 +145,6 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.error('Error checking access status:', error);
-      // Don't throw the error, just log it and continue
       setHasAccess(false);
     }
   };
