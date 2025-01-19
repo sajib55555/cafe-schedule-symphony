@@ -31,7 +31,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: FormData) => {
     try {
-      console.log("Starting signup process...");
+      console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
       const user = await handleSignUp({
         email: data.email,
         password: data.password,
@@ -48,7 +48,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       
       if (user) {
         console.log("Signup successful, user:", user);
-        toast.success("Account created! Please check your email to confirm your registration.");
+        toast.success("Account created successfully! Please check your email to confirm your registration.");
         toast("You will be redirected to sign in once you confirm your email.", {
           duration: 5000,
         });
@@ -62,12 +62,15 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     } catch (error: any) {
       console.error("Error during sign up:", error);
       
-      // Handle specific error cases
-      if (error instanceof AuthError && error.message.includes("already registered")) {
-        toast.error("An account with this email already exists. Please sign in instead.");
-        setTimeout(() => onModeChange('signin'), 2000);
+      if (error instanceof AuthError) {
+        if (error.message.includes("already registered")) {
+          toast.error("An account with this email already exists. Please sign in instead.");
+          setTimeout(() => onModeChange('signin'), 2000);
+        } else {
+          toast.error(error.message || "Failed to create account");
+        }
       } else {
-        toast.error(error.message || "Failed to create account");
+        toast.error("An unexpected error occurred. Please try again.");
       }
     }
   };
