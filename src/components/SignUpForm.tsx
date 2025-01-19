@@ -32,7 +32,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
   const onSubmit = async (data: FormData) => {
     try {
       console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
-      const user = await handleSignUp({
+      const { user, error } = await handleSignUp({
         email: data.email,
         password: data.password,
         fullName: data.fullName,
@@ -45,6 +45,8 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         department: data.department,
         phone: data.phone,
       });
+      
+      if (error) throw error;
       
       if (user) {
         console.log("Signup successful, user:", user);

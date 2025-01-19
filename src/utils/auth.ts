@@ -31,12 +31,12 @@ export const handleSignUp = async (data: SignUpData) => {
 
     if (signUpError) {
       console.error("Signup error:", signUpError);
-      throw signUpError;
+      return { error: signUpError };
     }
 
     if (!authData.user) {
       console.error("No user data returned from signup");
-      throw new Error("Failed to create account");
+      return { error: new Error("Failed to create account") };
     }
 
     // Create company record
@@ -54,7 +54,7 @@ export const handleSignUp = async (data: SignUpData) => {
 
     if (companyError) {
       console.error("Company creation error:", companyError);
-      throw companyError;
+      return { error: companyError };
     }
 
     console.log("Company created successfully:", company);
@@ -64,12 +64,15 @@ export const handleSignUp = async (data: SignUpData) => {
       .from('profiles')
       .update({
         company_id: company.id,
+        full_name: data.fullName,
         position: data.position,
         department: data.department || null,
         phone: data.phone || null,
         trial_start: new Date().toISOString(),
         trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
         subscription_status: 'trial',
+        role: 'staff',
+        currency_symbol: '$'
       })
       .eq('id', authData.user.id);
 
@@ -84,13 +87,13 @@ export const handleSignUp = async (data: SignUpData) => {
       if (deleteError) {
         console.error("Failed to clean up company after profile error:", deleteError);
       }
-      throw profileError;
+      return { error: profileError };
     }
 
     console.log("Profile updated successfully");
-    return authData.user;
+    return { user: authData.user };
   } catch (error) {
     console.error("Error during sign up:", error);
-    throw error;
+    return { error };
   }
 };

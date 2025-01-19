@@ -29,19 +29,39 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       if (error) throw error;
 
       if (authData.user) {
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', authData.user.id)
-          .single();
+          .maybeSingle();
 
-        if (profile) {
-          toast.success("Successfully signed in!");
-          navigate("/dashboard");
-        } else {
-          console.error("Profile not found");
-          toast.error("Error accessing user profile");
+        if (profileError) {
+          console.error("Error fetching profile:", profileError);
+          throw profileError;
         }
+
+        if (!profile) {
+          console.log("Creating profile for user:", authData.user.id);
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: authData.user.id,
+              email: authData.user.email,
+              trial_start: new Date().toISOString(),
+              trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
+              subscription_status: 'trial',
+              role: 'staff',
+              currency_symbol: '$'
+            }]);
+
+          if (createError) {
+            console.error("Error creating profile:", createError);
+            throw createError;
+          }
+        }
+
+        toast.success("Successfully signed in!");
+        navigate("/dashboard");
       }
     } catch (error: any) {
       console.error("Sign in error:", error);
