@@ -1,12 +1,50 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { SignInForm } from "@/components/SignInForm";
 import { SignUpForm } from "@/components/SignUpForm";
 import { ResetPasswordForm } from "@/components/ResetPasswordForm";
+import { useNavigate } from "react-router-dom";
+import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 type AuthMode = 'signin' | 'signup' | 'reset';
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('signin');
+  const navigate = useNavigate();
+
+  useEffect(() => {
+    // Handle email confirmation
+    const handleEmailConfirmation = async () => {
+      const hash = window.location.hash;
+      
+      // Check if this is an email confirmation callback
+      if (hash && hash.includes('type=signup')) {
+        try {
+          // Get the access_token and refresh_token from the URL
+          const tokens = hash.substring(1).split('&').reduce((acc: any, curr) => {
+            const [key, value] = curr.split('=');
+            acc[key] = value;
+            return acc;
+          }, {});
+
+          if (tokens.access_token) {
+            const { error } = await supabase.auth.getUser(tokens.access_token);
+            
+            if (error) throw error;
+            
+            // Email confirmed successfully
+            toast.success("Email verified successfully! You can now sign in.");
+            navigate('/auth', { replace: true });
+          }
+        } catch (error: any) {
+          console.error('Error confirming email:', error);
+          toast.error("Failed to verify email. Please try again.");
+        }
+      }
+    };
+
+    handleEmailConfirmation();
+  }, [navigate]);
 
   return (
     <div className="min-h-screen bg-background flex items-center justify-center p-4">
