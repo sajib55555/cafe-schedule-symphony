@@ -8,9 +8,15 @@ import { FormData, formSchema } from "./signup/types";
 import { handleSignUp } from "@/utils/auth";
 import { toast } from "sonner";
 import { AuthError } from "@supabase/supabase-js";
+import { Alert, AlertDescription } from "@/components/ui/alert";
+import { useState } from "react";
+import { differenceInDays } from "date-fns";
 
 export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
+  const [showVerification, setShowVerification] = useState(false);
+  const [email, setEmail] = useState("");
+  const [trialEnd, setTrialEnd] = useState<string | null>(null);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -48,18 +54,21 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       
       if (user) {
         console.log("Signup successful, user:", user);
-        toast.success("Your account has been created with a 30-day trial period.");
+        setEmail(data.email);
         
-        // Add a small delay to ensure the toast is visible and auth state is updated
-        setTimeout(() => {
-          console.log("Redirecting to dashboard...");
-          navigate("/dashboard", { replace: true });
-        }, 1000);
+        // Calculate trial end date (30 days from now)
+        const trialEndDate = new Date();
+        trialEndDate.setDate(trialEndDate.getDate() + 30);
+        setTrialEnd(trialEndDate.toISOString());
+        
+        // Show verification message
+        setShowVerification(true);
+        
+        toast.success("Account created successfully! Please check your email to verify your account.");
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
       
-      // Handle specific error cases
       if (error instanceof AuthError && error.message.includes("already registered")) {
         toast.error("An account with this email already exists. Please sign in instead.");
         setTimeout(() => onModeChange('signin'), 2000);
@@ -68,6 +77,45 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       }
     }
   };
+
+  if (showVerification) {
+    const daysLeft = trialEnd ? differenceInDays(new Date(trialEnd), new Date()) : 30;
+    
+    return (
+      <div className="space-y-6">
+        <Alert className="bg-blue-50 border-blue-200">
+          <AlertDescription className="text-blue-800">
+            <div className="space-y-4">
+              <p className="font-medium">Please verify your email address</p>
+              <p>We've sent a verification link to <span className="font-medium">{email}</span></p>
+              <p>Please check your inbox and click the link to verify your account.</p>
+            </div>
+          </AlertDescription>
+        </Alert>
+
+        <Alert className="bg-green-50 border-green-200">
+          <AlertDescription className="text-green-800">
+            <div className="space-y-2">
+              <p className="font-medium">Your 30-day trial is now active!</p>
+              <p>You have {daysLeft} days remaining in your trial period.</p>
+              <p>During this time, you'll have full access to all features.</p>
+            </div>
+          </AlertDescription>
+        </Alert>
+
+        <div className="text-center space-y-4">
+          <Button
+            type="button"
+            variant="outline"
+            onClick={() => onModeChange('signin')}
+            className="w-full"
+          >
+            Go to Sign In
+          </Button>
+        </div>
+      </div>
+    );
+  }
 
   return (
     <Form {...form}>
