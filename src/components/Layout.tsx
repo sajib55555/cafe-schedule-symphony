@@ -14,14 +14,24 @@ export function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkTrialStatus = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        // First check if we have a valid session
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          localStorage.clear();
+          navigate("/auth");
+          return;
+        }
         
         if (!session?.user) {
           console.log('No session found, redirecting to auth');
+          localStorage.clear();
           navigate("/auth");
           return;
         }
 
+        // Then attempt to fetch the profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -30,9 +40,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         if (profileError) {
           console.error('Error fetching profile:', profileError);
-          if (profileError.message?.includes('JWT expired')) {
-            // Clear session and redirect on JWT expiration
-            await supabase.auth.signOut();
+          if (profileError.message?.includes('JWT expired') || 
+              profileError.message?.includes('Failed to fetch') ||
+              profileError.message?.includes('session_not_found')) {
+            console.log('Invalid session, clearing and redirecting');
+            await supabase.auth.signOut({ scope: 'local' });
             localStorage.clear();
             navigate("/auth");
             return;
@@ -74,14 +86,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }
       } catch (error: any) {
         console.error('Error in checkTrialStatus:', error);
-        // Handle JWT expiration and network errors
-        if (error.message?.includes('JWT expired') || error.message?.includes('Failed to fetch')) {
-          await supabase.auth.signOut();
-          localStorage.clear();
-          navigate("/auth");
-          return;
-        }
-        toast.error('Error checking subscription status');
+        // Handle any unexpected errors by clearing session and redirecting
+        await supabase.auth.signOut({ scope: 'local' });
+        localStorage.clear();
+        navigate("/auth");
       }
     };
 

@@ -9,11 +9,13 @@ export function LogoutButton({ className }: { className?: string }) {
 
   const handleLogout = async () => {
     try {
-      // Clear local storage first to ensure clean state
+      // First clear all local storage to ensure clean state
       localStorage.clear();
       
-      // Simple local signout without global scope
-      const { error } = await supabase.auth.signOut();
+      // Attempt local signout without global scope
+      const { error } = await supabase.auth.signOut({
+        scope: 'local'
+      });
       
       if (error) {
         console.error('Logout error:', error);
