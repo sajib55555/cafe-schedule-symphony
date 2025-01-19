@@ -63,7 +63,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         });
 
-        // Handle URL parameters for email confirmation
+        // Handle URL parameters for email confirmation and password reset
         const params = new URLSearchParams(window.location.search);
         const accessToken = params.get('access_token');
         const refreshToken = params.get('refresh_token');
@@ -86,6 +86,20 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
                   toast.success('Email confirmed successfully! You can now sign in.');
                   // Clear URL parameters and redirect to sign in
                   window.history.replaceState({}, document.title, '/auth');
+                } else if (type === 'recovery') {
+                  toast.success('You can now set a new password.');
+                  // Handle password reset flow
+                  const { error: updateError } = await supabase.auth.updateUser({
+                    password: params.get('password') || ''
+                  });
+
+                  if (updateError) {
+                    console.error('Error updating password:', updateError);
+                    toast.error('Failed to update password. Please try again.');
+                  } else {
+                    toast.success('Password updated successfully! You can now sign in.');
+                    window.location.href = '/auth';
+                  }
                 }
               }
             }

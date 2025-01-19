@@ -24,7 +24,7 @@ export const ResetPasswordForm = ({ onModeChange }: { onModeChange: (mode: 'sign
   const onSubmit = async (data: ResetFormData) => {
     try {
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
-        redirectTo: `${window.location.origin}/reset-password`,
+        redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
       if (error) throw error;
