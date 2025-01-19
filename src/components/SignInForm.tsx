@@ -53,6 +53,9 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         return;
       }
 
+      // Wait for auth.users record to be fully created
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
       // Get user's profile to ensure it exists
       const { data: profile, error: profileError } = await supabase
         .from('profiles')
@@ -68,8 +71,23 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
       if (!profile) {
         console.error('No profile found for user');
-        toast.error('User profile not found');
-        return;
+        // Create profile if it doesn't exist
+        const { error: createProfileError } = await supabase
+          .from('profiles')
+          .insert([{
+            id: authData.session.user.id,
+            email: authData.session.user.email,
+            full_name: authData.session.user.user_metadata?.full_name,
+            trial_start: new Date().toISOString(),
+            trial_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+            subscription_status: 'trial'
+          }]);
+
+        if (createProfileError) {
+          console.error('Profile creation error:', createProfileError);
+          toast.error('Error creating user profile');
+          return;
+        }
       }
 
       console.log('Successfully signed in and verified profile');
