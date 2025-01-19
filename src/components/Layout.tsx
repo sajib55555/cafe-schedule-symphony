@@ -31,9 +31,13 @@ export function Layout({ children }: { children: React.ReactNode }) {
         if (profileError) {
           console.error('Error fetching profile:', profileError);
           if (profileError.message?.includes('JWT expired')) {
+            // Clear session and redirect on JWT expiration
             await supabase.auth.signOut();
+            localStorage.clear();
             navigate("/auth");
+            return;
           }
+          toast.error('Error checking subscription status');
           return;
         }
 
@@ -70,8 +74,10 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }
       } catch (error: any) {
         console.error('Error in checkTrialStatus:', error);
-        if (error.message?.includes('JWT expired')) {
+        // Handle JWT expiration and network errors
+        if (error.message?.includes('JWT expired') || error.message?.includes('Failed to fetch')) {
           await supabase.auth.signOut();
+          localStorage.clear();
           navigate("/auth");
           return;
         }
