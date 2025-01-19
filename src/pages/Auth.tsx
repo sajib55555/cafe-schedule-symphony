@@ -20,25 +20,37 @@ const Auth = () => {
       // Check if this is an email confirmation callback
       if (hash && hash.includes('type=signup')) {
         try {
-          // Get the access_token and refresh_token from the URL
+          // Parse the URL fragment to get the tokens
           const tokens = hash.substring(1).split('&').reduce((acc: any, curr) => {
             const [key, value] = curr.split('=');
-            acc[key] = value;
+            acc[key] = decodeURIComponent(value);
             return acc;
           }, {});
 
           if (tokens.access_token) {
-            const { error } = await supabase.auth.getUser(tokens.access_token);
-            
-            if (error) throw error;
-            
+            // Set the session with the tokens
+            const { error: sessionError } = await supabase.auth.setSession({
+              access_token: tokens.access_token,
+              refresh_token: tokens.refresh_token,
+            });
+
+            if (sessionError) throw sessionError;
+
+            // Get user details to confirm verification
+            const { error: userError } = await supabase.auth.getUser();
+            if (userError) throw userError;
+
             // Email confirmed successfully
             toast.success("Email verified successfully! You can now sign in.");
-            navigate('/auth', { replace: true });
+            
+            // Clear the URL hash and redirect
+            window.location.hash = '';
+            navigate('/dashboard', { replace: true });
           }
         } catch (error: any) {
           console.error('Error confirming email:', error);
-          toast.error("Failed to verify email. Please try again.");
+          toast.error("Failed to verify email. Please try again or contact support.");
+          navigate('/auth', { replace: true });
         }
       }
     };
