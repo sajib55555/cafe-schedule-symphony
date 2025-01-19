@@ -23,12 +23,18 @@ export const ResetPasswordForm = ({ onModeChange }: { onModeChange: (mode: 'sign
 
   const onSubmit = async (data: ResetFormData) => {
     try {
+      console.log("Sending reset password email to:", data.email);
+      
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/auth?type=recovery`,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error("Reset password error:", error);
+        throw error;
+      }
 
+      console.log("Reset password email sent successfully");
       toast.success("Password reset instructions have been sent to your email");
       onModeChange('signin');
     } catch (error: any) {
