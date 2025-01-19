@@ -25,6 +25,8 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
 
   const handleAddEmployee = async () => {
     try {
+      console.log('Starting staff addition process...');
+      
       if (!session?.user?.id) {
         toast({
           title: "Error",
@@ -34,6 +36,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         return;
       }
 
+      // Validate required fields
       if (!newEmployee.name || newEmployee.roles.length === 0 || !newEmployee.email || !newEmployee.phone) {
         toast({
           title: "Error",
@@ -43,6 +46,8 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         return;
       }
 
+      console.log('Fetching company ID for user:', session.user.id);
+      
       // First get the user's company_id
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
@@ -52,10 +57,16 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
 
       if (profileError) {
         console.error('Error fetching company ID:', profileError);
-        throw new Error('Could not get company ID');
+        toast({
+          title: "Error",
+          description: "Failed to fetch company information",
+          variant: "destructive",
+        });
+        return;
       }
 
       if (!profileData?.company_id) {
+        console.error('No company ID found for user');
         toast({
           title: "Error",
           description: "No company associated with your account. Please contact support.",
@@ -64,30 +75,43 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         return;
       }
 
+      console.log('Found company ID:', profileData.company_id);
+
       // Convert roles array to a comma-separated string for the role column
       const roleString = newEmployee.roles.join(', ');
+      
+      // Prepare the staff data
+      const staffData = {
+        name: newEmployee.name,
+        role: roleString,
+        email: newEmployee.email,
+        phone: newEmployee.phone,
+        availability: newEmployee.availability,
+        hours: 0, // Start with 0 hours
+        hourly_pay: parseFloat(newEmployee.hourly_pay.toString()) || 0,
+        company_id: profileData.company_id
+      };
+
+      console.log('Inserting new staff member with data:', staffData);
 
       const { data: insertedStaff, error: insertError } = await supabase
         .from('staff')
-        .insert([{
-          name: newEmployee.name,
-          role: roleString,
-          email: newEmployee.email,
-          phone: newEmployee.phone,
-          availability: newEmployee.availability,
-          hours: newEmployee.hours,
-          hourly_pay: parseFloat(newEmployee.hourly_pay.toString()) || 0,
-          company_id: profileData.company_id
-        }])
+        .insert([staffData])
         .select()
         .single();
 
       if (insertError) {
-        console.error('Insert error:', insertError);
-        throw insertError;
+        console.error('Error inserting staff:', insertError);
+        toast({
+          title: "Error",
+          description: "Failed to add staff member. Please try again.",
+          variant: "destructive",
+        });
+        return;
       }
 
       if (insertedStaff) {
+        console.log('Successfully added staff member:', insertedStaff);
         setStaff([...staff, insertedStaff]);
         setNewEmployee({ 
           name: "", 
@@ -105,10 +129,10 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         onClose();
       }
     } catch (error) {
-      console.error('Error adding staff member:', error);
+      console.error('Unexpected error adding staff member:', error);
       toast({
         title: "Error",
-        description: "Failed to add staff member. Please try again.",
+        description: "An unexpected error occurred. Please try again.",
         variant: "destructive",
       });
     }
