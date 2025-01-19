@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuthContextType {
   loading: boolean;
@@ -17,39 +18,74 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   const [trialEnded, setTrialEnded] = useState(false);
 
   useEffect(() => {
-    checkSession();
-    checkAccessStatus();
-    
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
-      setSession(session);
-      if (session) {
-        checkAccessStatus();
-      } else {
-        setHasAccess(false);
+    const initializeAuth = async () => {
+      try {
+        // Get initial session
+        const { data: { session: initialSession }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Error getting session:', sessionError);
+          throw sessionError;
+        }
+
+        setSession(initialSession);
+        
+        if (initialSession) {
+          await checkAccessStatus();
+        }
+
+        // Set up auth state change listener
+        const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, newSession) => {
+          console.log('Auth state changed:', event);
+          
+          if (event === 'TOKEN_REFRESHED') {
+            console.log('Token refreshed successfully');
+          }
+
+          if (event === 'SIGNED_OUT') {
+            setSession(null);
+            setHasAccess(false);
+            setTrialEnded(false);
+          }
+
+          if (newSession) {
+            setSession(newSession);
+            await checkAccessStatus();
+          }
+        });
+
+        return () => {
+          subscription.unsubscribe();
+        };
+      } catch (error: any) {
+        console.error('Error in auth initialization:', error);
+        
+        // If there's a refresh token error, clear the session
+        if (error.message?.includes('refresh_token_not_found')) {
+          await supabase.auth.signOut();
+          setSession(null);
+          setHasAccess(false);
+          toast.error("Your session has expired. Please sign in again.");
+        }
+      } finally {
+        setLoading(false);
       }
-    });
-
-    return () => {
-      subscription.unsubscribe();
     };
-  }, []);
 
-  const checkSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setSession(session);
-  };
+    initializeAuth();
+  }, []);
 
   const checkAccessStatus = async () => {
     try {
-      const { data: { session } } = await supabase.auth.getSession();
+      const { data: { session: currentSession } } = await supabase.auth.getSession();
       
-      if (session?.user) {
-        console.log('Checking access status for user:', session.user.email);
+      if (currentSession?.user) {
+        console.log('Checking access status for user:', currentSession.user.email);
         
         const { data: profile } = await supabase
           .from('profiles')
           .select('trial_start, trial_end, subscription_status')
-          .eq('id', session.user.id)
+          .eq('id', currentSession.user.id)
           .single();
 
         if (profile) {
@@ -78,8 +114,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.error('Error checking access status:', error);
-    } finally {
-      setLoading(false);
+      // Don't throw the error, just log it and continue
+      setHasAccess(false);
     }
   };
 
