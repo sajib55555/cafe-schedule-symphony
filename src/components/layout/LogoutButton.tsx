@@ -1,4 +1,5 @@
 import { useNavigate } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 import { supabase } from "@/integrations/supabase/client";
 import { Button } from "@/components/ui/button";
 import { LogOut } from "lucide-react";
@@ -10,20 +11,13 @@ export function LogoutButton({ className }: { className?: string }) {
   const handleLogout = async () => {
     try {
       const { error } = await supabase.auth.signOut();
+      if (error) throw error;
       
-      if (error) {
-        console.error('Logout error:', error);
-        toast.error("An error occurred during logout");
-        return;
-      }
-
-      // Clear any local state
-      localStorage.clear();
       toast.success("Successfully logged out");
-      navigate("/auth");
-    } catch (error: any) {
-      console.error('Logout error:', error);
-      toast.error("An error occurred during logout");
+      navigate("/");
+    } catch (error) {
+      console.error("Error logging out:", error);
+      toast.error("Failed to log out");
     }
   };
 

@@ -18,6 +18,11 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       email: "",
       password: "",
       fullName: "",
+      companyName: "",
+      companyAddress: "",
+      companyPhone: "",
+      companyWebsite: "",
+      companyDescription: "",
       position: "",
       department: "",
       phone: "",
@@ -26,42 +31,40 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: FormData) => {
     try {
-      console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
-      const { user, error } = await handleSignUp({
+      console.log("Starting signup process...");
+      const user = await handleSignUp({
         email: data.email,
         password: data.password,
         fullName: data.fullName,
+        companyName: data.companyName,
+        companyAddress: data.companyAddress,
+        companyPhone: data.companyPhone,
+        companyWebsite: data.companyWebsite,
+        companyDescription: data.companyDescription,
         position: data.position,
         department: data.department,
         phone: data.phone,
       });
       
-      if (error) throw error;
-      
       if (user) {
         console.log("Signup successful, user:", user);
-        toast.success("Account created successfully! Please check your email to confirm your registration.");
-        toast("You will be redirected to sign in once you confirm your email.", {
-          duration: 5000,
-        });
+        toast.success("Your account has been created with a 30-day trial period.");
         
+        // Add a small delay to ensure the toast is visible and auth state is updated
         setTimeout(() => {
-          console.log("Redirecting to signin...");
-          onModeChange('signin');
-        }, 5000);
+          console.log("Redirecting to dashboard...");
+          navigate("/dashboard", { replace: true });
+        }, 1000);
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
       
-      if (error instanceof AuthError) {
-        if (error.message.includes("already registered")) {
-          toast.error("An account with this email already exists. Please sign in instead.");
-          setTimeout(() => onModeChange('signin'), 2000);
-        } else {
-          toast.error(error.message || "Failed to create account");
-        }
+      // Handle specific error cases
+      if (error instanceof AuthError && error.message.includes("already registered")) {
+        toast.error("An account with this email already exists. Please sign in instead.");
+        setTimeout(() => onModeChange('signin'), 2000);
       } else {
-        toast.error("An unexpected error occurred. Please try again.");
+        toast.error(error.message || "Failed to create account");
       }
     }
   };

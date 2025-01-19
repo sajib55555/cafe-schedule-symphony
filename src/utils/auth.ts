@@ -1,64 +1,131 @@
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
-interface SignUpData {
+export type SignUpData = {
   email: string;
   password: string;
   fullName: string;
+  companyName: string;
+  companyAddress?: string;
+  companyPhone?: string;
+  companyWebsite?: string;
+  companyDescription?: string;
   position: string;
   department?: string;
   phone?: string;
-}
+};
 
-export const handleSignUp = async (data: SignUpData) => {
-  console.log("Handling signup with data:", { ...data, password: '[REDACTED]' });
-  
+export const handleSignUp = async (values: SignUpData) => {
   try {
-    // First create the user account
-    const { data: authData, error: signUpError } = await supabase.auth.signUp({
-      email: data.email,
-      password: data.password,
+    console.log('Starting signup process with values:', values);
+
+    // First check if user exists
+    const { data: existingUser } = await supabase
+      .from('profiles')
+      .select('id')
+      .eq('email', values.email)
+      .maybeSingle();
+
+    if (existingUser) {
+      toast.error("An account with this email already exists. Please sign in instead.");
+      return null;
+    }
+
+    // Create the user account
+    const { data: authData, error: authError } = await supabase.auth.signUp({
+      email: values.email,
+      password: values.password,
       options: {
         data: {
-          full_name: data.fullName,
+          full_name: values.fullName,
         },
       },
     });
 
-    if (signUpError) {
-      console.error("Signup error:", signUpError);
-      return { error: signUpError };
+    if (authError) {
+      console.error('Auth error:', authError);
+      throw authError;
     }
 
     if (!authData.user) {
-      console.error("No user data returned from signup");
-      return { error: new Error("Failed to create account") };
+      console.error('No user data returned after signup');
+      throw new Error("No user data returned after signup");
     }
 
-    // Update user profile with additional info
+    // Wait for session to be established
+    await new Promise(resolve => setTimeout(resolve, 2000));
+
+    // Get fresh session and ensure we're authenticated
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    
+    if (sessionError) {
+      console.error('Session error:', sessionError);
+      throw sessionError;
+    }
+
+    if (!session) {
+      console.error('No session available after signup');
+      throw new Error("No session available after signup");
+    }
+
+    // Set the session in the Supabase client
+    await supabase.auth.setSession(session);
+
+    // Create a new company with the authenticated client
+    const { data: companyData, error: companyError } = await supabase
+      .from('companies')
+      .insert([
+        { 
+          name: values.companyName,
+          address: values.companyAddress,
+          phone: values.companyPhone,
+          website: values.companyWebsite,
+          description: values.companyDescription,
+          industry: 'Other',
+          size: 'Small'
+        }
+      ])
+      .select()
+      .single();
+
+    if (companyError) {
+      console.error('Company creation error:', companyError);
+      throw companyError;
+    }
+
+    // Set trial dates
+    const trialStart = new Date();
+    const trialEnd = new Date();
+    trialEnd.setDate(trialEnd.getDate() + 30); // 30 days trial period
+
+    // Update profile with trial dates, company_id, and additional info
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
-        full_name: data.fullName,
-        position: data.position,
-        department: data.department || null,
-        phone: data.phone || null,
-        trial_start: new Date().toISOString(),
-        trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
-        subscription_status: 'trial',
-        role: 'staff',
-        currency_symbol: '$'
+        trial_start: trialStart.toISOString(),
+        trial_end: trialEnd.toISOString(),
+        company_id: companyData.id,
+        full_name: values.fullName,
+        position: values.position,
+        department: values.department,
+        phone: values.phone
       })
       .eq('id', authData.user.id);
 
     if (profileError) {
-      console.error("Profile update error:", profileError);
-      return { error: profileError };
+      console.error('Profile update error:', profileError);
+      throw profileError;
     }
 
-    console.log("Profile updated successfully");
-    return { user: authData.user };
-  } catch (error) {
-    console.error("Error during sign up:", error);
-    return { error };
+    console.log('User and company created successfully:', authData.user.id);
+    return authData.user;
+  } catch (error: any) {
+    console.error('Signup error:', error);
+    if (error.message.includes("already registered")) {
+      toast.error("An account with this email already exists. Please sign in instead.");
+    } else {
+      toast.error(error.message || "Failed to create account");
+    }
+    throw error;
   }
 };

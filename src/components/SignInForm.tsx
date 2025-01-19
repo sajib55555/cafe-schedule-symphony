@@ -21,52 +21,15 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: SignInFormData) => {
     try {
-      const { data: authData, error: signInError } = await supabase.auth.signInWithPassword({
+      const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      if (signInError) throw signInError;
+      if (error) throw error;
 
-      if (authData.user) {
-        const { data: profile, error: profileError } = await supabase
-          .from('profiles')
-          .select('*')
-          .eq('id', authData.user.id)
-          .maybeSingle();
-
-        if (profileError) {
-          console.error("Error fetching profile:", profileError);
-          throw profileError;
-        }
-
-        if (!profile) {
-          console.log("Creating profile for user:", authData.user.id);
-          const { error: createError } = await supabase
-            .from('profiles')
-            .insert([{
-              id: authData.user.id,
-              email: authData.user.email,
-              trial_start: new Date().toISOString(),
-              trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(),
-              subscription_status: 'trial',
-              role: 'staff',
-              currency_symbol: '$'
-            }])
-            .select()
-            .single();
-
-          if (createError) {
-            console.error("Error creating profile:", createError);
-            // Clean up the session if profile creation fails
-            await supabase.auth.signOut();
-            throw createError;
-          }
-        }
-
-        toast.success("Successfully signed in!");
-        navigate("/dashboard");
-      }
+      toast.success("Successfully signed in!");
+      navigate("/dashboard");
     } catch (error: any) {
       console.error("Sign in error:", error);
       toast.error(error.message || "Failed to sign in");
