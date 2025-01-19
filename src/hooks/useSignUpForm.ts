@@ -64,7 +64,19 @@ export const useSignUpForm = (onModeChange: (mode: 'signup' | 'signin' | 'reset'
 
       console.log('User created successfully:', authData.user.id);
 
-      const user = await handleSignUp(data);
+      const user = await handleSignUp({
+        email: data.email,
+        password: data.password,
+        fullName: data.fullName,
+        companyName: data.companyName,
+        companyAddress: data.companyAddress,
+        companyPhone: data.companyPhone,
+        companyWebsite: data.companyWebsite,
+        companyDescription: data.companyDescription,
+        position: data.position,
+        department: data.department,
+        phone: data.phone,
+      });
       
       if (user) {
         console.log("Signup successful, user:", user);
