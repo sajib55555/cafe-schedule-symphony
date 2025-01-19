@@ -4,37 +4,51 @@ import { differenceInDays } from "date-fns";
 import { TrialBanner } from "./layout/TrialBanner";
 import { NavigationBar } from "./layout/NavigationBar";
 import { toast } from "sonner";
+import { useNavigate } from "react-router-dom";
 
 export function Layout({ children }: { children: React.ReactNode }) {
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const navigate = useNavigate();
 
   useEffect(() => {
     const checkTrialStatus = async () => {
       try {
-        const { data: { session } } = await supabase.auth.getSession();
+        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        
+        if (sessionError) {
+          console.error('Session error:', sessionError);
+          navigate("/auth");
+          return;
+        }
+
         if (!session?.user) {
-          console.log('No session found, skipping trial status check');
+          console.log('No session found, redirecting to auth');
+          navigate("/auth");
           return;
         }
 
         console.log('Checking trial status for user:', session.user.id);
         
-        const { data: profile, error } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
           .eq('id', session.user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching profile:', error);
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          if (profileError.message?.includes('JWT expired')) {
+            navigate("/auth");
+            return;
+          }
           toast.error('Error checking subscription status');
           return;
         }
 
         if (!profile) {
           console.log('No profile found, creating new profile for:', session.user.email);
-          const { data: newProfile, error: createError } = await supabase
+          const { error: createError } = await supabase
             .from('profiles')
             .insert([{
               id: session.user.id,
@@ -44,21 +58,20 @@ export function Layout({ children }: { children: React.ReactNode }) {
               subscription_status: 'trial',
               role: 'staff',
               currency_symbol: '$'
-            }])
-            .select()
-            .maybeSingle();
+            }]);
 
           if (createError) {
             console.error('Error creating profile:', createError);
+            if (createError.message?.includes('JWT expired')) {
+              navigate("/auth");
+              return;
+            }
             toast.error('Error creating user profile');
             return;
           }
 
-          if (newProfile) {
-            setIsSubscribed(false);
-            const daysLeft = differenceInDays(new Date(newProfile.trial_end), new Date());
-            setTrialDaysLeft(Math.max(0, daysLeft));
-          }
+          setIsSubscribed(false);
+          setTrialDaysLeft(14);
           return;
         }
 
@@ -68,14 +81,18 @@ export function Layout({ children }: { children: React.ReactNode }) {
           const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
           setTrialDaysLeft(Math.max(0, daysLeft));
         }
-      } catch (error) {
+      } catch (error: any) {
         console.error('Error in checkTrialStatus:', error);
+        if (error.message?.includes('Failed to fetch') || error.message?.includes('JWT expired')) {
+          navigate("/auth");
+          return;
+        }
         toast.error('Error checking subscription status');
       }
     };
 
     checkTrialStatus();
-  }, [isSubscribed]);
+  }, [isSubscribed, navigate]);
 
   return (
     <div className="min-h-screen bg-[#FDF6E3]">
