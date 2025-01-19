@@ -15,13 +15,13 @@ const Auth = () => {
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       try {
-        // Get the current URL and hash parameters
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        const type = hashParams.get('type');
+        // Get the current URL
+        const url = new URL(window.location.href);
+        const accessToken = url.searchParams.get('access_token');
+        const refreshToken = url.searchParams.get('refresh_token');
+        const type = url.searchParams.get('type');
 
-        console.log('URL Hash Parameters:', {
+        console.log('URL Parameters:', {
           accessToken: accessToken ? 'present' : 'missing',
           refreshToken: refreshToken ? 'present' : 'missing',
           type
@@ -65,8 +65,10 @@ const Auth = () => {
           // Email confirmed successfully
           toast.success("Email verified successfully! You can now sign in.");
           
-          // Clear the URL hash and redirect
-          window.location.hash = '';
+          // Clear the URL parameters
+          window.history.replaceState({}, document.title, '/auth');
+          
+          // Redirect to dashboard
           navigate('/dashboard', { replace: true });
         }
       } catch (error: any) {
