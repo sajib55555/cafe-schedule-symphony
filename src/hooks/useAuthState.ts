@@ -20,6 +20,8 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
         }
 
         if (initialSession?.user) {
+          console.log('Checking profile for user:', initialSession.user.email);
+          
           // Verify profile exists
           const { data: profile, error: profileError } = await supabase
             .from('profiles')
@@ -29,16 +31,33 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
 
           if (profileError) {
             console.error('Error fetching profile:', profileError);
-            throw profileError;
-          }
-
-          if (!profile) {
-            console.error('Profile not found for user:', initialSession.user.id);
             await supabase.auth.signOut();
-            toast.error("User profile not found. Please contact support.");
+            toast.error("Error verifying user profile. Please try signing in again.");
             setSession(null);
             onSessionChange(null);
             return;
+          }
+
+          if (!profile) {
+            console.log('Creating profile for new user:', initialSession.user.email);
+            // Try to create profile if it doesn't exist
+            const { error: insertError } = await supabase
+              .from('profiles')
+              .insert([{ 
+                id: initialSession.user.id,
+                email: initialSession.user.email,
+                trial_start: new Date().toISOString(),
+                trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days trial
+              }]);
+
+            if (insertError) {
+              console.error('Error creating profile:', insertError);
+              await supabase.auth.signOut();
+              toast.error("Error creating user profile. Please contact support.");
+              setSession(null);
+              onSessionChange(null);
+              return;
+            }
           }
 
           setSession(initialSession);
@@ -59,6 +78,8 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
           }
 
           if (newSession?.user) {
+            console.log('Verifying profile on auth state change for:', newSession.user.email);
+            
             // Verify profile exists on auth state change
             const { data: profile, error: profileError } = await supabase
               .from('profiles')
@@ -68,16 +89,33 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
 
             if (profileError) {
               console.error('Error fetching profile:', profileError);
+              await supabase.auth.signOut();
+              toast.error("Error verifying user profile. Please try signing in again.");
+              setSession(null);
+              onSessionChange(null);
               return;
             }
 
             if (!profile) {
-              console.error('Profile not found for user:', newSession.user.id);
-              await supabase.auth.signOut();
-              toast.error("User profile not found. Please contact support.");
-              setSession(null);
-              onSessionChange(null);
-              return;
+              console.log('Creating profile for user on auth state change:', newSession.user.email);
+              // Try to create profile if it doesn't exist
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert([{ 
+                  id: newSession.user.id,
+                  email: newSession.user.email,
+                  trial_start: new Date().toISOString(),
+                  trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days trial
+                }]);
+
+              if (insertError) {
+                console.error('Error creating profile:', insertError);
+                await supabase.auth.signOut();
+                toast.error("Error creating user profile. Please contact support.");
+                setSession(null);
+                onSessionChange(null);
+                return;
+              }
             }
 
             setSession(newSession);
