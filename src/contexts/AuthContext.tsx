@@ -53,6 +53,8 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           if (event === 'USER_UPDATED' && newSession?.user?.email_confirmed_at) {
             console.log('Email confirmed successfully');
             toast.success('Email confirmed successfully! You can now sign in.');
+            // Redirect to sign in page after confirmation
+            window.location.href = '/auth';
           }
 
           if (newSession) {
@@ -71,7 +73,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           console.log('Processing authentication callback:', type);
           try {
             if (accessToken && refreshToken) {
-              const { error } = await supabase.auth.setSession({
+              const { data, error } = await supabase.auth.setSession({
                 access_token: accessToken,
                 refresh_token: refreshToken
               });
@@ -82,9 +84,9 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
               } else {
                 if (type === 'email_confirmation') {
                   toast.success('Email confirmed successfully! You can now sign in.');
+                  // Clear URL parameters and redirect to sign in
+                  window.history.replaceState({}, document.title, '/auth');
                 }
-                // Clear URL parameters after successful confirmation
-                window.history.replaceState({}, document.title, window.location.pathname);
               }
             }
           } catch (error) {
