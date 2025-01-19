@@ -9,42 +9,24 @@ export function LogoutButton({ className }: { className?: string }) {
 
   const handleLogout = async () => {
     try {
-      // First try to get the current session
-      const { data: { session } } = await supabase.auth.getSession();
+      // First clear local storage to ensure clean state
+      localStorage.clear();
       
-      if (session) {
-        // If we have a session, try to sign out locally first
-        await supabase.auth.signOut({ scope: 'local' });
-        
-        // Then attempt global sign out only if we had a valid session
-        try {
-          await supabase.auth.signOut({ scope: 'global' });
-        } catch (globalError: any) {
-          // Log but don't throw for global signout errors
-          console.log('Global sign out error (non-critical):', globalError);
-        }
-        
-        toast.success("Successfully logged out");
-      } else {
-        console.log('No active session found');
-      }
+      // Attempt local signout first
+      await supabase.auth.signOut({ scope: 'local' });
+      
+      // Log success message
+      console.log('Local session cleared successfully');
+      toast.success("Successfully logged out");
+      
     } catch (error: any) {
       console.error('Logout error:', error);
-      
-      // Attempt local signout regardless of error
-      try {
-        await supabase.auth.signOut({ scope: 'local' });
-      } catch (localError) {
-        console.error('Local signout error:', localError);
-      }
-      
-      // Only show error toast for non-session errors
+      // Only show error for non-session related issues
       if (!error.message?.includes('session_not_found')) {
         toast.error("An error occurred during logout");
       }
     } finally {
-      // Always clear local storage and redirect
-      localStorage.clear();
+      // Always redirect to auth page
       navigate("/auth");
     }
   };
