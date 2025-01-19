@@ -67,20 +67,30 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
           }
         });
 
-        // Parse URL hash for email confirmation
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const accessToken = hashParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token');
-        
-        if (accessToken && refreshToken) {
-          console.log('Found tokens in URL, setting session...');
-          const { error } = await supabase.auth.setSession({
-            access_token: accessToken,
-            refresh_token: refreshToken
-          });
-          
-          if (error) {
-            console.error('Error setting session:', error);
+        // Handle URL parameters for email confirmation
+        const params = new URLSearchParams(window.location.search);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
+
+        if (type === 'email_confirmation' && accessToken && refreshToken) {
+          console.log('Found email confirmation tokens, setting session...');
+          try {
+            const { error } = await supabase.auth.setSession({
+              access_token: accessToken,
+              refresh_token: refreshToken
+            });
+            
+            if (error) {
+              console.error('Error setting session:', error);
+              toast.error('Failed to confirm email. Please try again.');
+            } else {
+              toast.success('Email confirmed successfully! You can now sign in.');
+              // Clear URL parameters after successful confirmation
+              window.history.replaceState({}, document.title, window.location.pathname);
+            }
+          } catch (error) {
+            console.error('Error during email confirmation:', error);
             toast.error('Failed to confirm email. Please try again.');
           }
         }
