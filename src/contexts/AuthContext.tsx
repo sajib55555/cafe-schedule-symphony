@@ -19,12 +19,14 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
   useEffect(() => {
     checkSession();
-    checkAccessStatus();
     
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((_event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (_event, session) => {
       setSession(session);
       if (session) {
-        checkAccessStatus();
+        // Add a small delay to ensure auth.users record is created
+        setTimeout(() => {
+          checkAccessStatus();
+        }, 1000);
       } else {
         setHasAccess(false);
       }
@@ -36,8 +38,19 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
   }, []);
 
   const checkSession = async () => {
-    const { data: { session } } = await supabase.auth.getSession();
-    setSession(session);
+    try {
+      const { data: { session } } = await supabase.auth.getSession();
+      setSession(session);
+      if (session) {
+        // Add a small delay to ensure auth.users record is created
+        setTimeout(() => {
+          checkAccessStatus();
+        }, 1000);
+      }
+    } catch (error) {
+      console.error('Error checking session:', error);
+      toast.error('Error checking session status');
+    }
   };
 
   const checkAccessStatus = async () => {
@@ -47,6 +60,17 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session?.user) {
         console.log('Checking access status for user:', session.user.email);
         
+        // First, check if the user exists in auth.users
+        const { data: authUser, error: authError } = await supabase.auth.getUser();
+        
+        if (authError || !authUser.user) {
+          console.error('Error getting auth user:', authError);
+          toast.error('Error verifying user authentication');
+          setLoading(false);
+          return;
+        }
+
+        // Now check for profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('trial_start, trial_end, subscription_status, company_id')
@@ -62,27 +86,34 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
 
         if (!profile) {
           console.log('No profile found, creating one...');
-          const { error: createError } = await supabase
-            .from('profiles')
-            .insert([{
-              id: session.user.id,
-              email: session.user.email,
-              full_name: session.user.user_metadata?.full_name,
-              trial_start: new Date().toISOString(),
-              trial_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-              subscription_status: 'trial'
-            }]);
+          try {
+            const { error: createError } = await supabase
+              .from('profiles')
+              .insert([{
+                id: session.user.id,
+                email: session.user.email,
+                full_name: session.user.user_metadata?.full_name,
+                trial_start: new Date().toISOString(),
+                trial_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                subscription_status: 'trial'
+              }]);
 
-          if (createError) {
-            console.error('Error creating profile:', createError);
-            toast.error('Error creating user profile');
+            if (createError) {
+              console.error('Error creating profile:', createError);
+              toast.error('Error creating user profile');
+              setLoading(false);
+              return;
+            }
+
+            // Set initial access state for new profile
+            setHasAccess(true);
+            setTrialEnded(false);
+          } catch (error) {
+            console.error('Error in profile creation:', error);
+            toast.error('Failed to create user profile');
             setLoading(false);
             return;
           }
-
-          // Set initial access state for new profile
-          setHasAccess(true);
-          setTrialEnded(false);
         } else {
           const now = new Date();
           const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
