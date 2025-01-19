@@ -39,6 +39,17 @@ export const handleSignUp = async (data: SignUpData) => {
       return { error: new Error("Failed to create account") };
     }
 
+    // Sign in the user immediately after signup
+    const { error: signInError } = await supabase.auth.signInWithPassword({
+      email: data.email,
+      password: data.password,
+    });
+
+    if (signInError) {
+      console.error("Sign in error:", signInError);
+      return { error: signInError };
+    }
+
     // Create company record
     const { data: company, error: companyError } = await supabase
       .from('companies')
