@@ -9,33 +9,43 @@ export function LogoutButton({ className }: { className?: string }) {
 
   const handleLogout = async () => {
     try {
-      // First clear any local session data
-      await supabase.auth.signOut({ scope: 'local' });
+      // First try to get the current session
+      const { data: { session } } = await supabase.auth.getSession();
       
-      try {
-        // Then attempt to clear global session
-        await supabase.auth.signOut({ scope: 'global' });
-      } catch (globalError) {
-        // If global signout fails, that's okay - we've already cleared local session
-        console.log('Global sign out failed, but local session was cleared:', globalError);
+      if (session) {
+        // If we have a session, try to sign out locally first
+        await supabase.auth.signOut({ scope: 'local' });
+        
+        // Then attempt global sign out only if we had a valid session
+        try {
+          await supabase.auth.signOut({ scope: 'global' });
+        } catch (globalError: any) {
+          // Log but don't throw for global signout errors
+          console.log('Global sign out error (non-critical):', globalError);
+        }
+        
+        toast.success("Successfully logged out");
+      } else {
+        console.log('No active session found');
       }
-
-      console.log('Successfully signed out');
-      toast.success("Successfully logged out");
-      
-      // Always navigate to auth page after clearing session
-      navigate("/auth");
     } catch (error: any) {
-      console.error("Error during logout:", error);
+      console.error('Logout error:', error);
       
-      // Even if there's an error, clear local session and redirect
-      await supabase.auth.signOut({ scope: 'local' });
-      navigate("/auth");
+      // Attempt local signout regardless of error
+      try {
+        await supabase.auth.signOut({ scope: 'local' });
+      } catch (localError) {
+        console.error('Local signout error:', localError);
+      }
       
-      // Show error toast only if it's not a session_not_found error
+      // Only show error toast for non-session errors
       if (!error.message?.includes('session_not_found')) {
         toast.error("An error occurred during logout");
       }
+    } finally {
+      // Always clear local storage and redirect
+      localStorage.clear();
+      navigate("/auth");
     }
   };
 
