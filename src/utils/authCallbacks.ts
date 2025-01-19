@@ -2,60 +2,53 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 
 export const handleEmailConfirmation = async () => {
-  toast.success('Email confirmed successfully! You can now sign in.');
-  window.history.replaceState({}, document.title, '/auth');
+  try {
+    console.log('Handling email confirmation');
+    toast.success('Email confirmed successfully! You can now sign in.');
+    window.location.href = '/auth';
+  } catch (error) {
+    console.error('Error during email confirmation:', error);
+    toast.error('Failed to confirm email. Please try again.');
+  }
 };
 
-export const handlePasswordReset = async (password: string | null) => {
+export const handlePasswordReset = async (accessToken: string) => {
   try {
-    const { error: updateError } = await supabase.auth.updateUser({
-      password: password || ''
-    });
-
-    if (updateError) {
-      console.error('Error updating password:', updateError);
-      toast.error('Failed to update password. Please try again.');
-      return false;
+    console.log('Handling password reset with access token');
+    const { error } = await supabase.auth.getSession();
+    
+    if (error) {
+      console.error('Error getting session:', error);
+      throw error;
     }
 
-    toast.success('Password updated successfully! You can now sign in.');
-    window.location.href = '/auth';
+    // Redirect to password reset form
+    window.location.href = `/auth?type=recovery&access_token=${accessToken}`;
     return true;
   } catch (error) {
     console.error('Error during password reset:', error);
-    toast.error('Failed to update password. Please try again.');
+    toast.error('Failed to process password reset. Please try again.');
     return false;
   }
 };
 
 export const handleAuthCallback = async (
   accessToken: string | null,
-  refreshToken: string | null,
   type: string | null
 ) => {
-  if (!accessToken || !refreshToken) {
-    console.error('Missing tokens in auth callback');
+  console.log('Handling auth callback:', { type });
+  
+  if (!accessToken) {
+    console.error('Missing access token in auth callback');
+    toast.error('Authentication failed. Please try again.');
     return;
   }
 
   try {
-    const { data, error } = await supabase.auth.setSession({
-      access_token: accessToken,
-      refresh_token: refreshToken
-    });
-    
-    if (error) {
-      console.error('Error setting session:', error);
-      toast.error('Authentication failed. Please try again.');
-      return;
-    }
-
-    if (type === 'email_confirmation') {
+    if (type === 'recovery') {
+      await handlePasswordReset(accessToken);
+    } else if (type === 'email_confirmation') {
       await handleEmailConfirmation();
-    } else if (type === 'recovery') {
-      const params = new URLSearchParams(window.location.search);
-      const password = params.get('password');
-      await handlePasswordReset(password);
     }
   } catch (error) {
     console.error('Error during authentication callback:', error);

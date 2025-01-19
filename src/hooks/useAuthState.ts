@@ -45,11 +45,10 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
         const params = new URLSearchParams(window.location.search);
         const type = params.get('type');
         const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
 
-        if ((type === 'recovery' || type === 'signup' || type === 'email_confirmation') && accessToken && refreshToken) {
+        if ((type === 'recovery' || type === 'signup' || type === 'email_confirmation') && accessToken) {
           console.log('Processing authentication callback:', type);
-          await handleAuthCallback(accessToken, refreshToken, type);
+          await handleAuthCallback(accessToken, type);
         }
 
         return () => {
