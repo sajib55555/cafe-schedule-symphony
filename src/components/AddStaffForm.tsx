@@ -9,14 +9,16 @@ import { useState } from "react";
 import { useCompanyId } from "@/hooks/useCompanyId";
 import { StaffFormFields } from "./staff/StaffFormFields";
 import { staffFormSchema, type StaffFormData } from "@/utils/staffSchema";
+import { useStaff } from "@/contexts/StaffContext";
 
 interface AddStaffFormProps {
   onClose: () => void;
 }
 
 export function AddStaffForm({ onClose }: AddStaffFormProps) {
-  const { companyId } = useCompanyId();
-  const [isLoading, setIsLoading] = useState(false);
+  const { companyId, isLoading: isLoadingCompany } = useCompanyId();
+  const [isSubmitting, setIsSubmitting] = useState(false);
+  const { setStaff } = useStaff();
 
   const form = useForm<StaffFormData>({
     resolver: zodResolver(staffFormSchema),
@@ -35,7 +37,7 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
       return;
     }
 
-    setIsLoading(true);
+    setIsSubmitting(true);
     try {
       console.log('Submitting staff data:', data);
 
@@ -62,16 +64,24 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
         return;
       }
 
-      console.log('Staff member added successfully:', newStaff);
-      toast.success('Staff member added successfully');
-      onClose();
+      if (newStaff) {
+        console.log('Staff member added successfully:', newStaff);
+        setStaff(currentStaff => [...currentStaff, newStaff]);
+        toast.success('Staff member added successfully');
+        form.reset();
+        onClose();
+      }
     } catch (error) {
       console.error('Error in onSubmit:', error);
       toast.error('An unexpected error occurred');
     } finally {
-      setIsLoading(false);
+      setIsSubmitting(false);
     }
   };
+
+  if (isLoadingCompany) {
+    return <div className="p-4">Loading...</div>;
+  }
 
   return (
     <Form {...form}>
@@ -82,8 +92,8 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading ? "Adding..." : "Add Staff Member"}
+          <Button type="submit" disabled={isSubmitting}>
+            {isSubmitting ? "Adding..." : "Add Staff Member"}
           </Button>
         </div>
       </form>

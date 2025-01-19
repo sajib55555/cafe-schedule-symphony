@@ -19,6 +19,7 @@ export function WeeklySchedule() {
   const [selectedStaff, setSelectedStaff] = useState<string>('');
   const [selectedDate, setSelectedDate] = useState<string>('');
   const [isPdfGenerating, setIsPdfGenerating] = useState(false);
+  const [isAddStaffOpen, setIsAddStaffOpen] = useState(false);
   const [newShift, setNewShift] = useState<{
     startTime: string;
     endTime: string;
@@ -78,7 +79,7 @@ export function WeeklySchedule() {
           isMobile={isMobile}
         />
         <div className="flex items-center gap-2">
-          <Dialog>
+          <Dialog open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
             <DialogTrigger asChild>
               <Button variant="outline" className="whitespace-nowrap">
                 <UserPlus className="mr-2 h-4 w-4" />
@@ -86,12 +87,7 @@ export function WeeklySchedule() {
               </Button>
             </DialogTrigger>
             <DialogContent className="sm:max-w-[425px]">
-              <AddStaffForm onClose={() => {
-                const closeButton = document.querySelector('[aria-label="Close"]');
-                if (closeButton instanceof HTMLElement) {
-                  closeButton.click();
-                }
-              }} />
+              <AddStaffForm onClose={() => setIsAddStaffOpen(false)} />
             </DialogContent>
           </Dialog>
           <ScheduleActions
