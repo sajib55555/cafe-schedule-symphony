@@ -21,7 +21,7 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/auth" element={<Auth />} />
+      <Route path="/auth/*" element={<Auth />} />
       <Route
         path="/dashboard"
         element={

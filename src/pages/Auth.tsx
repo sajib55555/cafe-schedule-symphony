@@ -1,76 +1,33 @@
-import { useEffect } from "react";
-import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { supabase } from "@/integrations/supabase/client";
-import { useNavigate, useLocation } from "react-router-dom";
-import { Alert, AlertDescription } from "@/components/ui/alert";
-import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { SignInForm } from "@/components/SignInForm";
+import { SignUpForm } from "@/components/SignUpForm";
+import { ResetPasswordForm } from "@/components/ResetPasswordForm";
 
-export default function Auth() {
-  const navigate = useNavigate();
-  const location = useLocation();
-  const { toast } = useToast();
-  const mode = (location.state as { mode?: 'signin' | 'signup' })?.mode || 'signin';
+type AuthMode = 'signin' | 'signup' | 'reset';
 
-  useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      console.log('Auth state changed:', event, session?.user?.email);
-      
-      if (event === 'SIGNED_IN') {
-        toast({
-          title: "Welcome!",
-          description: "You have successfully signed in.",
-        });
-        navigate('/dashboard');
-      }
-
-      if (event === 'SIGNED_OUT') {
-        toast({
-          title: "Signed out",
-          description: "You have been signed out successfully.",
-        });
-        navigate('/');
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate, toast]);
+const Auth = () => {
+  const [mode, setMode] = useState<AuthMode>('signin');
 
   return (
-    <div className="min-h-screen bg-[#FDF6E3] flex items-center justify-center p-4">
-      <div className="w-full max-w-md space-y-4">
-        <div className="text-center mb-8">
-          <h1 className="text-2xl font-bold">
-            {mode === 'signup' ? 'Create your account' : 'Welcome back'}
-          </h1>
-          <p className="text-gray-600 mt-2">
-            {mode === 'signup' 
-              ? 'Start managing your team effectively'
-              : 'Sign in to continue to your dashboard'}
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold">Welcome to Café Schedule Manager</h1>
+          <p className="mt-2 text-muted-foreground">
+            {mode === 'signin' ? 'Sign in to your account' : 
+             mode === 'signup' ? 'Start your free 30-day trial' : 
+             'Reset your password'}
           </p>
         </div>
 
-        <div className="bg-white p-6 rounded-lg shadow-md">
-          <SupabaseAuth
-            supabaseClient={supabase}
-            appearance={{
-              theme: ThemeSupa,
-              variables: {
-                default: {
-                  colors: {
-                    brand: '#A5B81D',
-                    brandAccent: '#E67E22',
-                  },
-                },
-              },
-            }}
-            view={mode === 'signup' ? 'sign_up' : 'sign_in'}
-            providers={['google']}
-          />
+        <div className="bg-card shadow-lg rounded-lg p-6">
+          {mode === 'signin' && <SignInForm onModeChange={setMode} />}
+          {mode === 'signup' && <SignUpForm onModeChange={setMode} />}
+          {mode === 'reset' && <ResetPasswordForm onModeChange={setMode} />}
         </div>
       </div>
     </div>
   );
-}
+};
+
+export default Auth;

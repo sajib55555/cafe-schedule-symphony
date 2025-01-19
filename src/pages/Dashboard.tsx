@@ -18,7 +18,7 @@ export default function Dashboard() {
                   Add Staff
                 </Button>
               </DialogTrigger>
-              <DialogContent className="sm:max-w-[375px] max-h-[90vh] overflow-y-auto">
+              <DialogContent className="sm:max-w-[425px]">
                 <AddStaffForm onClose={() => {
                   const closeButton = document.querySelector('[aria-label="Close"]');
                   if (closeButton instanceof HTMLElement) {
