@@ -12,6 +12,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { z } from "zod";
 import { useEffect, useState } from "react";
+import { DialogTitle } from "@/components/ui/dialog";
 
 const staffFormSchema = z.object({
   name: z.string().min(2, "Name must be at least 2 characters"),
@@ -31,6 +32,7 @@ interface AddStaffFormProps {
 
 export function AddStaffForm({ onClose }: AddStaffFormProps) {
   const [companyId, setCompanyId] = useState<string | null>(null);
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<StaffFormData>({
     resolver: zodResolver(staffFormSchema),
@@ -64,7 +66,7 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
           .from('profiles')
           .select('company_id')
           .eq('id', session.user.id)
-          .maybeSingle();
+          .single();
 
         if (profileError) {
           console.error('Profile fetch error:', profileError);
@@ -74,7 +76,7 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
 
         if (!profile?.company_id) {
           console.error('No company ID found');
-          toast.error('Company information not found');
+          toast.error('Please create a company first');
           return;
         }
 
@@ -90,14 +92,14 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
   }, []);
 
   const onSubmit = async (data: StaffFormData) => {
+    if (!companyId) {
+      toast.error('Please create a company first');
+      return;
+    }
+
+    setIsLoading(true);
     try {
       console.log('Submitting staff data:', data);
-      
-      if (!companyId) {
-        console.error('No company ID available');
-        toast.error('Company information not found');
-        return;
-      }
 
       const { data: newStaff, error: insertError } = await supabase
         .from('staff')
@@ -128,11 +130,14 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
     } catch (error) {
       console.error('Error in onSubmit:', error);
       toast.error('An unexpected error occurred');
+    } finally {
+      setIsLoading(false);
     }
   };
 
   return (
     <Form {...form}>
+      <DialogTitle className="mb-4">Add New Staff Member</DialogTitle>
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
         <FormField
           control={form.control}
@@ -203,7 +208,9 @@ export function AddStaffForm({ onClose }: AddStaffFormProps) {
           <Button type="button" variant="outline" onClick={onClose}>
             Cancel
           </Button>
-          <Button type="submit">Add Staff Member</Button>
+          <Button type="submit" disabled={isLoading}>
+            {isLoading ? "Adding..." : "Add Staff Member"}
+          </Button>
         </div>
       </form>
     </Form>
