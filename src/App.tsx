@@ -6,7 +6,6 @@ import { ProtectedRoute } from "./components/auth/ProtectedRoute";
 import { useAuth } from "./contexts/AuthContext";
 import { Layout } from "./components/Layout";
 import LandingPage from "./pages/LandingPage";
-import Auth from "./pages/Auth";
 import Settings from "./pages/Settings";
 import WagesAnalysis from "./pages/WagesAnalysis";
 import Tasks from "./pages/Tasks";
@@ -21,7 +20,6 @@ function AppRoutes() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
-      <Route path="/auth/*" element={<Auth />} />
       <Route
         path="/dashboard"
         element={
