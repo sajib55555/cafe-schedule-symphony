@@ -7,6 +7,7 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SignInFields } from "./signin/SignInFields";
 import { SignInFormData, signInFormSchema } from "./signin/types";
+import { AuthError } from "@supabase/supabase-js";
 
 export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
@@ -19,20 +20,64 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     },
   });
 
+  const handleAuthError = (error: AuthError) => {
+    console.error('Auth error:', error);
+    switch (error.message) {
+      case 'Invalid login credentials':
+        return 'Invalid email or password';
+      case 'Email not confirmed':
+        return 'Please verify your email before signing in';
+      default:
+        return error.message;
+    }
+  };
+
   const onSubmit = async (data: SignInFormData) => {
     try {
-      const { error } = await supabase.auth.signInWithPassword({
+      console.log('Attempting to sign in with:', data.email);
+      
+      const { data: authData, error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        console.error('Sign in error:', error);
+        toast.error(handleAuthError(error));
+        return;
+      }
 
+      if (!authData.session) {
+        console.error('No session after sign in');
+        toast.error('Failed to establish session');
+        return;
+      }
+
+      // Get user's profile to ensure it exists
+      const { data: profile, error: profileError } = await supabase
+        .from('profiles')
+        .select('*')
+        .eq('id', authData.session.user.id)
+        .maybeSingle();
+
+      if (profileError) {
+        console.error('Profile fetch error:', profileError);
+        toast.error('Error fetching user profile');
+        return;
+      }
+
+      if (!profile) {
+        console.error('No profile found for user');
+        toast.error('User profile not found');
+        return;
+      }
+
+      console.log('Successfully signed in and verified profile');
       toast.success("Successfully signed in!");
       navigate("/dashboard");
     } catch (error: any) {
-      console.error("Sign in error:", error);
-      toast.error(error.message || "Failed to sign in");
+      console.error("Unexpected sign in error:", error);
+      toast.error("An unexpected error occurred");
     }
   };
 
