@@ -98,7 +98,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         .from('staff')
         .insert([staffData])
         .select()
-        .single();
+        .maybeSingle();
 
       if (insertError) {
         console.error('Error inserting staff:', insertError);
