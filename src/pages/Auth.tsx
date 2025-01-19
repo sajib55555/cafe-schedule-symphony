@@ -18,28 +18,27 @@ const Auth = () => {
         console.log('Starting email confirmation process...');
         console.log('Current URL:', window.location.href);
         
-        // Try both hash and search parameters
-        const hashParams = new URLSearchParams(window.location.hash.substring(1));
-        const urlParams = new URLSearchParams(window.location.search);
+        // Get hash parameters (remove the # symbol)
+        const hash = window.location.hash.substring(1);
+        console.log('Hash:', hash);
         
-        // Check both locations for tokens
-        const accessToken = hashParams.get('access_token') || urlParams.get('access_token');
-        const refreshToken = hashParams.get('refresh_token') || urlParams.get('refresh_token');
-        const type = hashParams.get('type') || urlParams.get('type');
+        // Parse the hash string manually
+        const params = new URLSearchParams(hash);
+        const accessToken = params.get('access_token');
+        const refreshToken = params.get('refresh_token');
+        const type = params.get('type');
 
-        console.log('Token check:', {
+        console.log('Parsed parameters:', {
           accessToken: accessToken ? 'present' : 'missing',
           refreshToken: refreshToken ? 'present' : 'missing',
           type,
-          hashParams: Object.fromEntries(hashParams),
-          urlParams: Object.fromEntries(urlParams)
+          allParams: Object.fromEntries(params)
         });
 
-        // Check if this is an email confirmation
         if (type === 'signup' && accessToken && refreshToken) {
-          console.log('Processing email confirmation...');
+          console.log('Valid signup confirmation detected');
 
-          // Set the session with the tokens
+          // Set the session
           const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -50,16 +49,11 @@ const Auth = () => {
             throw sessionError;
           }
 
-          if (!sessionData.session) {
-            console.error('No session established after confirmation');
-            throw new Error('No session established after confirmation');
-          }
+          console.log('Session established:', sessionData);
 
-          console.log('Session established successfully');
-
-          // Get user details to confirm verification
+          // Get user details
           const { data: { user }, error: userError } = await supabase.auth.getUser();
-          
+
           if (userError) {
             console.error('User error:', userError);
             throw userError;
@@ -72,22 +66,22 @@ const Auth = () => {
 
           console.log('User verified successfully:', user.email);
 
-          // Email confirmed successfully
-          toast.success("Email verified successfully! You can now sign in.");
-          
-          // Clear both hash and search parameters
-          window.history.replaceState({}, document.title, '/auth');
-          
+          // Clear hash
+          window.location.hash = '';
+
+          // Show success message
+          toast.success("Email verified successfully! Redirecting to dashboard...");
+
           // Redirect to dashboard
-          navigate('/dashboard', { replace: true });
+          setTimeout(() => {
+            navigate('/dashboard', { replace: true });
+          }, 1500);
         } else {
           console.log('Not a signup confirmation or missing tokens');
         }
       } catch (error: any) {
         console.error('Error during email confirmation:', error);
         toast.error("Failed to verify email. Please try again or contact support.");
-        // Stay on auth page but clear URL parameters
-        window.history.replaceState({}, document.title, '/auth');
       }
     };
 
