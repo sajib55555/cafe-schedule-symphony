@@ -14,22 +14,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
   useEffect(() => {
     const checkTrialStatus = async () => {
       try {
-        const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+        const { data: { session } } = await supabase.auth.getSession();
         
-        if (sessionError) {
-          console.error('Session error:', sessionError);
-          navigate("/auth");
-          return;
-        }
-
         if (!session?.user) {
           console.log('No session found, redirecting to auth');
           navigate("/auth");
           return;
         }
 
-        console.log('Checking trial status for user:', session.user.id);
-        
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -39,15 +31,14 @@ export function Layout({ children }: { children: React.ReactNode }) {
         if (profileError) {
           console.error('Error fetching profile:', profileError);
           if (profileError.message?.includes('JWT expired')) {
+            await supabase.auth.signOut();
             navigate("/auth");
-            return;
           }
-          toast.error('Error checking subscription status');
           return;
         }
 
         if (!profile) {
-          console.log('No profile found, creating new profile for:', session.user.email);
+          console.log('No profile found, creating new profile');
           const { error: createError } = await supabase
             .from('profiles')
             .insert([{
@@ -62,10 +53,6 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
           if (createError) {
             console.error('Error creating profile:', createError);
-            if (createError.message?.includes('JWT expired')) {
-              navigate("/auth");
-              return;
-            }
             toast.error('Error creating user profile');
             return;
           }
@@ -83,7 +70,8 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }
       } catch (error: any) {
         console.error('Error in checkTrialStatus:', error);
-        if (error.message?.includes('Failed to fetch') || error.message?.includes('JWT expired')) {
+        if (error.message?.includes('JWT expired')) {
+          await supabase.auth.signOut();
           navigate("/auth");
           return;
         }

@@ -9,14 +9,12 @@ export function LogoutButton({ className }: { className?: string }) {
 
   const handleLogout = async () => {
     try {
-      // First clear local storage to ensure clean state
+      // Clear local storage first
       localStorage.clear();
       
-      // Attempt local signout first
-      await supabase.auth.signOut({ scope: 'local' });
+      // Simple local signout
+      await supabase.auth.signOut();
       
-      // Log success message
-      console.log('Local session cleared successfully');
       toast.success("Successfully logged out");
       
     } catch (error: any) {
