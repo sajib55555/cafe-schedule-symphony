@@ -66,6 +66,39 @@ const Auth = () => {
           throw new Error('No user found after verification');
         }
 
+        // Check if profile exists using maybeSingle() instead of single()
+        const { data: profile, error: profileError } = await supabase
+          .from('profiles')
+          .select('*')
+          .eq('id', user.id)
+          .maybeSingle();
+
+        if (profileError) {
+          console.error('Profile error:', profileError);
+          throw profileError;
+        }
+
+        // If no profile exists, create one
+        if (!profile) {
+          const { error: insertError } = await supabase
+            .from('profiles')
+            .insert([
+              {
+                id: user.id,
+                email: user.email,
+                full_name: user.user_metadata?.full_name,
+                trial_start: new Date().toISOString(),
+                trial_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+                subscription_status: 'trial'
+              }
+            ]);
+
+          if (insertError) {
+            console.error('Error creating profile:', insertError);
+            throw insertError;
+          }
+        }
+
         console.log('User verified successfully:', user.email);
         
         // Clean up URL
