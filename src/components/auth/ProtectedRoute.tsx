@@ -43,7 +43,9 @@ export const ProtectedRoute = ({
               subscription_status: 'trial',
               role: 'staff',
               currency_symbol: '$'
-            }]);
+            }])
+            .select()
+            .maybeSingle();
 
           if (createError) {
             console.error('Error creating profile:', createError);

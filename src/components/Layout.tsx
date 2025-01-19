@@ -42,7 +42,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
                 currency_symbol: '$'
               }])
               .select()
-              .single();
+              .maybeSingle();
 
             if (createError) {
               console.error('Error creating profile:', createError);
@@ -50,9 +50,11 @@ export function Layout({ children }: { children: React.ReactNode }) {
               return;
             }
 
-            setIsSubscribed(false);
-            const daysLeft = differenceInDays(new Date(newProfile.trial_end), new Date());
-            setTrialDaysLeft(Math.max(0, daysLeft));
+            if (newProfile) {
+              setIsSubscribed(false);
+              const daysLeft = differenceInDays(new Date(newProfile.trial_end), new Date());
+              setTrialDaysLeft(Math.max(0, daysLeft));
+            }
             return;
           }
 
