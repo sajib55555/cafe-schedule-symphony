@@ -24,31 +24,31 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
   const { toast } = useToast();
 
   const handleAddEmployee = async () => {
-    if (!session?.user?.id) {
-      toast({
-        title: "Error",
-        description: "You must be logged in to add staff members",
-        variant: "destructive",
-      });
-      return;
-    }
-
-    if (!newEmployee.name || newEmployee.roles.length === 0 || !newEmployee.email || !newEmployee.phone) {
-      toast({
-        title: "Error",
-        description: "Please fill in all required fields and select at least one role",
-        variant: "destructive",
-      });
-      return;
-    }
-
     try {
+      if (!session?.user?.id) {
+        toast({
+          title: "Error",
+          description: "You must be logged in to add staff members",
+          variant: "destructive",
+        });
+        return;
+      }
+
+      if (!newEmployee.name || newEmployee.roles.length === 0 || !newEmployee.email || !newEmployee.phone) {
+        toast({
+          title: "Error",
+          description: "Please fill in all required fields and select at least one role",
+          variant: "destructive",
+        });
+        return;
+      }
+
       // First get the user's company_id
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Error fetching company ID:', profileError);
@@ -76,13 +76,16 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           phone: newEmployee.phone,
           availability: newEmployee.availability,
           hours: newEmployee.hours,
-          hourly_pay: newEmployee.hourly_pay,
+          hourly_pay: parseFloat(newEmployee.hourly_pay.toString()) || 0,
           company_id: profileData.company_id
         }])
         .select()
         .single();
 
-      if (insertError) throw insertError;
+      if (insertError) {
+        console.error('Insert error:', insertError);
+        throw insertError;
+      }
 
       if (insertedStaff) {
         setStaff([...staff, insertedStaff]);
@@ -174,8 +177,8 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           type="number"
           min="0"
           step="0.01"
-          value={newEmployee.hourly_pay}
-          onChange={(e) => setNewEmployee({ ...newEmployee, hourly_pay: parseFloat(e.target.value) })}
+          value={newEmployee.hourly_pay || ''}
+          onChange={(e) => setNewEmployee({ ...newEmployee, hourly_pay: parseFloat(e.target.value) || 0 })}
           placeholder="Enter hourly pay rate"
         />
       </div>
