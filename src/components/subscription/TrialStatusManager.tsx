@@ -2,6 +2,7 @@ import { useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
 import { differenceInDays } from "date-fns";
 import { TrialBanner } from "../layout/TrialBanner";
+import { toast } from "sonner";
 
 export function TrialStatusManager() {
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
@@ -9,22 +10,33 @@ export function TrialStatusManager() {
 
   useEffect(() => {
     const checkTrialStatus = async () => {
-      const { data: { session } } = await supabase.auth.getSession();
-      if (session?.user) {
-        const { data: profile } = await supabase
-          .from('profiles')
-          .select('trial_start, trial_end, subscription_status')
-          .eq('id', session.user.id)
-          .maybeSingle();
+      try {
+        const { data: { session } } = await supabase.auth.getSession();
+        if (session?.user) {
+          const { data: profile, error } = await supabase
+            .from('profiles')
+            .select('trial_start, trial_end, subscription_status')
+            .eq('id', session.user.id)
+            .maybeSingle();
 
-        if (profile) {
-          setIsSubscribed(profile.subscription_status === 'active');
-          
-          if (!isSubscribed && profile.trial_end) {
-            const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
-            setTrialDaysLeft(Math.max(0, daysLeft));
+          if (error) {
+            console.error('Error fetching profile:', error);
+            toast.error('Error checking trial status');
+            return;
+          }
+
+          if (profile) {
+            setIsSubscribed(profile.subscription_status === 'active');
+            
+            if (!isSubscribed && profile.trial_end) {
+              const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
+              setTrialDaysLeft(Math.max(0, daysLeft));
+            }
           }
         }
+      } catch (error) {
+        console.error('Error checking trial status:', error);
+        toast.error('Error checking trial status');
       }
     };
 

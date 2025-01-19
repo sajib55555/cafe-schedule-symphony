@@ -26,7 +26,6 @@ export function SessionManager() {
           return;
         }
 
-        // Then attempt to fetch the profile
         const { data: profile, error: profileError } = await supabase
           .from('profiles')
           .select('*')
@@ -48,7 +47,6 @@ export function SessionManager() {
           return;
         }
 
-        // If no profile exists, create one
         if (!profile) {
           console.log('No profile found, creating new profile');
           const { error: createError } = await supabase
