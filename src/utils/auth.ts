@@ -77,19 +77,24 @@ export const handleSignUp = async (data: SignUpData) => {
 
     if (profileError) {
       console.error("Profile update error:", profileError);
+      // If profile update fails, attempt to delete the company
+      const { error: deleteCompanyError } = await supabase
+        .from('companies')
+        .delete()
+        .eq('id', company.id);
+      
+      if (deleteCompanyError) {
+        console.error("Failed to clean up company after profile error:", deleteCompanyError);
+      }
       throw profileError;
     }
 
     console.log("Profile updated successfully");
     return authData.user;
   } catch (error) {
-    // If anything fails after user creation, we should clean up
-    if (authData.user) {
-      const { error: deleteError } = await supabase.auth.admin.deleteUser(authData.user.id);
-      if (deleteError) {
-        console.error("Failed to clean up user after error:", deleteError);
-      }
-    }
+    // Instead of trying to delete the user (which requires admin rights),
+    // we'll let the cleanup happen naturally when the email isn't confirmed
+    console.error("Error during sign up:", error);
     throw error;
   }
 };
