@@ -7,10 +7,7 @@ import { useSchedule } from './schedule/useSchedule';
 import { useShiftActions } from './schedule/useShiftActions';
 import { ScheduleActions } from './schedule/ScheduleActions';
 import { useIsMobile } from '@/hooks/use-mobile';
-import { Button } from "@/components/ui/button";
-import { Dialog, DialogContent, DialogTrigger } from "@/components/ui/dialog";
-import { UserPlus } from "lucide-react";
-import { AddStaffForm } from "@/components/AddStaffForm";
+import { AddStaffDialog } from "./staff/AddStaffDialog";
 
 export function WeeklySchedule() {
   const scheduleRef = useRef<HTMLDivElement>(null);
@@ -79,17 +76,10 @@ export function WeeklySchedule() {
           isMobile={isMobile}
         />
         <div className="flex items-center gap-2">
-          <Dialog open={isAddStaffOpen} onOpenChange={setIsAddStaffOpen}>
-            <DialogTrigger asChild>
-              <Button variant="outline" className="whitespace-nowrap">
-                <UserPlus className="mr-2 h-4 w-4" />
-                Add Staff
-              </Button>
-            </DialogTrigger>
-            <DialogContent className="sm:max-w-[425px]">
-              <AddStaffForm onClose={() => setIsAddStaffOpen(false)} />
-            </DialogContent>
-          </Dialog>
+          <AddStaffDialog 
+            isOpen={isAddStaffOpen}
+            onOpenChange={setIsAddStaffOpen}
+          />
           <ScheduleActions
             handleSaveSchedule={handleSaveSchedule}
             isSaving={isSaving}
