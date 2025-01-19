@@ -47,7 +47,8 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
                 id: initialSession.user.id,
                 email: initialSession.user.email,
                 trial_start: new Date().toISOString(),
-                trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days trial
+                trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
+                subscription_status: 'trial'
               }]);
 
             if (insertError) {
@@ -105,7 +106,8 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
                   id: newSession.user.id,
                   email: newSession.user.email,
                   trial_start: new Date().toISOString(),
-                  trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString() // 14 days trial
+                  trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
+                  subscription_status: 'trial'
                 }]);
 
               if (insertError) {
