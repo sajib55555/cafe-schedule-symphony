@@ -4,11 +4,6 @@ interface SignUpData {
   email: string;
   password: string;
   fullName: string;
-  companyName: string;
-  companyAddress?: string;
-  companyPhone?: string;
-  companyWebsite?: string;
-  companyDescription?: string;
   position: string;
   department?: string;
   phone?: string;
@@ -39,31 +34,10 @@ export const handleSignUp = async (data: SignUpData) => {
       return { error: new Error("Failed to create account") };
     }
 
-    // Create company record
-    const { data: company, error: companyError } = await supabase
-      .from('companies')
-      .insert({
-        name: data.companyName,
-        address: data.companyAddress || null,
-        phone: data.companyPhone || null,
-        website: data.companyWebsite || null,
-        description: data.companyDescription || null,
-      })
-      .select()
-      .single();
-
-    if (companyError) {
-      console.error("Company creation error:", companyError);
-      return { error: companyError };
-    }
-
-    console.log("Company created successfully:", company);
-
-    // Update user profile with company ID and additional info
+    // Update user profile with additional info
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
-        company_id: company.id,
         full_name: data.fullName,
         position: data.position,
         department: data.department || null,
@@ -78,15 +52,6 @@ export const handleSignUp = async (data: SignUpData) => {
 
     if (profileError) {
       console.error("Profile update error:", profileError);
-      // If profile update fails, clean up the company
-      const { error: deleteError } = await supabase
-        .from('companies')
-        .delete()
-        .eq('id', company.id);
-      
-      if (deleteError) {
-        console.error("Failed to clean up company after profile error:", deleteError);
-      }
       return { error: profileError };
     }
 

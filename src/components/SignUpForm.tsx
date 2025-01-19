@@ -18,11 +18,6 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       email: "",
       password: "",
       fullName: "",
-      companyName: "",
-      companyAddress: "",
-      companyPhone: "",
-      companyWebsite: "",
-      companyDescription: "",
       position: "",
       department: "",
       phone: "",
@@ -36,11 +31,6 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         email: data.email,
         password: data.password,
         fullName: data.fullName,
-        companyName: data.companyName,
-        companyAddress: data.companyAddress,
-        companyPhone: data.companyPhone,
-        companyWebsite: data.companyWebsite,
-        companyDescription: data.companyDescription,
         position: data.position,
         department: data.department,
         phone: data.phone,
@@ -55,7 +45,6 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
           duration: 5000,
         });
         
-        // Redirect to sign in page after a short delay
         setTimeout(() => {
           console.log("Redirecting to signin...");
           onModeChange('signin');
