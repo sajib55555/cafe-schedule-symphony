@@ -18,27 +18,34 @@ const Auth = () => {
         console.log('Starting email confirmation process...');
         console.log('Current URL:', window.location.href);
         
-        // Get hash parameters (remove the # symbol)
-        const hash = window.location.hash.substring(1);
-        console.log('Hash:', hash);
+        // Extract tokens from URL - handle both formats
+        let accessToken, refreshToken, type;
         
-        // Parse the hash string manually
-        const params = new URLSearchParams(hash);
-        const accessToken = params.get('access_token');
-        const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
+        // First try the hash format
+        if (window.location.hash) {
+          const hashParams = new URLSearchParams(window.location.hash.substring(1));
+          accessToken = hashParams.get('access_token');
+          refreshToken = hashParams.get('refresh_token');
+          type = hashParams.get('type');
+        }
+        
+        // If not in hash, try the path format
+        if (!accessToken) {
+          const pathParams = new URLSearchParams(window.location.pathname.split('/auth/')[1]);
+          accessToken = pathParams.get('access_token');
+          refreshToken = pathParams.get('refresh_token');
+          type = pathParams.get('type');
+        }
 
-        console.log('Parsed parameters:', {
+        console.log('Token check:', {
           accessToken: accessToken ? 'present' : 'missing',
           refreshToken: refreshToken ? 'present' : 'missing',
-          type,
-          allParams: Object.fromEntries(params)
+          type
         });
 
-        if (type === 'signup' && accessToken && refreshToken) {
-          console.log('Valid signup confirmation detected');
+        if (accessToken && refreshToken) {
+          console.log('Valid tokens detected, setting session...');
 
-          // Set the session
           const { data: sessionData, error: sessionError } = await supabase.auth.setSession({
             access_token: accessToken,
             refresh_token: refreshToken,
@@ -51,7 +58,6 @@ const Auth = () => {
 
           console.log('Session established:', sessionData);
 
-          // Get user details
           const { data: { user }, error: userError } = await supabase.auth.getUser();
 
           if (userError) {
@@ -66,22 +72,21 @@ const Auth = () => {
 
           console.log('User verified successfully:', user.email);
 
-          // Clear hash
-          window.location.hash = '';
+          // Clean up URL
+          window.history.replaceState({}, document.title, '/auth');
 
-          // Show success message
+          // Show success message and redirect
           toast.success("Email verified successfully! Redirecting to dashboard...");
-
-          // Redirect to dashboard
+          
           setTimeout(() => {
             navigate('/dashboard', { replace: true });
           }, 1500);
-        } else {
-          console.log('Not a signup confirmation or missing tokens');
         }
       } catch (error: any) {
         console.error('Error during email confirmation:', error);
         toast.error("Failed to verify email. Please try again or contact support.");
+        // Clean up URL on error too
+        window.history.replaceState({}, document.title, '/auth');
       }
     };
 
