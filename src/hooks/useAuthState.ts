@@ -27,36 +27,38 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
             .from('profiles')
             .select('*')
             .eq('id', initialSession.user.id)
-            .maybeSingle();
+            .single();
 
           if (profileError) {
-            console.error('Error fetching profile:', profileError);
-            await supabase.auth.signOut();
-            toast.error("Error verifying user profile. Please try signing in again.");
-            setSession(null);
-            onSessionChange(null);
-            return;
-          }
+            if (profileError.code === 'PGRST116') {
+              console.log('Profile not found, creating new profile for:', initialSession.user.email);
+              // Create profile if it doesn't exist
+              const { error: insertError } = await supabase
+                .from('profiles')
+                .insert([{ 
+                  id: initialSession.user.id,
+                  email: initialSession.user.email,
+                  trial_start: new Date().toISOString(),
+                  trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
+                  subscription_status: 'trial',
+                  role: 'staff',
+                  currency_symbol: '$'
+                }])
+                .select()
+                .single();
 
-          if (!profile) {
-            console.log('Creating profile for new user:', initialSession.user.email);
-            // Try to create profile if it doesn't exist
-            const { error: insertError } = await supabase
-              .from('profiles')
-              .insert([{ 
-                id: initialSession.user.id,
-                email: initialSession.user.email,
-                trial_start: new Date().toISOString(),
-                trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
-                subscription_status: 'trial',
-                role: 'staff',
-                currency_symbol: '$'
-              }]);
-
-            if (insertError) {
-              console.error('Error creating profile:', insertError);
+              if (insertError) {
+                console.error('Error creating profile:', insertError);
+                await supabase.auth.signOut();
+                toast.error("Error creating user profile. Please contact support.");
+                setSession(null);
+                onSessionChange(null);
+                return;
+              }
+            } else {
+              console.error('Error fetching profile:', profileError);
               await supabase.auth.signOut();
-              toast.error("Error creating user profile. Please contact support.");
+              toast.error("Error verifying user profile. Please try signing in again.");
               setSession(null);
               onSessionChange(null);
               return;
@@ -88,36 +90,38 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
               .from('profiles')
               .select('*')
               .eq('id', newSession.user.id)
-              .maybeSingle();
+              .single();
 
             if (profileError) {
-              console.error('Error fetching profile:', profileError);
-              await supabase.auth.signOut();
-              toast.error("Error verifying user profile. Please try signing in again.");
-              setSession(null);
-              onSessionChange(null);
-              return;
-            }
+              if (profileError.code === 'PGRST116') {
+                console.log('Creating profile for user on auth state change:', newSession.user.email);
+                // Create profile if it doesn't exist
+                const { error: insertError } = await supabase
+                  .from('profiles')
+                  .insert([{ 
+                    id: newSession.user.id,
+                    email: newSession.user.email,
+                    trial_start: new Date().toISOString(),
+                    trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
+                    subscription_status: 'trial',
+                    role: 'staff',
+                    currency_symbol: '$'
+                  }])
+                  .select()
+                  .single();
 
-            if (!profile) {
-              console.log('Creating profile for user on auth state change:', newSession.user.email);
-              // Try to create profile if it doesn't exist
-              const { error: insertError } = await supabase
-                .from('profiles')
-                .insert([{ 
-                  id: newSession.user.id,
-                  email: newSession.user.email,
-                  trial_start: new Date().toISOString(),
-                  trial_end: new Date(Date.now() + 14 * 24 * 60 * 60 * 1000).toISOString(), // 14 days trial
-                  subscription_status: 'trial',
-                  role: 'staff',
-                  currency_symbol: '$'
-                }]);
-
-              if (insertError) {
-                console.error('Error creating profile:', insertError);
+                if (insertError) {
+                  console.error('Error creating profile:', insertError);
+                  await supabase.auth.signOut();
+                  toast.error("Error creating user profile. Please contact support.");
+                  setSession(null);
+                  onSessionChange(null);
+                  return;
+                }
+              } else {
+                console.error('Error fetching profile:', profileError);
                 await supabase.auth.signOut();
-                toast.error("Error creating user profile. Please contact support.");
+                toast.error("Error verifying user profile. Please try signing in again.");
                 setSession(null);
                 onSessionChange(null);
                 return;
