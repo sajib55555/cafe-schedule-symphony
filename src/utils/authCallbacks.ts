@@ -3,26 +3,29 @@ import { supabase } from "@/integrations/supabase/client";
 
 export const handleEmailConfirmation = async () => {
   toast.success('Email confirmed successfully! You can now sign in.');
-  // Clear URL parameters and redirect to sign in
   window.history.replaceState({}, document.title, '/auth');
 };
 
 export const handlePasswordReset = async (password: string | null) => {
-  toast.success('You can now set a new password.');
-  
-  const { error: updateError } = await supabase.auth.updateUser({
-    password: password || ''
-  });
+  try {
+    const { error: updateError } = await supabase.auth.updateUser({
+      password: password || ''
+    });
 
-  if (updateError) {
-    console.error('Error updating password:', updateError);
+    if (updateError) {
+      console.error('Error updating password:', updateError);
+      toast.error('Failed to update password. Please try again.');
+      return false;
+    }
+
+    toast.success('Password updated successfully! You can now sign in.');
+    window.location.href = '/auth';
+    return true;
+  } catch (error) {
+    console.error('Error during password reset:', error);
     toast.error('Failed to update password. Please try again.');
     return false;
   }
-
-  toast.success('Password updated successfully! You can now sign in.');
-  window.location.href = '/auth';
-  return true;
 };
 
 export const handleAuthCallback = async (
@@ -30,7 +33,10 @@ export const handleAuthCallback = async (
   refreshToken: string | null,
   type: string | null
 ) => {
-  if (!accessToken || !refreshToken) return;
+  if (!accessToken || !refreshToken) {
+    console.error('Missing tokens in auth callback');
+    return;
+  }
 
   try {
     const { data, error } = await supabase.auth.setSession({
@@ -48,7 +54,8 @@ export const handleAuthCallback = async (
       await handleEmailConfirmation();
     } else if (type === 'recovery') {
       const params = new URLSearchParams(window.location.search);
-      await handlePasswordReset(params.get('password'));
+      const password = params.get('password');
+      await handlePasswordReset(password);
     }
   } catch (error) {
     console.error('Error during authentication callback:', error);

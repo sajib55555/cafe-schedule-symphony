@@ -41,13 +41,13 @@ export const useAuthState = (onSessionChange: (session: Session | null) => void)
           }
         });
 
-        // Handle URL parameters
+        // Handle URL parameters for password reset and email confirmation
         const params = new URLSearchParams(window.location.search);
+        const type = params.get('type');
         const accessToken = params.get('access_token');
         const refreshToken = params.get('refresh_token');
-        const type = params.get('type');
 
-        if (type === 'recovery' || type === 'signup' || type === 'email_confirmation') {
+        if ((type === 'recovery' || type === 'signup' || type === 'email_confirmation') && accessToken && refreshToken) {
           console.log('Processing authentication callback:', type);
           await handleAuthCallback(accessToken, refreshToken, type);
         }
