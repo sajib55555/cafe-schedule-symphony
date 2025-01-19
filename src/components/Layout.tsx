@@ -19,6 +19,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         
         if (sessionError) {
           console.error('Session error:', sessionError);
+          await supabase.auth.signOut();
           localStorage.clear();
           navigate("/auth");
           return;
@@ -44,7 +45,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
               profileError.message?.includes('Failed to fetch') ||
               profileError.message?.includes('session_not_found')) {
             console.log('Invalid session, clearing and redirecting');
-            await supabase.auth.signOut({ scope: 'local' });
+            await supabase.auth.signOut();
             localStorage.clear();
             navigate("/auth");
             return;
@@ -53,6 +54,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           return;
         }
 
+        // If no profile exists, create one
         if (!profile) {
           console.log('No profile found, creating new profile');
           const { error: createError } = await supabase
@@ -86,8 +88,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }
       } catch (error: any) {
         console.error('Error in checkTrialStatus:', error);
-        // Handle any unexpected errors by clearing session and redirecting
-        await supabase.auth.signOut({ scope: 'local' });
+        await supabase.auth.signOut();
         localStorage.clear();
         navigate("/auth");
       }
