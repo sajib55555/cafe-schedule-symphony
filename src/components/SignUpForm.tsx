@@ -11,6 +11,7 @@ import { AuthError } from "@supabase/supabase-js";
 import { Alert, AlertDescription } from "@/components/ui/alert";
 import { useState } from "react";
 import { differenceInDays } from "date-fns";
+import { supabase } from "@/integrations/supabase/client";
 
 export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
@@ -38,6 +39,41 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
   const onSubmit = async (data: FormData) => {
     try {
       console.log("Starting signup process...");
+      
+      // First check if user exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', data.email)
+        .maybeSingle();
+
+      if (existingUser) {
+        toast.error("An account with this email already exists. Please sign in instead.");
+        setTimeout(() => onModeChange('signin'), 2000);
+        return;
+      }
+
+      // Create the user account
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
+        email: data.email,
+        password: data.password,
+        options: {
+          data: {
+            full_name: data.fullName,
+          },
+          emailRedirectTo: `${window.location.origin}/auth`,
+        },
+      });
+
+      if (signUpError) {
+        console.error('Signup error:', signUpError);
+        throw signUpError;
+      }
+
+      if (!authData.user) {
+        throw new Error("No user data returned after signup");
+      }
+
       const user = await handleSignUp({
         email: data.email,
         password: data.password,
@@ -89,6 +125,9 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
               <p className="font-medium">Please verify your email address</p>
               <p>We've sent a verification link to <span className="font-medium">{email}</span></p>
               <p>Please check your inbox and click the link to verify your account.</p>
+              <p className="text-sm mt-2">
+                Note: If you don't see the email in your inbox, please check your spam folder.
+              </p>
             </div>
           </AlertDescription>
         </Alert>
@@ -96,9 +135,12 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         <Alert className="bg-green-50 border-green-200">
           <AlertDescription className="text-green-800">
             <div className="space-y-2">
-              <p className="font-medium">Your 30-day trial is now active!</p>
+              <p className="font-medium">Your 30-day trial is ready!</p>
               <p>You have {daysLeft} days remaining in your trial period.</p>
               <p>During this time, you'll have full access to all features.</p>
+              <p className="text-sm mt-2">
+                Important: Your trial will be activated once you verify your email.
+              </p>
             </div>
           </AlertDescription>
         </Alert>
@@ -112,6 +154,16 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
           >
             Go to Sign In
           </Button>
+          <p className="text-sm text-muted-foreground">
+            Didn't receive the email? Check your spam folder or{" "}
+            <button
+              type="button"
+              onClick={() => setShowVerification(false)}
+              className="text-primary hover:underline"
+            >
+              try again
+            </button>
+          </p>
         </div>
       </div>
     );
