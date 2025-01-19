@@ -15,16 +15,24 @@ const Auth = () => {
   useEffect(() => {
     const handleEmailConfirmation = async () => {
       try {
-        // Get the current URL
-        const url = new URL(window.location.href);
-        const accessToken = url.searchParams.get('access_token');
-        const refreshToken = url.searchParams.get('refresh_token');
-        const type = url.searchParams.get('type');
+        console.log('Starting email confirmation process...');
+        console.log('Current URL:', window.location.href);
+        
+        // Try both hash and search parameters
+        const hashParams = new URLSearchParams(window.location.hash.substring(1));
+        const urlParams = new URLSearchParams(window.location.search);
+        
+        // Check both locations for tokens
+        const accessToken = hashParams.get('access_token') || urlParams.get('access_token');
+        const refreshToken = hashParams.get('refresh_token') || urlParams.get('refresh_token');
+        const type = hashParams.get('type') || urlParams.get('type');
 
-        console.log('URL Parameters:', {
+        console.log('Token check:', {
           accessToken: accessToken ? 'present' : 'missing',
           refreshToken: refreshToken ? 'present' : 'missing',
-          type
+          type,
+          hashParams: Object.fromEntries(hashParams),
+          urlParams: Object.fromEntries(urlParams)
         });
 
         // Check if this is an email confirmation
@@ -43,6 +51,7 @@ const Auth = () => {
           }
 
           if (!sessionData.session) {
+            console.error('No session established after confirmation');
             throw new Error('No session established after confirmation');
           }
 
@@ -57,6 +66,7 @@ const Auth = () => {
           }
 
           if (!user) {
+            console.error('No user found after verification');
             throw new Error('No user found after verification');
           }
 
@@ -65,16 +75,19 @@ const Auth = () => {
           // Email confirmed successfully
           toast.success("Email verified successfully! You can now sign in.");
           
-          // Clear the URL parameters
+          // Clear both hash and search parameters
           window.history.replaceState({}, document.title, '/auth');
           
           // Redirect to dashboard
           navigate('/dashboard', { replace: true });
+        } else {
+          console.log('Not a signup confirmation or missing tokens');
         }
       } catch (error: any) {
-        console.error('Error confirming email:', error);
+        console.error('Error during email confirmation:', error);
         toast.error("Failed to verify email. Please try again or contact support.");
-        navigate('/auth', { replace: true });
+        // Stay on auth page but clear URL parameters
+        window.history.replaceState({}, document.title, '/auth');
       }
     };
 
