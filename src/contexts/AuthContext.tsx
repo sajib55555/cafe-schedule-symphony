@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { supabase } from "@/integrations/supabase/client";
+import { toast } from "sonner";
 
 interface AuthContextType {
   loading: boolean;
@@ -46,13 +47,43 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       if (session?.user) {
         console.log('Checking access status for user:', session.user.email);
         
-        const { data: profile } = await supabase
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('trial_start, trial_end, subscription_status')
+          .select('trial_start, trial_end, subscription_status, company_id')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
-        if (profile) {
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          toast.error('Error checking access status');
+          setLoading(false);
+          return;
+        }
+
+        if (!profile) {
+          console.log('No profile found, creating one...');
+          const { error: createError } = await supabase
+            .from('profiles')
+            .insert([{
+              id: session.user.id,
+              email: session.user.email,
+              full_name: session.user.user_metadata?.full_name,
+              trial_start: new Date().toISOString(),
+              trial_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+              subscription_status: 'trial'
+            }]);
+
+          if (createError) {
+            console.error('Error creating profile:', createError);
+            toast.error('Error creating user profile');
+            setLoading(false);
+            return;
+          }
+
+          // Set initial access state for new profile
+          setHasAccess(true);
+          setTrialEnded(false);
+        } else {
           const now = new Date();
           const trialEnd = profile.trial_end ? new Date(profile.trial_end) : null;
           
@@ -78,6 +109,7 @@ export const AuthProvider = ({ children }: { children: React.ReactNode }) => {
       }
     } catch (error) {
       console.error('Error checking access status:', error);
+      toast.error('Error checking access status');
     } finally {
       setLoading(false);
     }
