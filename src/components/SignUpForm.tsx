@@ -38,7 +38,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: FormData) => {
     try {
-      console.log("Starting signup process...");
+      console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
       
       // First check if user exists
       const { data: existingUser } = await supabase
@@ -48,6 +48,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         .maybeSingle();
 
       if (existingUser) {
+        console.log('User already exists:', data.email);
         toast.error("An account with this email already exists. Please sign in instead.");
         setTimeout(() => onModeChange('signin'), 2000);
         return;
@@ -71,9 +72,13 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       }
 
       if (!authData.user) {
+        console.error('No user data returned after signup');
         throw new Error("No user data returned after signup");
       }
 
+      console.log('User created successfully:', authData.user.id);
+
+      // Create company and update profile
       const user = await handleSignUp({
         email: data.email,
         password: data.password,
@@ -105,11 +110,17 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     } catch (error: any) {
       console.error("Error during sign up:", error);
       
-      if (error instanceof AuthError && error.message.includes("already registered")) {
-        toast.error("An account with this email already exists. Please sign in instead.");
-        setTimeout(() => onModeChange('signin'), 2000);
+      if (error instanceof AuthError) {
+        if (error.message.includes("already registered")) {
+          toast.error("An account with this email already exists. Please sign in instead.");
+          setTimeout(() => onModeChange('signin'), 2000);
+        } else if (error.message.includes("password")) {
+          toast.error("Password must be at least 6 characters long");
+        } else {
+          toast.error(error.message);
+        }
       } else {
-        toast.error(error.message || "Failed to create account");
+        toast.error("Failed to create account. Please try again.");
       }
     }
   };
