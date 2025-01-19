@@ -22,7 +22,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         
         const { data: profile, error } = await supabase
           .from('profiles')
-          .select('trial_end, subscription_status')
+          .select('*')
           .eq('id', session.user.id)
           .maybeSingle();
 
@@ -33,7 +33,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }
 
         if (!profile) {
-          console.log('No profile found, creating new profile');
+          console.log('No profile found, creating new profile for:', session.user.email);
           const { data: newProfile, error: createError } = await supabase
             .from('profiles')
             .insert([{
