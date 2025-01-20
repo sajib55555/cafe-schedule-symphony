@@ -34,13 +34,16 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
       
       // First check if user exists
-      const { data: existingUser } = await supabase
-        .from('profiles')
-        .select('id')
-        .eq('email', data.email)
-        .maybeSingle();
+      const { data: { user: existingUser }, error: userCheckError } = await supabase.auth.admin.getUserByEmail(data.email);
+
+      if (userCheckError && !userCheckError.message.includes("User not found")) {
+        console.error("Error checking existing user:", userCheckError);
+        toast.error("An error occurred. Please try again.");
+        return;
+      }
 
       if (existingUser) {
+        console.log("User already exists:", data.email);
         toast.error("An account with this email already exists. Please sign in instead.");
         setTimeout(() => onModeChange('signin'), 2000);
         return;
@@ -58,16 +61,20 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       });
 
       if (signUpError) {
+        console.error("Signup error:", signUpError);
         if (signUpError instanceof AuthApiError && signUpError.message.includes("already registered")) {
           toast.error("An account with this email already exists. Please sign in instead.");
           setTimeout(() => onModeChange('signin'), 2000);
-          return;
+        } else {
+          toast.error(signUpError.message || "Failed to create account");
         }
-        throw signUpError;
+        return;
       }
 
       if (!authData.user) {
-        throw new Error("No user data returned after signup");
+        console.error("No user data returned after signup");
+        toast.error("Failed to create account");
+        return;
       }
 
       console.log("User created successfully:", authData.user.id);
@@ -91,7 +98,8 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
       if (companyError) {
         console.error('Company creation error:', companyError);
-        throw companyError;
+        toast.error("Failed to create company profile");
+        return;
       }
 
       console.log("Company created successfully:", companyData.id);
@@ -113,11 +121,12 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
       if (profileError) {
         console.error('Profile update error:', profileError);
-        throw profileError;
+        toast.error("Failed to create user profile");
+        return;
       }
       
       console.log("Profile updated successfully");
-      toast.success("Your account has been created with a 30-day trial period!");
+      toast.success("Your account has been created successfully!");
       
       // Add a small delay to ensure the auth state is updated
       setTimeout(() => {

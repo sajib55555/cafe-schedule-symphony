@@ -29,8 +29,22 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         password: data.password,
       });
 
-      if (signInError) throw signInError;
-      if (!authData.user) throw new Error("No user data returned after signin");
+      if (signInError) {
+        console.error("Sign in error:", signInError);
+        if (signInError.message.includes("Invalid login credentials")) {
+          toast.error("Invalid email or password. Please check your credentials.");
+        } else if (signInError.message.includes("Email not confirmed")) {
+          toast.error("Please verify your email address before signing in.");
+        } else {
+          toast.error(signInError.message);
+        }
+        return;
+      }
+
+      if (!authData.user) {
+        toast.error("No user data returned after signin");
+        return;
+      }
 
       console.log("Sign in successful for user:", authData.user.id);
       toast.success("Successfully signed in!");
@@ -38,21 +52,7 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       
     } catch (error: any) {
       console.error("Sign in error:", error);
-      
-      if (error instanceof AuthError) {
-        switch (error.message) {
-          case 'Invalid login credentials':
-            toast.error("Invalid email or password. Please check your credentials.");
-            break;
-          case 'Email not confirmed':
-            toast.error("Please verify your email address before signing in.");
-            break;
-          default:
-            toast.error(error.message);
-        }
-      } else {
-        toast.error("Failed to sign in. Please try again.");
-      }
+      toast.error("Failed to sign in. Please try again.");
     }
   };
 
