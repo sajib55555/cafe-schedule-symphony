@@ -32,7 +32,9 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       if (signInError) {
         console.error("Sign in error:", signInError);
         if (signInError.message.includes("Email not confirmed")) {
-          toast.error("Please verify your email address before signing in. Check your inbox for the verification link.");
+          toast.error("Please verify your email address before signing in. Check your inbox for the verification link.", {
+            duration: 5000
+          });
         } else if (signInError.message.includes("Invalid login credentials")) {
           toast.error("Invalid email or password. Please check your credentials.");
         } else {
@@ -49,10 +51,10 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       console.log("Sign in successful for user:", authData.user.id);
       toast.success("Successfully signed in!");
       
-      // Add a small delay before navigation to ensure the toast is visible
+      // Add a longer delay before navigation to ensure the toast is visible
       setTimeout(() => {
         navigate("/dashboard");
-      }, 1000);
+      }, 2000);
       
     } catch (error: any) {
       console.error("Sign in error:", error);

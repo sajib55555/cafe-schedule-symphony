@@ -89,12 +89,12 @@ export const useSignUpSubmit = (onModeChange: (mode: 'signup' | 'signin' | 'rese
       }
 
       console.log("Profile updated successfully");
-      toast.success("Account created! Please check your email to verify your account before signing in.");
+      toast.success("Account created! Please check your email to verify your account.");
       
-      // Switch to sign in mode after successful signup
+      // Switch to sign in mode after successful signup with a delay
       setTimeout(() => {
         onModeChange('signin');
-      }, 2000);
+      }, 3000);
       
     } catch (error: any) {
       console.error("Error during sign up:", error);
