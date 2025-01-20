@@ -1,7 +1,7 @@
 import { FormData } from "./types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AuthApiError } from "@supabase/supabase-js";
+import { AuthError } from "@supabase/supabase-js";
 import { useNavigate } from "react-router-dom";
 
 export const useSignUpSubmit = (onModeChange: (mode: 'signup' | 'signin' | 'reset') => void) => {
@@ -10,7 +10,7 @@ export const useSignUpSubmit = (onModeChange: (mode: 'signup' | 'signin' | 'rese
   const handleSignUp = async (data: FormData) => {
     try {
       console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
-      
+
       // Step 1: Create the user account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
@@ -24,15 +24,11 @@ export const useSignUpSubmit = (onModeChange: (mode: 'signup' | 'signin' | 'rese
 
       if (signUpError) {
         console.error("Signup error:", signUpError);
-        if (signUpError instanceof AuthApiError) {
-          if (signUpError.message.includes("already registered")) {
-            toast.error("An account with this email already exists. Please sign in instead.");
-            setTimeout(() => onModeChange('signin'), 2000);
-          } else {
-            toast.error(signUpError.message || "Failed to create account");
-          }
+        if (signUpError.message.includes("already registered")) {
+          toast.error("An account with this email already exists. Please sign in instead.");
+          setTimeout(() => onModeChange('signin'), 2000);
         } else {
-          toast.error("Failed to create account");
+          toast.error(signUpError.message);
         }
         return;
       }
@@ -90,18 +86,18 @@ export const useSignUpSubmit = (onModeChange: (mode: 'signup' | 'signin' | 'rese
         toast.error("Failed to create user profile");
         return;
       }
-      
+
       console.log("Profile updated successfully");
-      toast.success("Your account has been created successfully!");
+      toast.success("Account created successfully! Please check your email to verify your account.");
       
-      // Add a small delay to ensure the auth state is updated
+      // Add a small delay before redirecting
       setTimeout(() => {
         navigate("/dashboard");
-      }, 1000);
+      }, 2000);
+      
     } catch (error: any) {
       console.error("Error during sign up:", error);
-      
-      if (error instanceof AuthApiError && error.message.includes("already registered")) {
+      if (error instanceof AuthError && error.message.includes("already registered")) {
         toast.error("An account with this email already exists. Please sign in instead.");
         setTimeout(() => onModeChange('signin'), 2000);
       } else {
