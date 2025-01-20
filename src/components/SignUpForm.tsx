@@ -5,7 +5,6 @@ import { Form } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoFields } from "./signup/PersonalInfoFields";
 import { FormData, formSchema } from "./signup/types";
-import { handleSignUp } from "@/utils/auth";
 import { toast } from "sonner";
 import { AuthError } from "@supabase/supabase-js";
 import { useState } from "react";
