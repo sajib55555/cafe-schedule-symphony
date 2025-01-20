@@ -18,7 +18,7 @@ const Auth = () => {
   }, [session, navigate]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
       if (event === "SIGNED_IN") {
         toast.success("Successfully signed in!");
         navigate("/dashboard");
@@ -28,7 +28,7 @@ const Auth = () => {
         navigate("/");
       }
       if (event === "USER_UPDATED") {
-        const { error } = supabase.auth.getSession();
+        const { data, error } = await supabase.auth.getSession();
         if (error) {
           toast.error(getErrorMessage(error));
         }
