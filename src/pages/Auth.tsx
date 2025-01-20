@@ -4,11 +4,20 @@ import { SignUpForm } from "@/components/SignUpForm";
 import { ResetPasswordForm } from "@/components/ResetPasswordForm";
 import { Card } from "@/components/ui/card";
 import { Coffee } from "lucide-react";
+import { Navigate, useLocation } from "react-router-dom";
+import { useAuth } from "@/contexts/AuthContext";
 
 type AuthMode = 'signin' | 'signup' | 'reset';
 
 const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('signin');
+  const { session } = useAuth();
+  const location = useLocation();
+
+  // Redirect if user is already authenticated
+  if (session) {
+    return <Navigate to="/dashboard" replace />;
+  }
 
   return (
     <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center p-4">
@@ -26,7 +35,7 @@ const Auth = () => {
           </h1>
           <p className="text-muted-foreground">
             {mode === 'signin' ? 'Sign in to your account' : 
-             mode === 'signup' ? 'Start your free 30-day trial' : 
+             mode === 'signup' ? 'Create your account' : 
              'Enter your email to reset your password'}
           </p>
         </div>
