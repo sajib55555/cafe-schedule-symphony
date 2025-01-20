@@ -33,16 +33,20 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     try {
       console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
       
-      // First check if user exists
-      const { data: { user: existingUser }, error: userCheckError } = await supabase.auth.admin.getUserByEmail(data.email);
+      // First check if user exists by attempting to sign in with a random password
+      const { error: checkError } = await supabase.auth.signInWithPassword({
+        email: data.email,
+        password: 'checkuserexistence',
+      });
 
-      if (userCheckError && !userCheckError.message.includes("User not found")) {
-        console.error("Error checking existing user:", userCheckError);
+      // If the error message indicates invalid credentials, the user exists
+      if (checkError && !checkError.message.includes("Invalid login credentials")) {
+        console.error("Error checking existing user:", checkError);
         toast.error("An error occurred. Please try again.");
         return;
       }
 
-      if (existingUser) {
+      if (!checkError) {
         console.log("User already exists:", data.email);
         toast.error("An account with this email already exists. Please sign in instead.");
         setTimeout(() => onModeChange('signin'), 2000);
