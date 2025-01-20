@@ -19,7 +19,7 @@ export const useSignUpSubmit = (onModeChange: (mode: 'signup' | 'signin' | 'rese
           data: {
             full_name: data.fullName,
           },
-          emailRedirectTo: `${window.location.origin}/auth`
+          emailRedirectTo: `${window.location.origin}/auth`,
         },
       });
 
