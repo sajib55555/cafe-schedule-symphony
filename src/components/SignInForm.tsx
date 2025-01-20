@@ -7,9 +7,11 @@ import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { SignInFields } from "./signin/SignInFields";
 import { SignInFormData, signInFormSchema } from "./signin/types";
+import { useState } from "react";
 
 export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<SignInFormData>({
     resolver: zodResolver(signInFormSchema),
@@ -21,6 +23,7 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: SignInFormData) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.auth.signInWithPassword({
         email: data.email,
         password: data.password,
@@ -33,6 +36,8 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     } catch (error: any) {
       console.error("Sign in error:", error);
       toast.error(error.message || "Failed to sign in");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -41,8 +46,8 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <SignInFields form={form} />
         <div className="space-y-4">
-          <Button type="submit" className="w-full">
-            Sign In
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Signing in..." : "Sign In"}
           </Button>
           <div className="text-center space-y-2">
             <button
@@ -57,7 +62,7 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
               <button
                 type="button"
                 onClick={() => onModeChange('signup')}
-                className="text-primary hover:underline"
+                className="text-primary hover:underline font-medium"
               >
                 Sign up
               </button>

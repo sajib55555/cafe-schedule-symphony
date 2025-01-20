@@ -6,6 +6,7 @@ import { Input } from "@/components/ui/input";
 import { toast } from "sonner";
 import { supabase } from "@/integrations/supabase/client";
 import { z } from "zod";
+import { useState } from "react";
 
 const resetFormSchema = z.object({
   email: z.string().email({ message: "Please enter a valid email address" }),
@@ -14,6 +15,8 @@ const resetFormSchema = z.object({
 type ResetFormData = z.infer<typeof resetFormSchema>;
 
 export const ResetPasswordForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
+  const [isLoading, setIsLoading] = useState(false);
+  
   const form = useForm<ResetFormData>({
     resolver: zodResolver(resetFormSchema),
     defaultValues: {
@@ -23,6 +26,7 @@ export const ResetPasswordForm = ({ onModeChange }: { onModeChange: (mode: 'sign
 
   const onSubmit = async (data: ResetFormData) => {
     try {
+      setIsLoading(true);
       const { error } = await supabase.auth.resetPasswordForEmail(data.email, {
         redirectTo: `${window.location.origin}/reset-password`,
       });
@@ -34,6 +38,8 @@ export const ResetPasswordForm = ({ onModeChange }: { onModeChange: (mode: 'sign
     } catch (error: any) {
       console.error("Reset password error:", error);
       toast.error(error.message || "Failed to send reset password instructions");
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -54,8 +60,8 @@ export const ResetPasswordForm = ({ onModeChange }: { onModeChange: (mode: 'sign
           )}
         />
         <div className="space-y-4">
-          <Button type="submit" className="w-full">
-            Send Reset Instructions
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Sending..." : "Send Reset Instructions"}
           </Button>
           <div className="text-center">
             <button

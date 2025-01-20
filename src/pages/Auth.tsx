@@ -2,6 +2,8 @@ import { useState } from "react";
 import { SignInForm } from "@/components/SignInForm";
 import { SignUpForm } from "@/components/SignUpForm";
 import { ResetPasswordForm } from "@/components/ResetPasswordForm";
+import { Card } from "@/components/ui/card";
+import { Coffee } from "lucide-react";
 
 type AuthMode = 'signin' | 'signup' | 'reset';
 
@@ -9,22 +11,42 @@ const Auth = () => {
   const [mode, setMode] = useState<AuthMode>('signin');
 
   return (
-    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+    <div className="min-h-screen bg-gradient-to-br from-orange-50 to-orange-100 flex items-center justify-center p-4">
       <div className="w-full max-w-md space-y-8">
-        <div className="text-center">
-          <h1 className="text-4xl font-bold">Welcome to Café Schedule Manager</h1>
-          <p className="mt-2 text-muted-foreground">
+        <div className="text-center space-y-4">
+          <div className="flex justify-center">
+            <div className="bg-primary rounded-full p-3">
+              <Coffee className="h-8 w-8 text-white" />
+            </div>
+          </div>
+          <h1 className="text-4xl font-bold tracking-tight text-gray-900">
+            {mode === 'signin' ? 'Welcome back' : 
+             mode === 'signup' ? 'Get started today' : 
+             'Reset your password'}
+          </h1>
+          <p className="text-muted-foreground">
             {mode === 'signin' ? 'Sign in to your account' : 
              mode === 'signup' ? 'Start your free 30-day trial' : 
-             'Reset your password'}
+             'Enter your email to reset your password'}
           </p>
         </div>
 
-        <div className="bg-card shadow-lg rounded-lg p-6">
+        <Card className="p-6 shadow-xl bg-white/80 backdrop-blur-sm border-0">
           {mode === 'signin' && <SignInForm onModeChange={setMode} />}
           {mode === 'signup' && <SignUpForm onModeChange={setMode} />}
           {mode === 'reset' && <ResetPasswordForm onModeChange={setMode} />}
-        </div>
+        </Card>
+
+        <p className="text-center text-sm text-muted-foreground">
+          By continuing, you agree to our{' '}
+          <a href="#" className="font-medium text-primary hover:underline">
+            Terms of Service
+          </a>{' '}
+          and{' '}
+          <a href="#" className="font-medium text-primary hover:underline">
+            Privacy Policy
+          </a>
+        </p>
       </div>
     </div>
   );

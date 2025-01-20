@@ -8,9 +8,11 @@ import { FormData, formSchema } from "./signup/types";
 import { handleSignUp } from "@/utils/auth";
 import { toast } from "sonner";
 import { AuthError } from "@supabase/supabase-js";
+import { useState } from "react";
 
 export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
+  const [isLoading, setIsLoading] = useState(false);
 
   const form = useForm<FormData>({
     resolver: zodResolver(formSchema),
@@ -31,7 +33,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: FormData) => {
     try {
-      console.log("Starting signup process...");
+      setIsLoading(true);
       const user = await handleSignUp({
         email: data.email,
         password: data.password,
@@ -47,25 +49,22 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       });
       
       if (user) {
-        console.log("Signup successful, user:", user);
         toast.success("Your account has been created with a 30-day trial period.");
-        
-        // Add a small delay to ensure the toast is visible and auth state is updated
         setTimeout(() => {
-          console.log("Redirecting to dashboard...");
           navigate("/dashboard", { replace: true });
         }, 1000);
       }
     } catch (error: any) {
       console.error("Error during sign up:", error);
       
-      // Handle specific error cases
       if (error instanceof AuthError && error.message.includes("already registered")) {
         toast.error("An account with this email already exists. Please sign in instead.");
         setTimeout(() => onModeChange('signin'), 2000);
       } else {
         toast.error(error.message || "Failed to create account");
       }
+    } finally {
+      setIsLoading(false);
     }
   };
 
@@ -74,8 +73,8 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
         <PersonalInfoFields form={form} />
         <div className="space-y-4">
-          <Button type="submit" className="w-full">
-            Create Account
+          <Button type="submit" className="w-full" disabled={isLoading}>
+            {isLoading ? "Creating account..." : "Create Account"}
           </Button>
           <div className="text-center">
             <div className="text-sm text-muted-foreground">
@@ -83,7 +82,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
               <button
                 type="button"
                 onClick={() => onModeChange('signin')}
-                className="text-primary hover:underline"
+                className="text-primary hover:underline font-medium"
               >
                 Sign in
               </button>
