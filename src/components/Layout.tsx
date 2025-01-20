@@ -12,25 +12,26 @@ export function Layout({ children }: { children: React.ReactNode }) {
     const checkTrialStatus = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (session?.user) {
-          const { data: profile, error } = await supabase
-            .from('profiles')
-            .select('trial_end, subscription_status')
-            .eq('id', session.user.id)
-            .maybeSingle();
+        if (!session?.user) return;
 
-          if (error) {
-            console.error('Error fetching profile:', error);
-            return;
-          }
+        const { data: profile, error } = await supabase
+          .from('profiles')
+          .select('trial_end, subscription_status')
+          .eq('id', session.user.id)
+          .maybeSingle();
 
-          if (profile) {
-            setIsSubscribed(profile.subscription_status === 'active');
-            
-            if (!isSubscribed && profile.trial_end) {
-              const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
-              setTrialDaysLeft(Math.max(0, daysLeft));
-            }
+        if (error) {
+          console.error('Error fetching profile:', error);
+          return;
+        }
+
+        if (profile) {
+          const isActiveSubscription = profile.subscription_status === 'active';
+          setIsSubscribed(isActiveSubscription);
+          
+          if (!isActiveSubscription && profile.trial_end) {
+            const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
+            setTrialDaysLeft(Math.max(0, daysLeft));
           }
         }
       } catch (error) {
@@ -39,7 +40,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
     };
 
     checkTrialStatus();
-  }, [isSubscribed]);
+  }, []);
 
   return (
     <div className="min-h-screen bg-[#FDF6E3]">
