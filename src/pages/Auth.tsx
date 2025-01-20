@@ -1,87 +1,30 @@
-import { useEffect } from "react";
-import { useNavigate } from "react-router-dom";
-import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
-import { ThemeSupa } from "@supabase/auth-ui-shared";
-import { supabase } from "@/integrations/supabase/client";
-import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { useState } from "react";
+import { SignInForm } from "@/components/SignInForm";
+import { SignUpForm } from "@/components/SignUpForm";
+import { ResetPasswordForm } from "@/components/ResetPasswordForm";
+
+type AuthMode = 'signin' | 'signup' | 'reset';
 
 const Auth = () => {
-  const navigate = useNavigate();
-  const { session } = useAuth();
-
-  useEffect(() => {
-    if (session) {
-      navigate("/dashboard");
-    }
-  }, [session, navigate]);
-
-  useEffect(() => {
-    const {
-      data: { subscription },
-    } = supabase.auth.onAuthStateChange(async (event, session) => {
-      try {
-        if (event === "SIGNED_IN") {
-          toast.success("Successfully signed in!");
-          navigate("/dashboard");
-        }
-        if (event === "SIGNED_OUT") {
-          toast.success("Successfully signed out!");
-          navigate("/");
-        }
-        if (event === "USER_UPDATED") {
-          const { data, error } = await supabase.auth.getSession();
-          if (error) {
-            toast.error(getErrorMessage(error));
-          }
-        }
-      } catch (error: any) {
-        toast.error(getErrorMessage(error));
-      }
-    });
-
-    return () => {
-      subscription.unsubscribe();
-    };
-  }, [navigate]);
-
-  const getErrorMessage = (error: any) => {
-    if (error.message.includes("Email not confirmed")) {
-      return "Please verify your email address before signing in.";
-    }
-    if (error.message.includes("Invalid login credentials")) {
-      return "Invalid email or password. Please check your credentials and try again.";
-    }
-    return error.message;
-  };
+  const [mode, setMode] = useState<AuthMode>('signin');
 
   return (
-    <div className="min-h-screen bg-gradient-to-br from-primary/10 to-accent/10 flex items-center justify-center p-4">
-      <div className="w-full max-w-md bg-white rounded-lg shadow-xl p-8">
-        <h1 className="text-2xl font-bold text-center mb-8 bg-gradient-to-r from-primary to-accent bg-clip-text text-transparent">
-          Welcome to EasyRotas
-        </h1>
-        <SupabaseAuth 
-          supabaseClient={supabase}
-          appearance={{
-            theme: ThemeSupa,
-            variables: {
-              default: {
-                colors: {
-                  brand: '#E67E22',
-                  brandAccent: '#7CB342',
-                }
-              }
-            },
-            className: {
-              container: 'w-full',
-              button: 'w-full px-4 py-2 rounded-md',
-              input: 'w-full px-3 py-2 border rounded-md',
-            }
-          }}
-          providers={[]}
-          redirectTo={`${window.location.origin}/auth/callback`}
-        />
+    <div className="min-h-screen bg-background flex items-center justify-center p-4">
+      <div className="w-full max-w-md space-y-8">
+        <div className="text-center">
+          <h1 className="text-4xl font-bold">Welcome to Café Schedule Manager</h1>
+          <p className="mt-2 text-muted-foreground">
+            {mode === 'signin' ? 'Sign in to your account' : 
+             mode === 'signup' ? 'Start your free 30-day trial' : 
+             'Reset your password'}
+          </p>
+        </div>
+
+        <div className="bg-card shadow-lg rounded-lg p-6">
+          {mode === 'signin' && <SignInForm onModeChange={setMode} />}
+          {mode === 'signup' && <SignUpForm onModeChange={setMode} />}
+          {mode === 'reset' && <ResetPasswordForm onModeChange={setMode} />}
+        </div>
       </div>
     </div>
   );
