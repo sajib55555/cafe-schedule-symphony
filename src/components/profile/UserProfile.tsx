@@ -5,9 +5,8 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { useToast } from "@/components/ui/use-toast";
 import { EditProfileForm } from "./EditProfileForm";
-import { Pencil } from "lucide-react";
+import { Pencil, User, Building2, Phone, Briefcase, Mail } from "lucide-react";
 import { Separator } from "@/components/ui/separator";
-import { ProfileDetails } from "./ProfileDetails";
 
 export function UserProfile() {
   const [loading, setLoading] = useState(true);
@@ -76,8 +75,50 @@ export function UserProfile() {
           />
         ) : (
           <div className="space-y-6">
-            <ProfileDetails profile={profile} session={session} />
+            <div className="space-y-4">
+              <div className="flex items-center space-x-4">
+                <Mail className="h-5 w-5 text-muted-foreground" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Email</p>
+                  <p className="text-lg font-medium">{profile?.email || session?.user?.email || "Not set"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <User className="h-5 w-5 text-muted-foreground" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Full Name</p>
+                  <p className="text-lg font-medium">{profile?.full_name || "Not set"}</p>
+                </div>
+              </div>
+              
+              <div className="flex items-center space-x-4">
+                <Building2 className="h-5 w-5 text-muted-foreground" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Department</p>
+                  <p className="text-lg font-medium">{profile?.department || "Not set"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <Briefcase className="h-5 w-5 text-muted-foreground" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Position</p>
+                  <p className="text-lg font-medium">{profile?.position || "Not set"}</p>
+                </div>
+              </div>
+
+              <div className="flex items-center space-x-4">
+                <Phone className="h-5 w-5 text-muted-foreground" />
+                <div className="space-y-1">
+                  <p className="text-sm font-medium text-muted-foreground">Phone</p>
+                  <p className="text-lg font-medium">{profile?.phone || "Not set"}</p>
+                </div>
+              </div>
+            </div>
+
             <Separator className="my-6" />
+
             <Button
               onClick={() => setIsEditing(true)}
               className="w-full"

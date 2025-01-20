@@ -80,7 +80,7 @@ const UpgradePage = () => {
 
       const { data, error } = await supabase.functions.invoke('create-checkout', {
         body: {
-          priceId: 'price_1QVwHDFk4w8hjVcVAXnqBo0a',
+          priceId: 'price_1QbAZfFk4w8hjVcVH2I32wCm',
           successUrl: `${window.location.origin}/upgrade?payment_status=success`,
           cancelUrl: `${window.location.origin}/upgrade`,
         },
