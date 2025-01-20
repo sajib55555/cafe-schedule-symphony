@@ -7,7 +7,7 @@ import { PersonalInfoFields } from "./signup/PersonalInfoFields";
 import { FormData, formSchema } from "./signup/types";
 import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
-import { AuthError } from "@supabase/supabase-js";
+import { AuthError, AuthApiError } from "@supabase/supabase-js";
 
 export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
@@ -33,6 +33,19 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     try {
       console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
       
+      // First check if user exists
+      const { data: existingUser } = await supabase
+        .from('profiles')
+        .select('id')
+        .eq('email', data.email)
+        .maybeSingle();
+
+      if (existingUser) {
+        toast.error("An account with this email already exists. Please sign in instead.");
+        setTimeout(() => onModeChange('signin'), 2000);
+        return;
+      }
+
       // Step 1: Create the user account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
@@ -44,8 +57,18 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         },
       });
 
-      if (signUpError) throw signUpError;
-      if (!authData.user) throw new Error("No user data returned after signup");
+      if (signUpError) {
+        if (signUpError instanceof AuthApiError && signUpError.message.includes("already registered")) {
+          toast.error("An account with this email already exists. Please sign in instead.");
+          setTimeout(() => onModeChange('signin'), 2000);
+          return;
+        }
+        throw signUpError;
+      }
+
+      if (!authData.user) {
+        throw new Error("No user data returned after signup");
+      }
 
       console.log("User created successfully:", authData.user.id);
 
@@ -66,7 +89,11 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         .select()
         .single();
 
-      if (companyError) throw companyError;
+      if (companyError) {
+        console.error('Company creation error:', companyError);
+        throw companyError;
+      }
+
       console.log("Company created successfully:", companyData.id);
 
       // Step 3: Update the user's profile with company information
@@ -84,7 +111,10 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         })
         .eq('id', authData.user.id);
 
-      if (profileError) throw profileError;
+      if (profileError) {
+        console.error('Profile update error:', profileError);
+        throw profileError;
+      }
       
       console.log("Profile updated successfully");
       toast.success("Your account has been created with a 30-day trial period!");
@@ -96,7 +126,7 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     } catch (error: any) {
       console.error("Error during sign up:", error);
       
-      if (error instanceof AuthError && error.message.includes("already registered")) {
+      if (error instanceof AuthApiError && error.message.includes("already registered")) {
         toast.error("An account with this email already exists. Please sign in instead.");
         setTimeout(() => onModeChange('signin'), 2000);
       } else {
