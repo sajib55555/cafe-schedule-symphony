@@ -33,33 +33,9 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
       if (!authData.user) throw new Error("No user data returned after signin");
 
       console.log("Sign in successful for user:", authData.user.id);
-
-      // Verify the user has a profile
-      const { data: profile, error: profileError } = await supabase
-        .from('profiles')
-        .select('id, company_id')
-        .eq('id', authData.user.id)
-        .maybeSingle();
-
-      if (profileError) throw profileError;
-      
-      if (!profile) {
-        console.log("Creating profile for user:", authData.user.id);
-        const { error: createProfileError } = await supabase
-          .from('profiles')
-          .insert([{
-            id: authData.user.id,
-            email: authData.user.email,
-            trial_start: new Date().toISOString(),
-            trial_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
-            subscription_status: 'trial'
-          }]);
-
-        if (createProfileError) throw createProfileError;
-      }
-
       toast.success("Successfully signed in!");
       navigate("/dashboard");
+      
     } catch (error: any) {
       console.error("Sign in error:", error);
       
