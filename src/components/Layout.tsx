@@ -16,7 +16,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
           .from('profiles')
           .select('trial_end, subscription_status')
           .eq('id', session.user.id)
-          .single();
+          .maybeSingle();
 
         if (profile) {
           setIsSubscribed(profile.subscription_status === 'active');

@@ -12,6 +12,7 @@ import { AvailabilitySelector } from "./staff/AvailabilitySelector";
 export function AddStaffForm({ onClose }: { onClose: () => void }) {
   const { staff, setStaff } = useStaff();
   const { session } = useAuth();
+  const [loading, setLoading] = useState(false);
   const [newEmployee, setNewEmployee] = useState({
     name: "",
     roles: [] as string[],
@@ -43,12 +44,13 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
     }
 
     try {
+      setLoading(true);
       // First get the user's company_id
       const { data: profileData, error: profileError } = await supabase
         .from('profiles')
         .select('company_id')
         .eq('id', session.user.id)
-        .single();
+        .maybeSingle();
 
       if (profileError) {
         console.error('Error fetching company ID:', profileError);
@@ -80,7 +82,7 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           company_id: profileData.company_id
         }])
         .select()
-        .single();
+        .maybeSingle();
 
       if (insertError) throw insertError;
 
@@ -100,6 +102,12 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
           description: "New staff member added successfully",
         });
         onClose();
+      } else {
+        toast({
+          title: "Error",
+          description: "Failed to add staff member. Please try again.",
+          variant: "destructive",
+        });
       }
     } catch (error) {
       console.error('Error adding staff member:', error);
@@ -108,6 +116,8 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         description: "Failed to add staff member. Please try again.",
         variant: "destructive",
       });
+    } finally {
+      setLoading(false);
     }
   };
 
@@ -185,8 +195,8 @@ export function AddStaffForm({ onClose }: { onClose: () => void }) {
         onAvailabilityChange={handleAvailabilityChange}
       />
 
-      <Button onClick={handleAddEmployee} className="w-full">
-        Add Staff Member
+      <Button onClick={handleAddEmployee} className="w-full" disabled={loading}>
+        {loading ? "Adding..." : "Add Staff Member"}
       </Button>
     </div>
   );
