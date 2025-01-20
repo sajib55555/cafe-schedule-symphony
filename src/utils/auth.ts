@@ -19,19 +19,7 @@ export const handleSignUp = async (values: SignUpData) => {
   try {
     console.log('Starting signup process with values:', values);
 
-    // First check if user exists
-    const { data: existingUser } = await supabase
-      .from('profiles')
-      .select('id')
-      .eq('email', values.email)
-      .maybeSingle();
-
-    if (existingUser) {
-      toast.error("An account with this email already exists. Please sign in instead.");
-      return null;
-    }
-
-    // Create the user account
+    // First, create the auth user
     const { data: authData, error: authError } = await supabase.auth.signUp({
       email: values.email,
       password: values.password,
@@ -52,30 +40,11 @@ export const handleSignUp = async (values: SignUpData) => {
       throw new Error("No user data returned after signup");
     }
 
-    // Wait for session to be established
-    await new Promise(resolve => setTimeout(resolve, 2000));
-
-    // Get fresh session and ensure we're authenticated
-    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
-    
-    if (sessionError) {
-      console.error('Session error:', sessionError);
-      throw sessionError;
-    }
-
-    if (!session) {
-      console.error('No session available after signup');
-      throw new Error("No session available after signup");
-    }
-
-    // Set the session in the Supabase client
-    await supabase.auth.setSession(session);
-
-    // Create a new company with the authenticated client
+    // Create the company first
     const { data: companyData, error: companyError } = await supabase
       .from('companies')
       .insert([
-        { 
+        {
           name: values.companyName,
           address: values.companyAddress,
           phone: values.companyPhone,
@@ -98,7 +67,7 @@ export const handleSignUp = async (values: SignUpData) => {
     const trialEnd = new Date();
     trialEnd.setDate(trialEnd.getDate() + 2); // 2 days trial period
 
-    // Update profile with trial dates, company_id, and additional info
+    // Update profile with trial dates and company_id
     const { error: profileError } = await supabase
       .from('profiles')
       .update({
@@ -108,7 +77,8 @@ export const handleSignUp = async (values: SignUpData) => {
         full_name: values.fullName,
         position: values.position,
         department: values.department,
-        phone: values.phone
+        phone: values.phone,
+        email: values.email
       })
       .eq('id', authData.user.id);
 
