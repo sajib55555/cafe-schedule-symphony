@@ -1,5 +1,5 @@
 import { useEffect } from "react";
-import { useNavigate, useLocation } from "react-router-dom";
+import { useNavigate } from "react-router-dom";
 import { Auth as SupabaseAuth } from "@supabase/auth-ui-react";
 import { ThemeSupa } from "@supabase/auth-ui-shared";
 import { supabase } from "@/integrations/supabase/client";
@@ -8,7 +8,6 @@ import { toast } from "sonner";
 
 const Auth = () => {
   const navigate = useNavigate();
-  const location = useLocation();
   const { session } = useAuth();
 
   useEffect(() => {
@@ -18,24 +17,32 @@ const Auth = () => {
   }, [session, navigate]);
 
   useEffect(() => {
-    const { data: { subscription } } = supabase.auth.onAuthStateChange(async (event, session) => {
-      if (event === "SIGNED_IN") {
-        toast.success("Successfully signed in!");
-        navigate("/dashboard");
-      }
-      if (event === "SIGNED_OUT") {
-        toast.success("Successfully signed out!");
-        navigate("/");
-      }
-      if (event === "USER_UPDATED") {
-        const { data, error } = await supabase.auth.getSession();
-        if (error) {
-          toast.error(getErrorMessage(error));
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      try {
+        if (event === "SIGNED_IN") {
+          toast.success("Successfully signed in!");
+          navigate("/dashboard");
         }
+        if (event === "SIGNED_OUT") {
+          toast.success("Successfully signed out!");
+          navigate("/");
+        }
+        if (event === "USER_UPDATED") {
+          const { data, error } = await supabase.auth.getSession();
+          if (error) {
+            toast.error(getErrorMessage(error));
+          }
+        }
+      } catch (error: any) {
+        toast.error(getErrorMessage(error));
       }
     });
 
-    return () => subscription.unsubscribe();
+    return () => {
+      subscription.unsubscribe();
+    };
   }, [navigate]);
 
   const getErrorMessage = (error: any) => {
