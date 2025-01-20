@@ -40,7 +40,17 @@ export const handleSignUp = async (values: SignUpData) => {
       throw new Error("No user data returned after signup");
     }
 
-    // Create the company first
+    // Wait for session to be established
+    await new Promise(resolve => setTimeout(resolve, 1000));
+
+    // Get fresh session
+    const { data: { session }, error: sessionError } = await supabase.auth.getSession();
+    if (sessionError || !session) {
+      console.error('Session error:', sessionError);
+      throw sessionError || new Error('No session available');
+    }
+
+    // Create the company with the authenticated session
     const { data: companyData, error: companyError } = await supabase
       .from('companies')
       .insert([
