@@ -7,12 +7,16 @@ import { NavigationBar } from "./layout/NavigationBar";
 export function Layout({ children }: { children: React.ReactNode }) {
   const [trialDaysLeft, setTrialDaysLeft] = useState<number | null>(null);
   const [isSubscribed, setIsSubscribed] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const checkTrialStatus = async () => {
       try {
         const { data: { session } } = await supabase.auth.getSession();
-        if (!session?.user) return;
+        if (!session?.user) {
+          setIsLoading(false);
+          return;
+        }
 
         const { data: profile, error } = await supabase
           .from('profiles')
@@ -22,6 +26,7 @@ export function Layout({ children }: { children: React.ReactNode }) {
 
         if (error) {
           console.error('Error fetching profile:', error);
+          setIsLoading(false);
           return;
         }
 
@@ -36,11 +41,21 @@ export function Layout({ children }: { children: React.ReactNode }) {
         }
       } catch (error) {
         console.error('Error in checkTrialStatus:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
     checkTrialStatus();
   }, []);
+
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-[#FDF6E3] flex items-center justify-center">
+        <div className="animate-pulse">Loading...</div>
+      </div>
+    );
+  }
 
   return (
     <div className="min-h-screen bg-[#FDF6E3]">
