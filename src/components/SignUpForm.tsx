@@ -5,7 +5,7 @@ import { Form } from "@/components/ui/form";
 import { useNavigate } from "react-router-dom";
 import { PersonalInfoFields } from "./signup/PersonalInfoFields";
 import { FormData, formSchema } from "./signup/types";
-import { handleSignUp } from "@/utils/auth";
+import { supabase } from "@/integrations/supabase/client";
 import { toast } from "sonner";
 import { AuthError } from "@supabase/supabase-js";
 
@@ -31,35 +31,71 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
   const onSubmit = async (data: FormData) => {
     try {
-      console.log("Starting signup process...");
-      const user = await handleSignUp({
+      console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
+      
+      // Step 1: Create the user account
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        fullName: data.fullName,
-        companyName: data.companyName,
-        companyAddress: data.companyAddress,
-        companyPhone: data.companyPhone,
-        companyWebsite: data.companyWebsite,
-        companyDescription: data.companyDescription,
-        position: data.position,
-        department: data.department,
-        phone: data.phone,
+        options: {
+          data: {
+            full_name: data.fullName,
+          },
+        },
       });
+
+      if (signUpError) throw signUpError;
+      if (!authData.user) throw new Error("No user data returned after signup");
+
+      console.log("User created successfully:", authData.user.id);
+
+      // Step 2: Create the company
+      const { data: companyData, error: companyError } = await supabase
+        .from('companies')
+        .insert([
+          {
+            name: data.companyName,
+            address: data.companyAddress,
+            phone: data.companyPhone,
+            website: data.companyWebsite,
+            description: data.companyDescription,
+            industry: 'Other',
+            size: 'Small'
+          }
+        ])
+        .select()
+        .single();
+
+      if (companyError) throw companyError;
+      console.log("Company created successfully:", companyData.id);
+
+      // Step 3: Update the user's profile with company information
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .update({
+          full_name: data.fullName,
+          company_id: companyData.id,
+          position: data.position,
+          department: data.department,
+          phone: data.phone,
+          trial_start: new Date().toISOString(),
+          trial_end: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+          subscription_status: 'trial'
+        })
+        .eq('id', authData.user.id);
+
+      if (profileError) throw profileError;
       
-      if (user) {
-        console.log("Signup successful, user:", user);
-        toast.success("Your account has been created with a 30-day trial period.");
-        
-        // Add a small delay to ensure the toast is visible and auth state is updated
-        setTimeout(() => {
-          console.log("Redirecting to dashboard...");
-          navigate("/dashboard", { replace: true });
-        }, 1000);
-      }
+      console.log("Profile updated successfully");
+      toast.success("Your account has been created with a 30-day trial period!");
+      
+      // Add a small delay to ensure the auth state is updated
+      setTimeout(() => {
+        navigate("/dashboard");
+      }, 1000);
     } catch (error: any) {
       console.error("Error during sign up:", error);
       
-      // Handle specific error cases
       if (error instanceof AuthError && error.message.includes("already registered")) {
         toast.error("An account with this email already exists. Please sign in instead.");
         setTimeout(() => onModeChange('signin'), 2000);
