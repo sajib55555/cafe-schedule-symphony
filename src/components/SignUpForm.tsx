@@ -33,26 +33,6 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     try {
       console.log("Starting signup process with data:", { ...data, password: '[REDACTED]' });
       
-      // First check if user exists by attempting to sign in with a random password
-      const { error: checkError } = await supabase.auth.signInWithPassword({
-        email: data.email,
-        password: 'checkuserexistence',
-      });
-
-      // If the error message indicates invalid credentials, the user exists
-      if (checkError && !checkError.message.includes("Invalid login credentials")) {
-        console.error("Error checking existing user:", checkError);
-        toast.error("An error occurred. Please try again.");
-        return;
-      }
-
-      if (!checkError) {
-        console.log("User already exists:", data.email);
-        toast.error("An account with this email already exists. Please sign in instead.");
-        setTimeout(() => onModeChange('signin'), 2000);
-        return;
-      }
-
       // Step 1: Create the user account
       const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
@@ -66,11 +46,15 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
 
       if (signUpError) {
         console.error("Signup error:", signUpError);
-        if (signUpError instanceof AuthApiError && signUpError.message.includes("already registered")) {
-          toast.error("An account with this email already exists. Please sign in instead.");
-          setTimeout(() => onModeChange('signin'), 2000);
+        if (signUpError instanceof AuthApiError) {
+          if (signUpError.message.includes("already registered")) {
+            toast.error("An account with this email already exists. Please sign in instead.");
+            setTimeout(() => onModeChange('signin'), 2000);
+          } else {
+            toast.error(signUpError.message || "Failed to create account");
+          }
         } else {
-          toast.error(signUpError.message || "Failed to create account");
+          toast.error("Failed to create account");
         }
         return;
       }
