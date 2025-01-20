@@ -8,6 +8,7 @@ import { supabase } from "@/integrations/supabase/client";
 import { SignInFields } from "./signin/SignInFields";
 import { SignInFormData, signInFormSchema } from "./signin/types";
 import { useState } from "react";
+import { AuthError } from "@supabase/supabase-js";
 
 export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
@@ -21,6 +22,17 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
     },
   });
 
+  const handleAuthError = (error: AuthError) => {
+    switch (error.message) {
+      case 'Invalid login credentials':
+        return "Invalid email or password. Please check your credentials and try again.";
+      case 'Email not confirmed':
+        return "Please verify your email address before signing in.";
+      default:
+        return error.message || "An error occurred during sign in.";
+    }
+  };
+
   const onSubmit = async (data: SignInFormData) => {
     try {
       setIsLoading(true);
@@ -29,13 +41,17 @@ export const SignInForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
         password: data.password,
       });
 
-      if (error) throw error;
+      if (error) {
+        const errorMessage = handleAuthError(error);
+        toast.error(errorMessage);
+        return;
+      }
 
       toast.success("Successfully signed in!");
       navigate("/dashboard");
     } catch (error: any) {
       console.error("Sign in error:", error);
-      toast.error(error.message || "Failed to sign in");
+      toast.error("An unexpected error occurred. Please try again.");
     } finally {
       setIsLoading(false);
     }
