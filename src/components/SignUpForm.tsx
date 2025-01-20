@@ -9,6 +9,7 @@ import { handleSignUp } from "@/utils/auth";
 import { toast } from "sonner";
 import { AuthError } from "@supabase/supabase-js";
 import { useState } from "react";
+import { supabase } from "@/integrations/supabase/client";
 
 export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | 'signin' | 'reset') => void }) => {
   const navigate = useNavigate();
@@ -34,26 +35,62 @@ export const SignUpForm = ({ onModeChange }: { onModeChange: (mode: 'signup' | '
   const onSubmit = async (data: FormData) => {
     try {
       setIsLoading(true);
-      const user = await handleSignUp({
+      
+      // First create the company
+      const { data: company, error: companyError } = await supabase
+        .from('companies')
+        .insert({
+          name: data.companyName,
+          address: data.companyAddress,
+          phone: data.companyPhone,
+          website: data.companyWebsite,
+          description: data.companyDescription,
+        })
+        .select()
+        .maybeSingle();
+
+      if (companyError) throw companyError;
+      if (!company) throw new Error("Failed to create company");
+
+      // Then sign up the user
+      const { data: authData, error: signUpError } = await supabase.auth.signUp({
         email: data.email,
         password: data.password,
-        fullName: data.fullName,
-        companyName: data.companyName,
-        companyAddress: data.companyAddress,
-        companyPhone: data.companyPhone,
-        companyWebsite: data.companyWebsite,
-        companyDescription: data.companyDescription,
-        position: data.position,
-        department: data.department,
-        phone: data.phone,
+        options: {
+          data: {
+            full_name: data.fullName,
+          }
+        }
       });
+
+      if (signUpError) throw signUpError;
+      if (!authData.user) throw new Error("Failed to create user");
+
+      // Create or update the profile
+      const trialEnd = new Date();
+      trialEnd.setDate(trialEnd.getDate() + 30);
+
+      const { error: profileError } = await supabase
+        .from('profiles')
+        .upsert({
+          id: authData.user.id,
+          email: data.email,
+          full_name: data.fullName,
+          company_id: company.id,
+          position: data.position,
+          department: data.department,
+          phone: data.phone,
+          trial_start: new Date().toISOString(),
+          trial_end: trialEnd.toISOString(),
+          subscription_status: 'trial'
+        });
+
+      if (profileError) throw profileError;
       
-      if (user) {
-        toast.success("Your account has been created with a 30-day trial period.");
-        setTimeout(() => {
-          navigate("/dashboard", { replace: true });
-        }, 1000);
-      }
+      toast.success("Your account has been created with a 30-day trial period.");
+      setTimeout(() => {
+        navigate("/dashboard", { replace: true });
+      }, 1000);
     } catch (error: any) {
       console.error("Error during sign up:", error);
       
