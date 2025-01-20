@@ -18,26 +18,31 @@ export function Layout({ children }: { children: React.ReactNode }) {
           return;
         }
 
-        const { data: profile, error } = await supabase
+        // First check if profile exists
+        const { data: profile, error: profileError } = await supabase
           .from('profiles')
-          .select('trial_end, subscription_status')
+          .select('trial_end, subscription_status, company_id')
           .eq('id', session.user.id)
           .maybeSingle();
 
-        if (error) {
-          console.error('Error fetching profile:', error);
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
           setIsLoading(false);
           return;
         }
 
-        if (profile) {
-          const isActiveSubscription = profile.subscription_status === 'active';
-          setIsSubscribed(isActiveSubscription);
-          
-          if (!isActiveSubscription && profile.trial_end) {
-            const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
-            setTrialDaysLeft(Math.max(0, daysLeft));
-          }
+        // If no profile found, don't show trial banner
+        if (!profile) {
+          setIsLoading(false);
+          return;
+        }
+
+        const isActiveSubscription = profile.subscription_status === 'active';
+        setIsSubscribed(isActiveSubscription);
+        
+        if (!isActiveSubscription && profile.trial_end) {
+          const daysLeft = differenceInDays(new Date(profile.trial_end), new Date());
+          setTrialDaysLeft(Math.max(0, daysLeft));
         }
       } catch (error) {
         console.error('Error in checkTrialStatus:', error);
