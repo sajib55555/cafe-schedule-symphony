@@ -1,12 +1,12 @@
 import React from 'react';
 import { Button } from "@/components/ui/button";
 import { ChevronLeft, ChevronRight } from "lucide-react";
-import { format, addDays } from "date-fns";
+import { format, addDays, subWeeks, addWeeks } from "date-fns";
 import { SchedulePdfExport } from '../SchedulePdfExport';
 
 interface ScheduleHeaderProps {
   selectedWeekStart: Date;
-  navigateWeek: (direction: 'prev' | 'next') => void;
+  setSelectedWeekStart: (date: Date) => void;
   scheduleRef: React.RefObject<HTMLDivElement>;
   onPdfGenerating: (generating: boolean) => void;
   isMobile?: boolean;
@@ -14,11 +14,17 @@ interface ScheduleHeaderProps {
 
 export function ScheduleHeader({ 
   selectedWeekStart, 
-  navigateWeek, 
+  setSelectedWeekStart,
   scheduleRef, 
   onPdfGenerating,
   isMobile 
 }: ScheduleHeaderProps) {
+  const navigateWeek = (direction: 'prev' | 'next') => {
+    setSelectedWeekStart(current => 
+      direction === 'prev' ? subWeeks(current, 1) : addWeeks(current, 1)
+    );
+  };
+
   return (
     <div className={`flex ${isMobile ? 'flex-col space-y-2 w-full' : 'justify-between'} items-center`}>
       <h2 className={`text-xl font-bold text-secondary ${isMobile ? 'text-center' : ''}`}>
