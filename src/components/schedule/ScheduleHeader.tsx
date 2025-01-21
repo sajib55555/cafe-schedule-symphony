@@ -6,7 +6,7 @@ import { SchedulePdfExport } from '../SchedulePdfExport';
 
 interface ScheduleHeaderProps {
   selectedWeekStart: Date;
-  setSelectedWeekStart: (date: Date) => void;
+  setSelectedWeekStart: (value: Date | ((prev: Date) => Date)) => void;
   scheduleRef: React.RefObject<HTMLDivElement>;
   onPdfGenerating: (generating: boolean) => void;
   isMobile?: boolean;
